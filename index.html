@@ -108,6 +108,9 @@
     box-shadow:0 18px 40px #000a; max-width:94vw; max-height:92vh; overflow:auto; }
   .panel h2{ margin:0 0 10px; font-size:16px; letter-spacing:.4px; }
   .grid{ display:grid; gap:4px; }
+  .invlayout .gslot{ width:40px; height:40px; }
+  .invlayout .gslot .ic{ width:27px; height:27px; }
+  .invlayout .lbl{ margin:1px 0 2px; }
   .gslot{ width:46px; height:46px; background:var(--slot); border:2px solid var(--slotb); border-radius:6px;
     position:relative; display:flex; align-items:center; justify-content:center; }
   .gslot.out{ background:#2c3647; border-color:var(--gold); }
@@ -423,6 +426,8 @@ function mat(key,name,col,extra){ var o={key:key,name:name,stack:64,color:col}; 
 mat('STICK','Stick',[150,110,66]);
 mat('COAL','Coal',[40,40,44],{fuel:80});
 mat('IRON_INGOT','Iron Ingot',[214,196,178]);
+mat('BUCKET','Bucket',[176,182,194],{stack:16});
+mat('WATER_BUCKET','Water Bucket',[64,118,200],{stack:1});
 mat('GOLD_INGOT','Gold Ingot',[230,200,90]);
 mat('COPPER_INGOT','Copper Ingot',[200,120,70]);
 mat('TIN_INGOT','Tin Ingot',[206,214,224]);
@@ -642,6 +647,7 @@ var World = {
   init: function(seed){
     this.seed = seed>>>0 || 1; this.noise = makeNoise(this.seed); this.bnoise = makeNoise(this.seed^0x9e3779b9);
     this.chunks={}; this.blockLight={}; this.grassTaken={};
+    this.wlvl={}; this.wsrc={}; this.wq=[]; this.wseen={}; this.wtimer=0; this._wsim=false; this.leafQ=[];
   },
   key: function(x,z){ return x+','+z; },
   ck: function(x,y,z){ return x+','+y+','+z; },
@@ -810,30 +816,64 @@ var World = {
       if(!items[s]) items[s]={key:pick.k, qty:qty};
     }
   },
-  buildHouse: function(ch, cxp, czp, h){
-    var dx,dz,cy, R=2;
-    // floor + hollow interior (5x5, 3 tall)
+  buildHouse: function(ch, cxp, czp, h, pal, big){
+    pal = pal || {base:B.COBBLE, wall:B.PLANKS, post:B.LOG, roof:B.PLANKS};
+    var dx,dz,cy, R=2, wt=big?4:3, rf=wt+1;
+    for(dx=-R;dx<=R;dx++) for(dz=-R;dz<=R;dz++){ setLocal(ch.blocks, cxp+dx, h, czp+dz, pal.base);
+      for(cy=1;cy<=rf;cy++) setLocal(ch.blocks, cxp+dx, h+cy, czp+dz, B.AIR); }
     for(dx=-R;dx<=R;dx++) for(dz=-R;dz<=R;dz++){
-      setLocal(ch.blocks, cxp+dx, h, czp+dz, B.PLANKS);                 // floor
-      for(cy=1;cy<=4;cy++) setLocal(ch.blocks, cxp+dx, h+cy, czp+dz, B.AIR);
-    }
-    // walls: cobble base course, planks above, log corner posts (3 tall)
-    for(dx=-R;dx<=R;dx++) for(dz=-R;dz<=R;dz++){
-      if(Math.abs(dx)!==R && Math.abs(dz)!==R) continue;                // perimeter only
+      if(Math.abs(dx)!==R && Math.abs(dz)!==R) continue;
       var corner=(Math.abs(dx)===R && Math.abs(dz)===R);
-      for(cy=1;cy<=3;cy++) setLocal(ch.blocks, cxp+dx, h+cy, czp+dz, corner?B.LOG:(cy===1?B.COBBLE:B.PLANKS));
+      for(cy=1;cy<=wt;cy++) setLocal(ch.blocks, cxp+dx, h+cy, czp+dz, corner?pal.post:(cy===1?pal.base:pal.wall));
     }
-    // windows on three sides
     setLocal(ch.blocks, cxp+R, h+2, czp, B.GLASS); setLocal(ch.blocks, cxp-R, h+2, czp, B.GLASS); setLocal(ch.blocks, cxp, h+2, czp-R, B.GLASS);
-    // door (2 tall) on +z
-    setLocal(ch.blocks, cxp, h+1, czp+R, B.AIR); setLocal(ch.blocks, cxp, h+2, czp+R, B.AIR);
-    // gabled roof: full plank cap, inset log ridge, peak
-    for(dx=-R;dx<=R;dx++) for(dz=-R;dz<=R;dz++) setLocal(ch.blocks, cxp+dx, h+4, czp+dz, B.PLANKS);
-    for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++) setLocal(ch.blocks, cxp+dx, h+5, czp+dz, B.LOG);
-    setLocal(ch.blocks, cxp, h+6, czp, B.PLANKS);
-    // interior: torch + crafting table
+    if(big){ setLocal(ch.blocks, cxp+R, h+4, czp, B.GLASS); setLocal(ch.blocks, cxp-R, h+4, czp, B.GLASS); }
+    setLocal(ch.blocks, cxp, h+1, czp+R, B.AIR); setLocal(ch.blocks, cxp, h+2, czp+R, B.AIR);     // door
+    for(dx=-R;dx<=R;dx++) for(dz=-R;dz<=R;dz++) setLocal(ch.blocks, cxp+dx, h+rf, czp+dz, pal.roof);
+    for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++) setLocal(ch.blocks, cxp+dx, h+rf+1, czp+dz, pal.post);
+    setLocal(ch.blocks, cxp, h+rf+2, czp, pal.roof);
     setLocal(ch.blocks, cxp-1, h+1, czp-1, B.TORCH);
     setLocal(ch.blocks, cxp+1, h+1, czp-1, B.CRAFTING);
+  },
+  buildFarm: function(ch, cxp, czp, h, pal){
+    var dx,dz;
+    for(dx=-2;dx<=2;dx++) for(dz=-2;dz<=2;dz++){ var inner=(Math.abs(dx)<2 && Math.abs(dz)<2);
+      setLocal(ch.blocks, cxp+dx, h, czp+dz, inner?B.DIRT:pal.base); }
+    setLocal(ch.blocks, cxp, h, czp, B.WATER);                                                    // irrigation
+    for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++){ if(dx===0&&dz===0) continue;
+      var wx=ch.cx*CHUNK+cxp+dx, wz=ch.cz*CHUNK+czp+dz, wy=h+1;
+      var crop=(hash3(wx,9,wz,this.seed)<0.5)?'wheat':(hash3(wx,8,wz,this.seed)<0.5?'carrot':'potato');
+      this.tiles[this.ck(wx,wy,wz)]={type:'crop', crop:crop, t:5+(hash3(wx,3,wz,this.seed)*8|0)};
+    }
+    setLocal(ch.blocks, cxp-2,h+1,czp-2,pal.post); setLocal(ch.blocks, cxp+2,h+1,czp-2,pal.post);
+    setLocal(ch.blocks, cxp-2,h+1,czp+2,pal.post); setLocal(ch.blocks, cxp+2,h+1,czp+2,pal.post);
+  },
+  buildWell: function(ch, cxp, czp, h, pal){
+    var dx,dz;
+    for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++) setLocal(ch.blocks, cxp+dx, h, czp+dz, B.COBBLE);
+    setLocal(ch.blocks, cxp, h-1, czp, B.WATER); setLocal(ch.blocks, cxp, h, czp, B.WATER);
+    for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++){ if(Math.abs(dx)===1||Math.abs(dz)===1) setLocal(ch.blocks, cxp+dx, h+1, czp+dz, B.COBBLE); }
+    setLocal(ch.blocks, cxp, h+1, czp, B.WATER);
+    setLocal(ch.blocks, cxp-1,h+2,czp-1,pal.post); setLocal(ch.blocks, cxp+1,h+2,czp-1,pal.post);
+    setLocal(ch.blocks, cxp-1,h+2,czp+1,pal.post); setLocal(ch.blocks, cxp+1,h+2,czp+1,pal.post);
+    for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++) setLocal(ch.blocks, cxp+dx, h+3, czp+dz, pal.roof);
+  },
+  buildStall: function(ch, cxp, czp, h, pal){
+    var dx;
+    for(dx=-1;dx<=1;dx++) setLocal(ch.blocks, cxp+dx, h+1, czp, pal.wall);          // counter
+    setLocal(ch.blocks, cxp-1,h+2,czp,pal.post); setLocal(ch.blocks, cxp+1,h+2,czp,pal.post);
+    for(dx=-1;dx<=1;dx++){ setLocal(ch.blocks, cxp+dx, h+3, czp-1, pal.roof); setLocal(ch.blocks, cxp+dx, h+3, czp, pal.roof); setLocal(ch.blocks, cxp+dx, h+3, czp+1, pal.roof); }
+  },
+  buildLamp: function(ch, x, z, h, pal){
+    setLocal(ch.blocks, x, h+1, z, pal.post); setLocal(ch.blocks, x, h+2, z, pal.post); setLocal(ch.blocks, x, h+3, z, B.TORCH);
+  },
+  villagePalette: function(biome){
+    if(biome===3) return {base:B.SAND, wall:B.SAND, post:B.SAND, roof:B.SAND};                          // desert
+    if(biome===4||biome===9) return {base:B.COBBLE, wall:B.PLANKS, post:B.SPRUCE_LOG, roof:B.PLANKS};   // taiga/snowy
+    if(biome===8) return {base:B.COBBLE, wall:B.PLANKS, post:B.LOG, roof:B.PLANKS};                       // savanna
+    if(biome===6) return {base:B.COBBLE, wall:B.PLANKS, post:B.CHERRY_LOG, roof:B.PLANKS};                // cherry
+    if(biome===5) return {base:B.COBBLE, wall:B.PLANKS, post:B.BIRCH_LOG, roof:B.PLANKS};                 // birch
+    return {base:B.COBBLE, wall:B.PLANKS, post:B.LOG, roof:B.PLANKS};                                     // default
   },
   genStructures: function(ch){
     var cx=ch.cx, cz=ch.cz;
@@ -844,26 +884,41 @@ var World = {
     var h=ch.hmap[lx*CHUNK+lz]; if(h<=SEA || h>=WORLD_H-6) return;
     var wallMat=(biome===3)?B.SAND:B.COBBLE, dx,dz,cy;
     var roll=hash3(cx,104,cz,this.seed^0x7A11);
-    // ~25% of structures are a small village (hamlet of houses)
-    if(roll < 0.25 && h>SEA && h<WORLD_H-8 && biome!==2 && biome!==3 && biome!==9){
+    // ~30% of structures are a varied village (no two alike)
+    if(roll < 0.30 && h>SEA && h<WORLD_H-8 && biome!==2 && biome!==7){
+      var pal=this.villagePalette(biome);
       var plots=[[lx-3,lz-3],[lx+3,lz-3],[lx-3,lz+3],[lx+3,lz+3]], placedChest=false, built=0;
       for(var pi=0; pi<plots.length; pi++){
         var hx=plots[pi][0], hz=plots[pi][1];
-        if(hx<2||hx>13||hz<2||hz>13) continue;
-        if(hash3(cx*16+hx,7,cz*16+hz,this.seed^0xA11)<0.22) continue;   // some empty lots
-        var hh=ch.hmap[hx*CHUNK+hz]; if(hh<=SEA || hh>=WORLD_H-6) continue;
-        this.buildHouse(ch, hx, hz, hh);
+        if(hx<3||hx>12||hz<3||hz>12) continue;
+        var pr=hash3(cx*16+hx,7,cz*16+hz,this.seed^0xA11);
+        if(pr<0.12) continue;                                           // some empty lots
+        var hh=ch.hmap[hx*CHUNK+hz]; if(hh<=SEA || hh>=WORLD_H-8) continue;
+        var wxx=cx*16+hx, wzz=cz*16+hz;
+        var kind = (pr<0.42)?'house' : (pr<0.60)?'farm' : (pr<0.76)?'well' : (pr<0.88)?'stall' : 'bighouse';
+        if(kind==='house') this.buildHouse(ch, hx, hz, hh, pal, false);
+        else if(kind==='bighouse') this.buildHouse(ch, hx, hz, hh, pal, true);
+        else if(kind==='farm') this.buildFarm(ch, hx, hz, hh, pal);
+        else if(kind==='well') this.buildWell(ch, hx, hz, hh, pal);
+        else this.buildStall(ch, hx, hz, hh, pal);
         built++;
-        if(!placedChest){
+        if(!placedChest && (kind==='house'||kind==='bighouse')){
           setLocal(ch.blocks, hx, hh+1, hz, B.CHEST);
-          var vk=this.ck(cx*16+hx, hh+1, cz*16+hz);
-          if(!this.tiles[vk]){ var vit=newArray(27); this.fillLoot(vit, cx*16+hx, cz*16+hz); this.tiles[vk]={type:'chest', items:vit}; }
+          var vk=this.ck(wxx, hh+1, wzz);
+          if(!this.tiles[vk]){ var vit=newArray(27); this.fillLoot(vit, wxx, wzz); this.tiles[vk]={type:'chest', items:vit}; }
           placedChest=true;
         }
       }
-      if(built>0){ setLocal(ch.blocks, lx, h+1, lz, B.TORCH);   // village square lamp
+      if(built>0){
+        setLocal(ch.blocks, lx, h+1, lz, B.TORCH);                       // village square lamp
+        var lamps=[[lx,lz-4],[lx,lz+4],[lx-4,lz],[lx+4,lz]];
+        for(var li=0; li<lamps.length; li++){ var ux=lamps[li][0], uz=lamps[li][1];
+          if(ux<1||ux>14||uz<1||uz>14) continue;
+          if(hash3(cx*16+ux,13,cz*16+uz,this.seed)>0.55){ var uh=ch.hmap[ux*CHUNK+uz]; if(uh>SEA && uh<WORLD_H-5) this.buildLamp(ch, ux, uz, uh, pal); }
+        }
         var sk=cx+','+cz; if(!villageSiteSet[sk]){ villageSiteSet[sk]=1; villageSites.push({x:wx+0.5, y:h+1, z:wz+0.5}); }
-        return; }
+        return;
+      }
     }
     // ~35% are a taller ruined watchtower
     if(roll < 0.6 && h < WORLD_H-10){
@@ -962,37 +1017,70 @@ var World = {
     if((x-cx*CHUNK)===CHUNK-1) this.markDirty(cx+1,cz);
     if((z-cz*CHUNK)===0) this.markDirty(cx,cz-1);
     if((z-cz*CHUNK)===CHUNK-1) this.markDirty(cx,cz+1);
+    if(id!==B.WATER){ var wk=this.ck(x,y,z); if(this.wlvl) delete this.wlvl[wk]; if(this.wsrc) delete this.wsrc[wk]; }
+    if(running && !this._wsim && this.wq && (prev!==id)) this.schedWaterAround(x,y,z);
   },
   markDirty: function(cx,cz){ var ch=this.chunks[this.key(cx,cz)]; if(ch) ch.dirty=true; },
-  // --- water flow: bounded, animated flood when a gap opens next to water ---
-  waterFront: [], waterSeen: {}, waterUsed: 0, waterTimer: 0,
-  floodSeed: function(x,y,z){
-    if(y<0||y>=WORLD_H) return;
-    var k=x+','+y+','+z; if(this.waterSeen[k]) return;
-    this.waterSeen[k]=1; this.waterFront.push([x,y,z,7]);
+  // --- Minecraft-style flowing water: source/level cellular automaton ---
+  wlvl:{}, wsrc:{}, wq:[], wseen:{}, wtimer:0,
+  isWaterSource: function(x,y,z){
+    if(this.getBlock(x,y,z)!==B.WATER) return false;
+    var k=this.ck(x,y,z);
+    if(this.wsrc[k]) return true;
+    if(this.wlvl[k]) return false;
+    return y<=SEA;                                       // untracked gen water below sea = source
   },
-  tickWater: function(dt){
-    this.waterTimer+=dt; if(this.waterTimer<0.05) return; this.waterTimer=0;
-    if(this.waterFront.length===0){ this.waterSeen={}; this.waterUsed=0; return; }
-    var budget=IS_MOBILE?3:5, n=0;
-    while(this.waterFront.length && n<budget && this.waterUsed<520){
-      var it=this.waterFront.shift(); n++;
-      var x=it[0], y=it[1], z=it[2], reach=it[3];
-      if(this.getBlock(x,y,z)!==B.AIR) continue;
-      var fed = this.getBlock(x,y+1,z)===B.WATER ||
-                this.getBlock(x+1,y,z)===B.WATER || this.getBlock(x-1,y,z)===B.WATER ||
-                this.getBlock(x,y,z+1)===B.WATER || this.getBlock(x,y,z-1)===B.WATER;
-      if(!fed) continue;
-      this.setBlock(x,y,z,B.WATER,true); this.waterUsed++;
-      var below=this.getBlock(x,y-1,z);
-      if(below===B.AIR){ var kb=x+','+(y-1)+','+z;                   // fall straight down, keep remaining reach
-        if(!this.waterSeen[kb]){ this.waterSeen[kb]=1; this.waterFront.push([x,y-1,z, reach]); } }
-      else if(reach>0){                                              // spread along floor, costs 1 reach per step
-        var d4=[[1,0],[-1,0],[0,1],[0,-1]];
-        for(var i=0;i<4;i++){ var nx=x+d4[i][0], nz=z+d4[i][1], k=nx+','+y+','+nz;
-          if(!this.waterSeen[k] && this.getBlock(nx,y,nz)===B.AIR){ this.waterSeen[k]=1; this.waterFront.push([nx,y,nz,reach-1]); } }
+  waterLevel: function(x,y,z){
+    if(this.getBlock(x,y,z)!==B.WATER) return 0;
+    if(this.isWaterSource(x,y,z)) return 8;
+    return this.wlvl[this.ck(x,y,z)] || 8;
+  },
+  schedWater: function(x,y,z){
+    if(y<1||y>=WORLD_H) return; if(this.wq.length>6000) return;
+    var dx=x-Player.pos.x, dz=z-Player.pos.z; if(dx*dx+dz*dz>54*54) return;   // only simulate near player
+    var k=this.ck(x,y,z); if(this.wseen[k]) return; this.wseen[k]=1; this.wq.push([x,y,z]);
+  },
+  schedWaterAround: function(x,y,z){
+    this.schedWater(x,y,z); this.schedWater(x,y+1,z); this.schedWater(x,y-1,z);
+    this.schedWater(x+1,y,z); this.schedWater(x-1,y,z); this.schedWater(x,y,z+1); this.schedWater(x,y,z-1);
+  },
+  floodSeed: function(x,y,z){ this.schedWaterAround(x,y,z); },               // back-compat
+  spreadWater: function(x,y,z,level){
+    var below=this.getBlock(x,y-1,z);
+    var belowSrc=(below===B.WATER) && this.isWaterSource(x,y-1,z);
+    var canFall=(below===B.AIR) || (below===B.WATER && !belowSrc && this.waterLevel(x,y-1,z)<8);
+    if(below===B.AIR) this.schedWater(x,y-1,z);
+    else if(below===B.WATER && !belowSrc) this.schedWater(x,y-1,z);
+    if(!canFall && level>1){
+      var d=[[1,0],[-1,0],[0,1],[0,-1]];
+      for(var i=0;i<4;i++){ var nx=x+d[i][0], nz=z+d[i][1], nb=this.getBlock(nx,y,nz);
+        if(nb===B.AIR) this.schedWater(nx,y,nz);
+        else if(nb===B.WATER && !this.isWaterSource(nx,y,nz) && this.waterLevel(nx,y,nz)<level-1) this.schedWater(nx,y,nz);
       }
     }
+  },
+  updateWaterCell: function(x,y,z){
+    var k=this.ck(x,y,z), cur=this.getBlock(x,y,z);
+    if(this.wsrc[k] || (cur===B.WATER && !this.wlvl[k] && y<=SEA)){ this.spreadWater(x,y,z,8); return; }   // source
+    if(cur!==B.AIR && cur!==B.WATER) return;
+    var newL=0;
+    if(this.getBlock(x,y+1,z)===B.WATER){ newL=8; }                          // falling column
+    else { var d=[[1,0],[-1,0],[0,1],[0,-1]];
+      for(var i=0;i<4;i++){ var nx=x+d[i][0], nz=z+d[i][1];
+        if(this.getBlock(nx,y,nz)===B.WATER){ var nl=this.waterLevel(nx,y,nz)-1; if(nl>newL) newL=nl; } } }
+    if(cur===B.WATER){
+      if(newL<=0){ this.setBlock(x,y,z,B.AIR,true); delete this.wlvl[k];
+        this.schedWater(x,y+1,z); this.schedWater(x,y-1,z); this.schedWater(x+1,y,z); this.schedWater(x-1,y,z); this.schedWater(x,y,z+1); this.schedWater(x,y,z-1); }
+      else { var prevL=this.wlvl[k]||8; this.wlvl[k]=newL; if(prevL!==newL) this.markDirty(x>>4, z>>4); this.spreadWater(x,y,z,newL); }
+    } else { if(newL>0){ this.setBlock(x,y,z,B.WATER,true); this.wlvl[k]=newL; this.spreadWater(x,y,z,newL); } }
+  },
+  tickWater: function(dt){
+    this.wtimer+=dt; if(this.wtimer<0.09) return; this.wtimer=0;
+    if(!this.wq.length) return;
+    var budget=IS_MOBILE?45:90, n=0; this._wsim=true;
+    while(this.wq.length && n<budget){ var it=this.wq.shift(); n++;
+      delete this.wseen[this.ck(it[0],it[1],it[2])]; this.updateWaterCell(it[0],it[1],it[2]); }
+    this._wsim=false;
   },
 
   /* --- skylight: column-based with depth falloff (fast, no BFS) --- */
@@ -1081,13 +1169,20 @@ function decorFor(id, f){
   if(id===B.CHEST){ if(f===4) face=3; return 1*8+face; }    // front = +z face
   if(id===B.FURNACE){ if(f===4) face=3; return 2*8+face; }  // front = +z face
   if(id===B.CRAFTING) return 3*8+face;
+  if(id===B.COAL_ORE) return 4*8+2;
+  if(id===B.IRON_ORE) return 5*8+2;
+  if(id===B.GOLD_ORE) return 6*8+2;
+  if(id===B.DIAMOND_ORE) return 7*8+2;
+  if(id===B.REDSTONE_ORE) return 8*8+2;
+  if(id===B.COPPER_ORE) return 9*8+2;
+  if(id===B.TIN_ORE) return 10*8+2;
   return 0;
 }
 function buildChunkGeometry(chunk){
   var blocks=chunk.blocks, cx=chunk.cx, cz=chunk.cz;
   var oP=[],oC=[],oL=[],oU=[],oD=[],oI=[];   // opaque
   var tP=[],tC=[],tL=[],tU=[],tD=[],tI=[];   // transparent (water/glass)
-  function emit(P,C,L,U,D,I, lx,ly,lz, f, baseCol, light, decor){
+  function emit(P,C,L,U,D,I, lx,ly,lz, f, baseCol, light, decor, surf){
     var face=FACES[f]; var n=face.dir;
     var nx=cx*CHUNK+lx, ny=ly, nz=cz*CHUNK+lz;
     var shade=SHADE[face.cat];
@@ -1095,7 +1190,7 @@ function buildChunkGeometry(chunk){
     var start=P.length/3;
     for(var v=0; v<4; v++){
       var co=face.corners[v];
-      var vx=lx+co[0], vy=ly+co[1], vz=lz+co[2];
+      var vx=lx+co[0], vy=ly+(co[1]?(surf==null?1:surf):0), vz=lz+co[2];
       var ao = vertexAO(nx,ny,nz, f, v);
       var aoF = [0.45,0.62,0.80,1.0][ao];
       var vvar = 0.93 + hash3(nx*2+co[0], ny*2+co[1], nz*2+co[2], 99)*0.14;
@@ -1134,6 +1229,8 @@ function buildChunkGeometry(chunk){
     var P = transparent?tP:oP, C=transparent?tC:oC, L=transparent?tL:oL, U=transparent?tU:oU, D=transparent?tD:oD, I=transparent?tI:oI;
     var wx=cx*CHUNK+lx, wz=cz*CHUNK+lz;
     if(b.thin){ emitTorch(P,C,L,U,D,I, lx,ly,lz); continue; }
+    var surf=1.0;
+    if(id===B.WATER){ var ab=World.getBlock(wx,ly+1,wz); if(ab!==B.WATER){ var lvl=World.waterLevel(wx,ly,wz); surf=0.12+0.78*(lvl/8); } }
     for(var f=0;f<6;f++){
       var d=FACES[f].dir;
       var nb=World.getBlock(wx+d[0], ly+d[1], wz+d[2]);
@@ -1142,7 +1239,7 @@ function buildChunkGeometry(chunk){
       var sky=World.skyLightAt(wx+d[0],ly+d[1],wz+d[2]);
       var bl=blk(id).lava? 14 : World.blockLightAt(wx+d[0],ly+d[1],wz+d[2]);
       var col = blockColor(id, FACES[f].cat);
-      emit(P,C,L,U,D,I, lx,ly,lz, f, col, {sky:sky,blk:bl}, decorFor(id, f));
+      emit(P,C,L,U,D,I, lx,ly,lz, f, col, {sky:sky,blk:bl}, decorFor(id, f), surf);
     }
   }
   function emitTorch(P,C,L,U,D,I, lx,ly,lz){
@@ -1284,15 +1381,31 @@ var rainGeo=new THREE.BufferGeometry(); rainGeo.setAttribute('position', new THR
 var rainMat=new THREE.LineBasicMaterial({ color:0x9fc2e6, transparent:true, opacity:0, fog:false });
 var rainMesh=new THREE.LineSegments(rainGeo, rainMat); rainMesh.frustumCulled=false; rainMesh.visible=false; scene.add(rainMesh);
 var weather='clear', weatherTimer=70+Math.random()*120, rainAmt=0;
-var rainSrc=null, rainGainNode=null;
-function startRainSound(){ var a=ac(); if(!a||rainSrc) return; rainSrc=a.createBufferSource(); rainSrc.buffer=getNoise(); rainSrc.loop=true;
-  var f=a.createBiquadFilter(); f.type='lowpass'; f.frequency.value=2400;
-  rainGainNode=a.createGain(); rainGainNode.gain.value=0; rainSrc.connect(f); f.connect(rainGainNode); rainGainNode.connect(masterGain);
+var rainSrc=null, rainGainNode=null, rainFilter=null, rainNoiseBuf=null, thunderCd=18+Math.random()*24;
+function getRainNoise(){ if(rainNoiseBuf||!actx) return rainNoiseBuf; var a=actx, n=Math.floor(a.sampleRate*3.4); rainNoiseBuf=a.createBuffer(1,n,a.sampleRate);
+  var d=rainNoiseBuf.getChannelData(0), last=0;
+  for(var i=0;i<n;i++){ var w=Math.random()*2-1; last=(last+0.025*w)/1.025; d[i]=(w*0.65+last*2.4)*0.5; }   // fuller brown-ish noise, long loop
+  return rainNoiseBuf; }
+function startRainSound(){ var a=ac(); if(!a||rainSrc) return; rainSrc=a.createBufferSource(); rainSrc.buffer=getRainNoise()||getNoise(); rainSrc.loop=true;
+  rainFilter=a.createBiquadFilter(); rainFilter.type='lowpass'; rainFilter.frequency.value=2300;
+  rainGainNode=a.createGain(); rainGainNode.gain.value=0; rainSrc.connect(rainFilter); rainFilter.connect(rainGainNode); rainGainNode.connect(masterGain);
   try{ rainSrc.start(); }catch(e){} }
-function stopRainSound(){ if(rainSrc){ try{ rainSrc.stop(); }catch(e){} rainSrc=null; rainGainNode=null; } }
+function stopRainSound(){ if(rainSrc){ try{ rainSrc.stop(); }catch(e){} rainSrc=null; rainGainNode=null; rainFilter=null; } }
+function thunder(){ var a=ac(); if(!a||!sfxOn) return;
+  var s=a.createBufferSource(); s.buffer=getRainNoise()||getNoise(); s.loop=true;
+  var f=a.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(320,a.currentTime); f.frequency.exponentialRampToValueAtTime(60,a.currentTime+2.3);
+  var g=a.createGain(); g.gain.setValueAtTime(0.0001,a.currentTime); g.gain.exponentialRampToValueAtTime(0.55,a.currentTime+0.07);
+  g.gain.exponentialRampToValueAtTime(0.18,a.currentTime+0.7); g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+2.5);
+  s.connect(f); f.connect(g); g.connect(masterGain); try{ s.start(); s.stop(a.currentTime+2.6); }catch(e){}
+  tone(110,0.35,'sawtooth',0.26,38); }
+function lightningFlash(){ var el=document.getElementById('lflash');
+  if(!el){ el=document.createElement('div'); el.id='lflash'; el.style.cssText='position:fixed;inset:0;background:#e6ecff;opacity:0;pointer-events:none;z-index:55;transition:opacity 0.12s;'; document.body.appendChild(el); }
+  el.style.opacity='0.6'; setTimeout(function(){ el.style.opacity='0'; },80);
+  setTimeout(function(){ el.style.opacity='0.35'; setTimeout(function(){ el.style.opacity='0'; },60); },190); }
 function tickRain(dt){
   rainMat.opacity = 0.5*rainAmt; rainMesh.visible = rainAmt>0.02;
-  if(rainGainNode) rainGainNode.gain.value = sfxOn? rainAmt*0.09 : 0;
+  if(rainGainNode) rainGainNode.gain.value = sfxOn? rainAmt*0.09*(1+0.28*Math.sin(now*0.0017)) : 0;   // gentle variation
+  if(rainFilter) rainFilter.frequency.value = 1850 + 750*Math.sin(now*0.0009);
   if(!rainMesh.visible) return;
   if(actx && !rainSrc) startRainSound();
   var cx=camera.position.x, cy=camera.position.y, cz=camera.position.z, fall=24*dt, p=rainPos;
@@ -1309,12 +1422,13 @@ function tickRain(dt){
 function tickWeather(dt){
   weatherTimer-=dt;
   if(weatherTimer<=0){
-    if(weather==='clear'){ weather='rain'; weatherTimer=30+Math.random()*55; if(actx) startRainSound(); }
+    if(weather==='clear'){ weather='rain'; weatherTimer=30+Math.random()*55; thunderCd=8+Math.random()*16; if(actx) startRainSound(); }
     else { weather='clear'; weatherTimer=120+Math.random()*180; }
   }
   var target = (weather==='rain')?1:0;
   rainAmt += (target-rainAmt)*Math.min(1,dt*0.5);
   if(rainAmt<0.01 && weather==='clear') stopRainSound();
+  if(weather==='rain' && rainAmt>0.45){ thunderCd-=dt; if(thunderCd<=0){ thunderCd=14+Math.random()*30; thunder(); lightningFlash(); } }
   tickRain(dt);
 }
 function tickSky(){
@@ -1402,6 +1516,13 @@ function chunkFrag(alpha, grain){
     '       dc *= 1.0 - 0.3*lineAt(uv.y,0.5,0.035);',
     '       dc *= 1.0 - 0.22*lineAt(uv.x,0.5,0.028);',
     '     }',
+    '   } else if(base>=4.0){',            // ORES: stone base with colored mineral speckles
+    '     vec3 ore = base==4.0?vec3(0.09,0.09,0.10):base==5.0?vec3(0.82,0.68,0.56):base==6.0?vec3(0.93,0.80,0.34):base==7.0?vec3(0.50,0.90,0.90):base==8.0?vec3(0.88,0.17,0.17):base==9.0?vec3(0.82,0.48,0.28):vec3(0.82,0.86,0.90);',
+    '     vec2 cl=floor(uv*4.0); vec2 fr=fract(uv*4.0)-0.5;',
+    '     float rnd=fract(sin(dot(cl+floor(vWorld.xz), vec2(12.9898,78.233))+floor(vWorld.y)*7.31)*43758.5453);',
+    '     float blob=1.0-smoothstep(0.15,0.34,length(fr));',
+    '     dc=mix(dc, ore, blob*step(0.5,rnd)*0.88);',
+    '     dc*=1.0-0.26*(blob*step(0.8,fract(rnd*7.0)));',
     '   }',
     ' }',
     ' vec3 c = mix(uFogColor, dc, vFog);'
@@ -1856,6 +1977,16 @@ function tryHarvest(){
 }
 function breakBlock(hit){
   var id=hit.id; var b=blk(id);
+  // TreeCapitator: chopping a log with an axe fells the whole connected tree
+  if(gameMode!=='creative' && isLogId(id)){
+    var heldAxe=inv.hotbar[hotbarSel];
+    if(heldAxe && ITEMS[heldAxe.key] && ITEMS[heldAxe.key].tool==='axe'){
+      var felled=treeCapitate(hit.x,hit.y,hit.z);
+      for(var di=0; di<Math.min(felled,6); di++) damageTool();
+      if(id===B.LOG) unlock('getting_wood');
+      sfxBreak(); return;
+    }
+  }
   // drop
   if(canHarvest(id) && gameMode!=='creative'){
     var dropKey = b.drop ? b.drop : (BLOCKS[id].key);
@@ -1881,6 +2012,56 @@ function breakBlock(hit){
   damageTool();
   sfxBreak();
 }
+function isLogId(id){ return id===B.LOG||id===B.SPRUCE_LOG||id===B.BIRCH_LOG||id===B.CHERRY_LOG; }
+function isLeafId(id){ return id===B.LEAVES||id===B.SPRUCE_LEAVES||id===B.BIRCH_LEAVES||id===B.CHERRY_LEAVES||id===B.JUNGLE_LEAVES; }
+function treeCapitate(bx,by,bz){
+  var logs=[], seen={}, stack=[[bx,by,bz]], cap=170;
+  while(stack.length && logs.length<cap){
+    var p=stack.pop(), k=p[0]+','+p[1]+','+p[2]; if(seen[k]) continue; seen[k]=1;
+    var id=World.getBlock(p[0],p[1],p[2]); if(!isLogId(id)) continue;
+    logs.push([p[0],p[1],p[2],id]);
+    for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++)for(var dz=-1;dz<=1;dz++) if(dx||dy||dz) stack.push([p[0]+dx,p[1]+dy,p[2]+dz]);
+  }
+  for(var i=0;i<logs.length;i++){ var L=logs[i]; World.setBlock(L[0],L[1],L[2],B.AIR,true);
+    if(gameMode!=='creative') spawnDrop(L[0]+0.5,L[1]+0.5,L[2]+0.5, BLOCKS[L[3]].key, 1); }
+  scheduleLeafDecay(logs);
+  return logs.length;
+}
+function scheduleLeafDecay(logs){
+  if(!logs.length) return; if(!World.leafQ) World.leafQ=[];
+  var seen={}, q=[], cap=500;
+  // seed with leaves adjacent to any removed log
+  for(var i=0;i<logs.length;i++){ var L=logs[i];
+    for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++)for(var dz=-1;dz<=1;dz++){
+      var sx=L[0]+dx, sy=L[1]+dy, sz=L[2]+dz, sk=sx+','+sy+','+sz;
+      if(seen[sk]) continue;
+      if(isLeafId(World.getBlock(sx,sy,sz))){ seen[sk]=1; q.push([sx,sy,sz]); }
+    } }
+  // flood through the connected canopy so nothing is left floating
+  var qi=0;
+  while(qi<q.length && q.length<cap){ var p=q[qi++];
+    World.leafQ.push({x:p[0],y:p[1],z:p[2],t:0.35+Math.random()*2.4});
+    for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++)for(var dz=-1;dz<=1;dz++){
+      var x=p[0]+dx, y=p[1]+dy, z=p[2]+dz, k=x+','+y+','+z;
+      if(seen[k]) continue;
+      if(isLeafId(World.getBlock(x,y,z))){ seen[k]=1; q.push([x,y,z]); }
+    } }
+}
+function tickLeaves(dt){
+  if(!World.leafQ || !World.leafQ.length) return;
+  var budget=IS_MOBILE?6:12, n=0;
+  for(var i=World.leafQ.length-1; i>=0; i--){ var e=World.leafQ[i]; e.t-=dt;
+    if(e.t>0) continue; if(n>=budget) continue; n++;
+    World.leafQ.splice(i,1);
+    var id=World.getBlock(e.x,e.y,e.z); if(!isLeafId(id)) continue;
+    var near=false;
+    for(var dy=-1;dy<=1&&!near;dy++)for(var dx=-2;dx<=2&&!near;dx++)for(var dz=-2;dz<=2&&!near;dz++){ if(isLogId(World.getBlock(e.x+dx,e.y+dy,e.z+dz))) near=true; }
+    if(near) continue;
+    World.setBlock(e.x,e.y,e.z,B.AIR,true);
+    if(Math.random()<0.05) spawnDrop(e.x+0.5,e.y+0.5,e.z+0.5,'APPLE',1);
+    if(Math.random()<0.08) spawnDrop(e.x+0.5,e.y+0.5,e.z+0.5,'SAPLING',1);
+  }
+}
 function damageTool(){
   var s=inv.hotbar[hotbarSel];
   if(s && ITEMS[s.key] && ITEMS[s.key].tool){
@@ -1892,6 +2073,11 @@ function damageTool(){
 function doPlace(){
   if(uiOpen) return;
   triggerHandSwing();
+  // mount a tamed horse (takes priority; aiming at a mob has no block hit)
+  if(!Player.riding){
+    var rideT=mobInFront(3.6);
+    if(rideT && rideT.kind==='horse' && rideT.tamed){ Player.riding=rideT; rideT.ridden=true; sfxClick(); toast('Riding \u2014 tap SNEAK to dismount'); return; }
+  }
   var hit=raycast(); if(!hit) return;
   var slot=inv.hotbar[hotbarSel];
   // interact with tile blocks first (right-click open)
@@ -1899,6 +2085,22 @@ function doPlace(){
   if(hit.id===B.FURNACE){ openFurnace(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.MACERATOR){ openMacerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.CHEST){ openChest(World.ck(hit.x,hit.y,hit.z)); return; }
+  // buckets: place / scoop water sources
+  if(slot && slot.key==='WATER_BUCKET'){
+    var wbx=hit.x+hit.nx, wby=hit.y+hit.ny, wbz=hit.z+hit.nz;
+    if(wby>=0 && wby<WORLD_H && World.getBlock(wbx,wby,wbz)===B.AIR){
+      World.setBlock(wbx,wby,wbz,B.WATER,true); World.wsrc[World.ck(wbx,wby,wbz)]=1; World.schedWaterAround(wbx,wby,wbz);
+      if(gameMode!=='creative') slot.key='BUCKET';
+      renderHotbar(); sfxSplash?sfxSplash():sfxPlace(); }
+    return;
+  }
+  if(slot && slot.key==='BUCKET'){
+    if(hit.id===B.WATER && World.isWaterSource(hit.x,hit.y,hit.z)){
+      delete World.wsrc[World.ck(hit.x,hit.y,hit.z)]; World.setBlock(hit.x,hit.y,hit.z,B.AIR,true); World.schedWaterAround(hit.x,hit.y,hit.z);
+      if(gameMode!=='creative'){ if(slot.qty>1){ slot.qty--; giveItem('WATER_BUCKET',1); } else { slot.key='WATER_BUCKET'; } }
+      renderHotbar(); sfxSplash?sfxSplash():sfxPlace(); }
+    return;
+  }
   // feed seeds to animals (breeding) — only when aiming at an animal
   if(slot && slot.key==='SEEDS'){
     var tgt=mobInFront(3.2);
@@ -2038,6 +2240,7 @@ shaped([['PLANKS','PLANKS'],['PLANKS','PLANKS']], 'CRAFTING', 1);
 shaped([['COBBLE','COBBLE','COBBLE'],['COBBLE',null,'COBBLE'],['COBBLE','COBBLE','COBBLE']], 'FURNACE', 1);
 shaped([['COBBLE','COBBLE','COBBLE'],['COBBLE','IRON_INGOT','COBBLE'],['COBBLE','COBBLE','COBBLE']], 'MACERATOR', 1);
 shaped([['IRON_INGOT','IRON_INGOT','IRON_INGOT'],['IRON_INGOT','STICK','IRON_INGOT'],[null,'STICK',null]], 'IRON_BATTLEAXE', 1);
+shaped([['IRON_INGOT',null,'IRON_INGOT'],[null,'IRON_INGOT',null]], 'BUCKET', 1);
 shaped([['STEEL_INGOT','STEEL_INGOT','STEEL_INGOT'],['STEEL_INGOT','STICK','STEEL_INGOT'],[null,'STICK',null]], 'STEEL_BATTLEAXE', 1);
 shaped([['DIAMOND','DIAMOND','DIAMOND'],['DIAMOND','STICK','DIAMOND'],[null,'STICK',null]], 'DIAMOND_BATTLEAXE', 1);
 shaped([['PLANKS','PLANKS','PLANKS'],['PLANKS',null,'PLANKS'],['PLANKS','PLANKS','PLANKS']], 'CHEST', 1);
@@ -2279,6 +2482,18 @@ function spacer(h){ var d=document.createElement('div'); d.style.height=h+'px'; 
 
 function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
 var palNameEl=null, invNameEl=null;
+function makeAvatarPreview(){
+  var box=document.createElement('div'); box.style.cssText='width:80px;height:178px;background:linear-gradient(#10202e,#0a0e16);border:2px solid #0007;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;';
+  var fig=document.createElement('div'); fig.style.cssText='position:relative;width:50px;height:140px;';
+  function aCol(slot, base){ if(slot && ITEMS[slot.key]){ var n=slot.key; if(n.indexOf('DIAMOND')>=0) return '#5fe9e0'; if(n.indexOf('IRON')>=0) return '#d2d2d2'; if(n.indexOf('GOLD')>=0) return '#e9d24a'; if(n.indexOf('LEATHER')>=0) return '#9a6a3a'; } return base; }
+  function pc(w,hh,t,l,c){ var d=document.createElement('div'); d.style.cssText='position:absolute;width:'+w+'px;height:'+hh+'px;top:'+t+'px;left:'+l+'px;background:'+c+';border-radius:2px;'; fig.appendChild(d); }
+  pc(24,22,2,13, aCol(inv.armor[0],'#d6a47c'));                                   // head / helmet
+  pc(32,38,26,9, aCol(inv.armor[1],'#3a7d8c'));                                   // chest
+  pc(8,34,28,1,'#d6a47c'); pc(8,34,28,41,'#d6a47c');                              // arms
+  pc(13,34,66,10, aCol(inv.armor[2],'#37506e')); pc(13,34,66,27, aCol(inv.armor[2],'#37506e')); // legs
+  pc(13,14,100,10, aCol(inv.armor[3],'#444a52')); pc(13,14,100,27, aCol(inv.armor[3],'#444a52')); // boots
+  box.appendChild(fig); return box;
+}
 function makePaletteSlot(key){
   var d=document.createElement('div'); d.className='gslot'; d.innerHTML=slotHTML({key:key,qty:1});
   var it=ITEMS[key]; if(it) d.title=it.name||key;
@@ -2309,19 +2524,40 @@ function openInventory(keep){
     p.appendChild(search); p.appendChild(palNameEl); p.appendChild(grid); p.appendChild(spacer(10));
     renderPalette('');
   } else {
-    p.appendChild(label('Crafting (2×2)'));
-    renderCrafting(p,2);
-    p.appendChild(spacer(8));
-    p.appendChild(label('Armor'));
-    var ag=gridContainer(4);
+    var L=document.createElement('div'); L.className='invlayout';
+    L.style.cssText='display:flex; gap:18px; align-items:flex-start; justify-content:center; flex-wrap:wrap;';
+    // LEFT: armor column + character preview, then crafting
+    var col1=document.createElement('div'); col1.style.cssText='display:flex; flex-direction:column; gap:6px;';
+    var arow=document.createElement('div'); arow.style.cssText='display:flex; gap:10px; align-items:flex-start;';
+    var acol=document.createElement('div'); acol.appendChild(label('Armor'));
+    var ag=gridContainer(1);
     for(var ai=0;ai<4;ai++){ (function(ai){ ag.appendChild(makeGridSlot(inv.armor,ai,function(idx,btn){ clickArmorSlot(idx); })); })(ai); }
-    p.appendChild(ag);
-    p.appendChild(spacer(10));
-    invNameEl=document.createElement('div'); invNameEl.style.cssText='min-height:16px;font-size:12px;color:#cfe;opacity:0.85;padding:4px 2px;'; invNameEl.textContent='Tap an item to see its name';
-    p.appendChild(invNameEl);
+    acol.appendChild(ag); arow.appendChild(acol);
+    arow.appendChild(makeAvatarPreview());
+    col1.appendChild(arow);
+    var cw=document.createElement('div'); cw.appendChild(label('Crafting')); renderCrafting(cw,2); col1.appendChild(cw);
+    // RIGHT: inventory grid + hotbar
+    var col2=document.createElement('div'); col2.style.cssText='display:flex; flex-direction:column; gap:6px;';
+    col2.appendChild(label('Inventory'));
+    var mg=gridContainer(9);
+    for(var i=0;i<27;i++){ (function(i){ mg.appendChild(makeGridSlot(inv.main,i,function(idx,btn){ clickSlot(inv.main,idx,btn); })); })(i); }
+    col2.appendChild(mg);
+    col2.appendChild(label('Hotbar'));
+    var hg=gridContainer(9);
+    for(var j=0;j<9;j++){ (function(j){ hg.appendChild(makeGridSlot(inv.hotbar,j,function(idx,btn){ clickSlot(inv.hotbar,idx,btn); })); })(j); }
+    col2.appendChild(hg);
+    invNameEl=document.createElement('div'); invNameEl.style.cssText='min-height:15px;font-size:12px;color:#cfe;opacity:0.85;'; invNameEl.textContent='Tap an item to see its name';
+    col2.appendChild(invNameEl);
+    L.appendChild(col1); L.appendChild(col2);
+    p.appendChild(L);
   }
-  renderInvAndHotbar(p);
-  p.appendChild(closeBtn(2));
+  if(gameMode==='creative'){ renderInvAndHotbar(p); p.appendChild(recipeBookBtn()); p.appendChild(closeBtn(2)); }
+  else {
+    var btnRow=document.createElement('div'); btnRow.style.cssText='display:flex; gap:8px; margin-top:6px;';
+    var rb=recipeBookBtn(); rb.style.marginTop='0'; rb.style.width='auto'; rb.style.flex='1';
+    var cb=closeBtn(2); cb.style.flex='1';
+    btnRow.appendChild(rb); btnRow.appendChild(cb); p.appendChild(btnRow);
+  }
   screenEl.appendChild(p);
   bindScreenBg();
 }
@@ -2332,9 +2568,53 @@ function openCrafting(keep, fromRerender){
   renderCrafting(p,3);
   p.appendChild(spacer(10));
   renderInvAndHotbar(p);
+  p.appendChild(recipeBookBtn());
   p.appendChild(closeBtn(3));
   screenEl.appendChild(p);
   bindScreenBg();
+}
+function recipeBookBtn(){ var b=document.createElement('button'); b.className='mbtn'; b.style.cssText='margin-top:6px;width:100%;'; b.textContent='\uD83D\uDCD6 Recipe Book'; b.onclick=function(){ if(typeof clearCraftToInv==='function') clearCraftToInv(9); openRecipeBook(); }; return b; }
+function miniIcon(key, qty){ if(!key||!ITEMS[key]) return ''; var h='<img class="ic" src="'+iconFor(key)+'">'; if(qty>1) h+='<span class="qty">'+qty+'</span>'; return h; }
+function recipeRow(r){
+  var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:8px;background:#0006;border:2px solid #0007;border-radius:6px;padding:6px;';
+  var ing=document.createElement('div');
+  if(r.type==='shaped'){
+    ing.style.cssText='display:grid;grid-template-columns:repeat('+r.rows[0].length+',24px);gap:2px;flex:none;';
+    for(var y=0;y<r.rows.length;y++) for(var x=0;x<r.rows[y].length;x++){ var key=r.rows[y][x];
+      var c=document.createElement('div'); c.className='gslot'; c.style.cssText='width:24px;height:24px;min-width:24px;'; if(key) c.innerHTML=miniIcon(key); ing.appendChild(c); }
+  } else {
+    ing.style.cssText='display:flex;gap:2px;flex-wrap:wrap;max-width:110px;flex:none;';
+    for(var i=0;i<r.ing.length;i++){ var c2=document.createElement('div'); c2.className='gslot'; c2.style.cssText='width:24px;height:24px;min-width:24px;'; c2.innerHTML=miniIcon(r.ing[i]); ing.appendChild(c2); }
+  }
+  row.appendChild(ing);
+  var arr=document.createElement('div'); arr.textContent='\u279C'; arr.style.cssText='opacity:0.85;flex:none;'; row.appendChild(arr);
+  var out=document.createElement('div'); out.className='gslot'; out.style.cssText='width:30px;height:30px;min-width:30px;flex:none;'; out.innerHTML=miniIcon(r.out,r.qty); row.appendChild(out);
+  var nm=document.createElement('div'); nm.style.cssText='font-size:12px;line-height:1.2;'; nm.textContent=(ITEMS[r.out]?ITEMS[r.out].name:r.out)+(r.qty>1?(' \u00D7'+r.qty):''); row.appendChild(nm);
+  return row;
+}
+function smeltRow(fromKey,toKey){
+  var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:8px;background:#0006;border:2px solid #0007;border-radius:6px;padding:6px;';
+  var a=document.createElement('div'); a.className='gslot'; a.style.cssText='width:30px;height:30px;min-width:30px;flex:none;'; a.innerHTML=miniIcon(fromKey); row.appendChild(a);
+  var arr=document.createElement('div'); arr.textContent='\uD83D\uDD25\u279C'; arr.style.cssText='opacity:0.85;flex:none;'; row.appendChild(arr);
+  var b=document.createElement('div'); b.className='gslot'; b.style.cssText='width:30px;height:30px;min-width:30px;flex:none;'; b.innerHTML=miniIcon(toKey); row.appendChild(b);
+  var nm=document.createElement('div'); nm.style.cssText='font-size:12px;'; nm.textContent=(ITEMS[toKey]?ITEMS[toKey].name:toKey); row.appendChild(nm);
+  return row;
+}
+function openRecipeBook(){
+  openScreen(); currentScreen='recipes';
+  screenEl.innerHTML=''; var p=document.createElement('div'); p.className='panel';
+  var h=document.createElement('h2'); h.textContent='Recipe Book'; p.appendChild(h);
+  var sub=document.createElement('div'); sub.style.cssText='font-size:12px;opacity:0.8;margin-bottom:8px;'; sub.textContent='How to craft & smelt everything'; p.appendChild(sub);
+  var list=document.createElement('div'); list.style.cssText='max-height:58vh;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:7px;padding-right:4px;'; list.style.touchAction='pan-y';
+  var ch=document.createElement('div'); ch.textContent='Crafting'; ch.style.cssText='font-weight:bold;opacity:0.9;margin:2px 0;'; list.appendChild(ch);
+  for(var ri=0; ri<RECIPES.length; ri++){ list.appendChild(recipeRow(RECIPES[ri])); }
+  var sh=document.createElement('div'); sh.textContent='Smelting'; sh.style.cssText='font-weight:bold;opacity:0.9;margin:8px 0 2px;'; list.appendChild(sh);
+  for(var key in ITEMS){ if(ITEMS[key].smeltTo) list.appendChild(smeltRow(key, ITEMS[key].smeltTo)); }
+  for(var bi=0; bi<BLOCKS.length; bi++){ var bd=BLOCKS[bi]; if(bd && bd.smeltTo && bd.key) list.appendChild(smeltRow(bd.key, bd.smeltTo)); }
+  p.appendChild(list); p.appendChild(spacer(8));
+  var back=document.createElement('button'); back.className='mbtn'; back.style.cssText='width:100%;'; back.textContent='Close'; back.onclick=function(){ closeScreen(); };
+  p.appendChild(back);
+  screenEl.appendChild(p); bindScreenBg();
 }
 function closeBtn(craftSize){
   var b=document.createElement('button'); b.className='mbtn'; b.textContent='Close'; b.style.marginTop='12px'; b.style.minWidth='120px'; b.style.padding='8px 16px';
@@ -2538,20 +2818,27 @@ function makeSkeleton(){
   var g=new THREE.Group(); g.__mats=[];
   function part(w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex, side:THREE.DoubleSide}); var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
     mesh.position.set(x,y,z); m.__base=hex; g.__mats.push(m); g.add(mesh); return mesh; }
-  var BONE=0xd9d6c8, BONE2=0xbfbcae;
-  part(0.34,0.7,0.2, BONE2, 0,0.95,0);
-  part(0.42,0.42,0.42, BONE, 0,1.58,0);
-  var eyeM=new THREE.MeshBasicMaterial({color:0x101014});
-  var e1=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.02),eyeM); e1.position.set(-0.1,1.6,0.23); g.add(e1);
-  var e2=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.02),eyeM); e2.position.set(0.1,1.6,0.23); g.add(e2);
-  var armL=part(0.12,0.6,0.12, BONE, -0.3,1.16,0.16); var armR=part(0.12,0.6,0.12, BONE, 0.3,1.16,0.16);
+  var BONE=0xd9d6c8, BONE2=0xbfbcae, DK=0x8a8780;
+  part(0.1,0.74,0.1, BONE2, 0,0.95,0);                  // spine
+  part(0.28,0.1,0.16, BONE2, 0,0.6,0);                  // pelvis
+  for(var ri=0; ri<4; ri++){ var rw=0.34-ri*0.03; part(rw,0.05,0.18, BONE, 0,1.0+ri*0.12,0.02); } // rib slats
+  part(0.05,0.5,0.06, BONE, -0.15,1.18,0.04); part(0.05,0.5,0.06, BONE, 0.15,1.18,0.04);          // side ribs
+  part(0.42,0.07,0.12, BONE, 0,1.44,0);                 // collarbone
+  part(0.36,0.3,0.34, BONE, 0,1.62,0);                  // cranium
+  part(0.3,0.12,0.3, BONE2, 0,1.43,0.02);               // jaw
+  var eyeM=new THREE.MeshBasicMaterial({color:0x0a0a0e});
+  var e1=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.11,0.05),eyeM); e1.position.set(-0.09,1.64,0.17); g.add(e1);
+  var e2=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.11,0.05),eyeM); e2.position.set(0.09,1.64,0.17); g.add(e2);
+  part(0.05,0.08,0.05, DK, 0,1.54,0.2);                 // nasal gap
+  var teethM=new THREE.MeshBasicMaterial({color:DK}); var teeth=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.03,0.02),teethM); teeth.position.set(0,1.46,0.18); g.add(teeth);
+  var armL=part(0.1,0.56,0.1, BONE, -0.28,1.16,0.14); var armR=part(0.1,0.56,0.1, BONE, 0.28,1.16,0.14);
   armL.rotation.x=-1.2; armR.rotation.x=-1.2;
-  var legL=part(0.13,0.7,0.13, BONE2, -0.1,0.35,0); var legR=part(0.13,0.7,0.13, BONE2, 0.1,0.35,0);
+  var legL=part(0.11,0.7,0.11, BONE2, -0.09,0.34,0); var legR=part(0.11,0.7,0.11, BONE2, 0.09,0.34,0);
   g.userData.legs=[legL,legR]; g.userData.arms=[armL,armR];
   var bowM=new THREE.MeshBasicMaterial({color:0x6b4a26, side:THREE.DoubleSide});
-  var bowTop=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.34,0.06),bowM); bowTop.position.set(0.34,1.28,0.46); bowTop.rotation.x=0.4; g.add(bowTop);
-  var bowBot=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.34,0.06),bowM); bowBot.position.set(0.34,1.02,0.46); bowBot.rotation.x=-0.4; g.add(bowBot);
-  var strM=new THREE.MeshBasicMaterial({color:0xeeeeee}); var str=new THREE.Mesh(new THREE.BoxGeometry(0.015,0.62,0.015),strM); str.position.set(0.31,1.15,0.5); g.add(str);
+  var bowTop=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.34,0.06),bowM); bowTop.position.set(0.32,1.28,0.42); bowTop.rotation.x=0.4; g.add(bowTop);
+  var bowBot=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.34,0.06),bowM); bowBot.position.set(0.32,1.02,0.42); bowBot.rotation.x=-0.4; g.add(bowBot);
+  var strM=new THREE.MeshBasicMaterial({color:0xeeeeee}); var str=new THREE.Mesh(new THREE.BoxGeometry(0.015,0.62,0.015),strM); str.position.set(0.29,1.15,0.46); g.add(str);
   return g;
 }
 function makeCreeper(){
@@ -2625,6 +2912,10 @@ function makeDog(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y
   var l3=p(0.1,0.4,0.1,F,-0.1,0.2,-0.18), l4=p(0.1,0.4,0.1,F,0.1,0.2,-0.18);
   p(0.08,0.08,0.26,F,0,0.62,-0.4);             // tail
   g.userData.legs=[l1,l2,l3,l4]; return g; }
+function makeFire(){ var g=new THREE.Group();
+  function fb(c,s,y){ var m=new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:0.82,depthWrite:false,side:THREE.DoubleSide}); var me=new THREE.Mesh(new THREE.BoxGeometry(s,s*1.7,s),m); me.position.y=y; g.add(me); return me; }
+  fb(0xff7a1a,0.42,0.55); fb(0xffd23a,0.26,0.85); fb(0xff3a12,0.32,1.15);
+  return g; }
 function makeFish(){
   var g=new THREE.Group(); g.__mats=[];
   function part(w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex, side:THREE.DoubleSide}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
@@ -2676,6 +2967,9 @@ function makeVillager(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,
   p(0.16,0.6,0.22,SHIRT,-0.33,1.14,0); p(0.16,0.6,0.22,SHIRT,0.33,1.14,0); // upper sleeves
   p(0.15,0.26,0.21,SKIN,-0.33,0.78,0); p(0.15,0.26,0.21,SKIN,0.33,0.78,0); // forearms (skin)
   var l1=p(0.21,0.66,0.24,PANTS,-0.12,0.33,0), l2=p(0.21,0.66,0.24,PANTS,0.12,0.33,0); // legs
+  var rh=Math.random();
+  if(rh<0.3){ p(0.56,0.1,0.56,[0x6a4a2a,0x3a2a1a,0x222428][Math.random()*3|0],0,1.92,0); p(0.36,0.16,0.36,0x4a3320,0,2.0,0); } // brimmed hat
+  else if(rh<0.5){ p(0.54,0.2,0.54,[0x8a3a3a,0x3a5a8a,0x4a6a3a][Math.random()*3|0],0,1.96,0); }                              // cap/beanie
   g.userData.legs=[l1,l2]; return g; }
 function makeCow(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   p(0.8,0.62,1.15,0x4a3424,0,0.78,0); p(0.78,0.28,0.7,0xe8e2d0,0,0.62,0.18);
@@ -2914,6 +3208,13 @@ function tickProjectiles(dt){
 function tickEntities(dt){
   var pp=Player.pos;
   for(var i=entities.length-1;i>=0;i--){ var e=entities[i];
+    if(e===Player.riding){
+      e.pos.x=pp.x; e.pos.z=pp.z; e.pos.y=pp.y;
+      e.mesh.position.set(e.pos.x,e.pos.y,e.pos.z); e.mesh.rotation.y=-Player.yaw;
+      var rsp=Math.hypot(Player.vel.x,Player.vel.z), lg=e.mesh.userData.legs;
+      if(lg){ var sw=Math.sin(now*0.014)*Math.min(0.7, rsp*0.12); lg[0].rotation.x=sw; lg[1].rotation.x=-sw; if(lg[2]){ lg[2].rotation.x=-sw; lg[3].rotation.x=sw; } }
+      continue;
+    }
     tintMob(e);
     var dx=pp.x-e.pos.x, dz=pp.z-e.pos.z; var dist=Math.hypot(dx,dz);
     if(e.kind==='fish'){ fishTick(e,dt);
@@ -2942,8 +3243,16 @@ function tickEntities(dt){
       continue;
     }
     // burn in daylight (zombies & skeletons) — exposed to sky in daytime
-    if((e.kind==='zombie'||e.kind==='skeleton') && sunU.value>0.55 && World.skyLightAt(Math.floor(e.pos.x),Math.floor(e.pos.y+1),Math.floor(e.pos.z))>11){
-      e.hp-=dt*6; e.hurt=Math.max(e.hurt||0, 0.18);   // hurt flicker reads as burning
+    var burning=(e.kind==='zombie'||e.kind==='skeleton') && sunU.value>0.55 && World.skyLightAt(Math.floor(e.pos.x),Math.floor(e.pos.y+1),Math.floor(e.pos.z))>11;
+    if(burning){
+      e.hp-=dt*6; e.hurt=Math.max(e.hurt||0, 0.18);
+      if(!e.fireMesh){ e.fireMesh=makeFire(); e.mesh.add(e.fireMesh); }
+      e.fireMesh.visible=true; var fl=0.7+Math.random()*0.5; e.fireMesh.scale.set(fl,0.8+Math.random()*0.6,fl); e.fireMesh.rotation.y=Math.random()*6.28;
+    } else if(e.fireMesh){ e.fireMesh.visible=false; }
+    // idle/aggro vocalizations for hostiles (so zombies etc. are audible)
+    if(!e.passive && e.kind!=='emberwisp' && dist<24){
+      e.sndCd=(e.sndCd==null?1+Math.random()*5:e.sndCd-dt);
+      if(e.sndCd<=0){ e.sndCd=4+Math.random()*6; mobSound(e.kind,false); }
     }
     if(gameMode==='creative'){
       // creative: hostiles wander, don't hunt the player
@@ -3050,6 +3359,7 @@ function creeperExplode(e){
 }
 function maybeSpawnEnemies(){
   if(difficulty==='peaceful') return; // peaceful: no hostiles
+  if(spawnGrace>0) return;            // brief grace after respawn
   if(sunU.value>0.5) return; // only at night
   var hostiles=0; for(var hi=0;hi<entities.length;hi++){ var hk=entities[hi].kind; if(hk!=='fish'&&hk!=='emberwisp'&&!entities[hi].passive) hostiles++; }
   if(hostiles >= (IS_MOBILE?6:10)) return;
@@ -3176,14 +3486,24 @@ function die(){
   uiOpen=true;
 }
 function respawn(){
-  Player.hp=Player.maxHp; Player.hunger=Player.maxHunger; Player.sat=5; Player.invul=2;
+  Player.hp=Player.maxHp; Player.hunger=Player.maxHunger; Player.sat=5; Player.invul=3; Player.riding=null;
   Player.pos.copy(Player.spawn); Player.vel.set(0,0,0);
+  // clear hostiles near the spawn so you don't get jumped, and pause spawning briefly
+  for(var i=entities.length-1;i>=0;i--){ var e=entities[i];
+    if(!e.passive && e.kind!=='fish' && e.kind!=='bird'){
+      var dx=e.pos.x-Player.spawn.x, dz=e.pos.z-Player.spawn.z;
+      if(dx*dx+dz*dz < 40*40){ scene.remove(e.mesh); entities.splice(i,1); }
+    }
+  }
+  spawnGrace=28;
   document.getElementById('death').classList.add('hidden'); uiOpen=false;
   updateStats();
 }
+var spawnGrace=0;
 var survivalTimer=0;
 function tickSurvival(dt){
   Player.invul-=dt; if(Player.invul<0)Player.invul=0;
+  if(spawnGrace>0) spawnGrace-=dt;
   if(gameMode==='creative'){ if(Player.hp<Player.maxHp) Player.hp=Player.maxHp; Player.hunger=20; return; }
   survivalTimer+=dt;
   // hunger drain (peaceful never gets hungry, like Minecraft)
@@ -3605,6 +3925,7 @@ function startWorld(seed, save, mode){
   }
   // clear entities
   entities.forEach(function(e){ scene.remove(e.mesh); }); entities=[]; clearProjectiles(); clearDrops();
+  Player.riding=null;
   villageSites.length=0; villageSiteSet={};
   buildQueue=[];
   // remove old chunk meshes
@@ -3646,6 +3967,7 @@ function openPauseMenu(){
 }
 function closePause(){ document.getElementById('pause').classList.add('hidden'); uiOpen=false; }
 function exitToTitle(){ saveGame(true); closePause(); running=false;
+  stopRainSound(); weather='clear'; rainAmt=0; weatherTimer=80+Math.random()*120;
   if(musicTimer){ clearInterval(musicTimer); musicTimer=null; } playMenuTheme();
   document.getElementById('hud').classList.add('hidden'); document.getElementById('touch').classList.add('hidden');
   var bd=document.getElementById('btnDown'); if(bd) bd.classList.add('hidden');
@@ -3659,6 +3981,11 @@ function toast(msg){ var el=document.getElementById('toast'); el.textContent=msg
 
 /* ----------------------------- MAIN LOOP -------------------------------- */
 var running=false, now=0, last=0, frame=0, acc=0;
+function dismountHorse(){
+  if(!Player.riding) return; var h=Player.riding;
+  h.ridden=false; h.pos.x=Player.pos.x; h.pos.y=Player.pos.y; h.pos.z=Player.pos.z; h.vel.x=0; h.vel.z=0;
+  Player.riding=null; toast('Dismounted');
+}
 function physics(dt){
   // movement direction relative to yaw
   var f=input.fwd, s=input.strafe;
@@ -3678,7 +4005,10 @@ function physics(dt){
   Player.wasInWater = Player.inWater;
   Player.sneaking = !!input.crouch || (!IS_MOBILE && (keys['ControlLeft']||keys['KeyC']));
   Player.sprinting = (!!input.sprint || (!IS_MOBILE && (keys['ShiftLeft']||keys['ShiftRight']) && !Player.flying)) && f>0.2 && !Player.sneaking;
-  var speed = Player.inWater?3.2:(Player.sneaking?2.4:(Player.sprinting?6.8:4.6));
+  var riding = !!Player.riding && Player.riding.hp>0;
+  if(Player.riding && !riding) Player.riding=null;
+  if(riding && (input.crouch || (!IS_MOBILE && (keys['ControlLeft']||keys['KeyC'])))){ dismountHorse(); riding=false; }
+  var speed = riding?8.2:(Player.inWater?3.2:(Player.sneaking?2.4:(Player.sprinting?6.8:4.6)));
   Player.sneakGuard = Player.sneaking && grounded && !Player.flying;
   var accel = Player.onGround?40:8;
   Player.vel.x += (wishX*speed - Player.vel.x)*Math.min(1,accel*dt);
@@ -3692,7 +4022,7 @@ function physics(dt){
   else if(Player.inWater){ Player.vel.y += (-2 - Player.vel.y)*Math.min(1,6*dt); if((input.jump||keys['Space'])) Player.vel.y=3.0; }
   else { Player.vel.y -= 24*dt; if(Player.vel.y<-40)Player.vel.y=-40; }
   // jump
-  if(!Player.flying && (input.jump||keys['Space']) && Player.onGround && !Player.inWater){ Player.vel.y=8.2; Player.onGround=false; }
+  if(!Player.flying && (input.jump||keys['Space']) && Player.onGround && !Player.inWater){ Player.vel.y=riding?9.8:8.2; Player.onGround=false; }
   // auto-jump (Bedrock-style): hop up 1-block steps while walking into them
   if(autoJump && !Player.flying && Player.onGround && !Player.inWater){
     var hsp=Math.hypot(Player.vel.x,Player.vel.z);
@@ -3748,6 +4078,7 @@ function loop(t){
   tickMacerators(dt);
   tickPlants(dt);
   World.tickWater(dt);
+  tickLeaves(dt);
   // place camera
   if(viewMode!==0){
     var fwd=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
