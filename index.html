@@ -428,6 +428,7 @@ mat('COAL','Coal',[40,40,44],{fuel:80});
 mat('IRON_INGOT','Iron Ingot',[214,196,178]);
 mat('BUCKET','Bucket',[176,182,194],{stack:16});
 mat('WATER_BUCKET','Water Bucket',[64,118,200],{stack:1});
+mat('BOAT','Boat',[154,106,58],{stack:1});
 mat('GOLD_INGOT','Gold Ingot',[230,200,90]);
 mat('COPPER_INGOT','Copper Ingot',[200,120,70]);
 mat('TIN_INGOT','Tin Ingot',[206,214,224]);
@@ -1525,11 +1526,13 @@ function chunkFrag(alpha, grain){
     '     dc*=1.0-0.26*(blob*step(0.8,fract(rnd*7.0)));',
     '   }',
     ' }',
+    ' dc = torchLit(dc, vWorld);',
     ' vec3 c = mix(uFogColor, dc, vFog);'
   ] : [
     ' float isWater = step(vColor.r*1.8, vColor.b) * step(vColor.g*1.4, vColor.b);',  // water = strongly blue (glass/lava excluded)
     ' float w = sin(vWorld.x*1.7 + uTime*1.6) + sin(vWorld.z*2.1 + uTime*1.3) + sin((vWorld.x+vWorld.z)*1.1 - uTime*1.9);',
     ' vec3 wc = vColor * (1.0 + 0.07*w*isWater);',
+    ' wc = torchLit(wc, vWorld);',
     ' vec3 c = mix(uFogColor, wc, vFog);'
   ];
   var helpers = grain ? [
@@ -1538,18 +1541,22 @@ function chunkFrag(alpha, grain){
   ] : [];
   return ['precision highp float;',
     'varying vec3 vColor; varying float vFog; varying vec3 vWorld; varying vec2 vUV; varying float vDecor;',
-    'uniform vec3 uFogColor;'].concat(grain?[]:['uniform float uTime;']).concat(helpers).concat([
+    'uniform vec3 uFogColor; uniform vec4 uTorch[16]; uniform int uTorchN; uniform float uTorchFlk;'].concat(grain?[]:['uniform float uTime;']).concat([
+    'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.020,0.0,1.0); tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.6); return col*(1.0+vec3(0.95,0.58,0.26)*tl); }'
+    ]).concat(helpers).concat([
     'void main(){']).concat(body).concat([' gl_FragColor=vec4(c,'+alpha+');','}']).join('\n');
 }
+var torchUVals=[]; for(var _ti=0;_ti<16;_ti++) torchUVals.push(new THREE.Vector4(0,0,0,0));
+var torchU={value:torchUVals}, torchNU={value:0}, torchFlkU={value:1.0};
 var chunkMat=new THREE.ShaderMaterial({
-  uniforms:{ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar} },
+  uniforms:{ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTorch:torchU, uTorchN:torchNU, uTorchFlk:torchFlkU },
   vertexShader: chunkVert,
   fragmentShader: chunkFrag('1.0', true)
 });
 var chunkMatT=chunkMat.clone();
 chunkMatT.transparent=true; chunkMatT.depthWrite=false;
 chunkMatT.fragmentShader=chunkFrag('0.72', false);
-chunkMatT.uniforms={ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTime:{value:0} };
+chunkMatT.uniforms={ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTime:{value:0}, uTorch:torchU, uTorchN:torchNU, uTorchFlk:torchFlkU };
 chunkMatT.needsUpdate=true;
 function setRenderDist(n){ RENDER_DIST=n; var fn=(n-1)*CHUNK, ff=(n+0.4)*CHUNK;
   chunkMat.uniforms.uFogNear.value=fn; chunkMat.uniforms.uFogFar.value=ff;
@@ -1671,7 +1678,7 @@ function updateChunks(px,pz){
       if(c.pmesh){ scene.remove(c.pmesh); c.pmesh.geometry.dispose(); }
       if(c.smesh){ scene.remove(c.smesh); c.smesh.geometry.dispose(); }
       delete World.chunks[k];
-    }
+    } else if(c.pmesh){ var cd=Math.max(Math.abs(c.cx-pcx), Math.abs(c.cz-pcz)); c.pmesh.visible = cd <= Math.max(2, RENDER_DIST-2); }
   }
   // also rescan loaded chunks for dirty (e.g. from edits/light)
   for(var k2 in World.chunks){ var cc=World.chunks[k2]; if(cc.dirty && buildQueue.indexOf(cc)<0) buildQueue.push(cc); }
@@ -2076,6 +2083,10 @@ function doPlace(){
   // mount a tamed horse (takes priority; aiming at a mob has no block hit)
   if(!Player.riding){
     var rideT=mobInFront(3.6);
+    if(rideT && rideT.kind==='boat'){
+      if(Player.sneaking){ scene.remove(rideT.mesh); var ix=entities.indexOf(rideT); if(ix>=0) entities.splice(ix,1); giveItem('BOAT',1); sfxClick(); toast('Picked up boat'); return; }
+      Player.riding=rideT; rideT.ridden=true; sfxClick(); toast('Sailing \u2014 tap SNEAK to exit'); return;
+    }
     if(rideT && rideT.kind==='horse' && rideT.tamed){ Player.riding=rideT; rideT.ridden=true; sfxClick(); toast('Riding \u2014 tap SNEAK to dismount'); return; }
   }
   var hit=raycast(); if(!hit) return;
@@ -2092,6 +2103,14 @@ function doPlace(){
       World.setBlock(wbx,wby,wbz,B.WATER,true); World.wsrc[World.ck(wbx,wby,wbz)]=1; World.schedWaterAround(wbx,wby,wbz);
       if(gameMode!=='creative') slot.key='BUCKET';
       renderHotbar(); sfxSplash?sfxSplash():sfxPlace(); }
+    return;
+  }
+  if(slot && slot.key==='BOAT'){
+    var obx=hit.x+hit.nx, oby=hit.y+hit.ny, obz=hit.z+hit.nz;
+    if(oby>=0 && oby<WORLD_H && World.getBlock(obx,oby,obz)===B.AIR){
+      spawnEnemy('boat', obx+0.5, oby, obz+0.5);
+      if(gameMode!=='creative') consumeSlot(slot,1);
+      renderHotbar(); sfxPlace(); }
     return;
   }
   if(slot && slot.key==='BUCKET'){
@@ -2241,6 +2260,7 @@ shaped([['COBBLE','COBBLE','COBBLE'],['COBBLE',null,'COBBLE'],['COBBLE','COBBLE'
 shaped([['COBBLE','COBBLE','COBBLE'],['COBBLE','IRON_INGOT','COBBLE'],['COBBLE','COBBLE','COBBLE']], 'MACERATOR', 1);
 shaped([['IRON_INGOT','IRON_INGOT','IRON_INGOT'],['IRON_INGOT','STICK','IRON_INGOT'],[null,'STICK',null]], 'IRON_BATTLEAXE', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],[null,'IRON_INGOT',null]], 'BUCKET', 1);
+shaped([['PLANKS',null,'PLANKS'],['PLANKS','PLANKS','PLANKS']], 'BOAT', 1);
 shaped([['STEEL_INGOT','STEEL_INGOT','STEEL_INGOT'],['STEEL_INGOT','STICK','STEEL_INGOT'],[null,'STICK',null]], 'STEEL_BATTLEAXE', 1);
 shaped([['DIAMOND','DIAMOND','DIAMOND'],['DIAMOND','STICK','DIAMOND'],[null,'STICK',null]], 'DIAMOND_BATTLEAXE', 1);
 shaped([['PLANKS','PLANKS','PLANKS'],['PLANKS',null,'PLANKS'],['PLANKS','PLANKS','PLANKS']], 'CHEST', 1);
@@ -2298,10 +2318,17 @@ function trim(cells, w){ // cells = flat grid of keys (null), w = width. Return 
   var out=[]; for(var y2=minr;y2<=maxr;y2++){ var rr=[]; for(var x2=minc;x2<=maxc;x2++) rr.push(rows[y2][x2]); out.push(rr); }
   return out;
 }
+function trimRows(rows){
+  var minc=99,maxc=-1,minr=99,maxr=-1;
+  for(var y=0;y<rows.length;y++) for(var x=0;x<rows[y].length;x++){ if(rows[y][x]){ if(x<minc)minc=x; if(x>maxc)maxc=x; if(y<minr)minr=y; if(y>maxr)maxr=y; } }
+  if(maxc<0) return null;
+  var out=[]; for(var y2=minr;y2<=maxr;y2++){ var row=[]; for(var x2=minc;x2<=maxc;x2++) row.push(rows[y2][x2]||null); out.push(row); }
+  return out;
+}
 function matchShaped(cells, w){
   var t=trim(cells,w); if(!t) return null;
   for(var r=0;r<RECIPES.length;r++){ var rec=RECIPES[r]; if(rec.type!=='shaped') continue;
-    var rr=rec.rows;
+    var rr=rec._tr || (rec._tr = trimRows(rec.rows)); if(!rr) continue;
     if(rr.length!==t.length) continue;
     if(rr[0].length!==t[0].length) continue;
     var ok=true;
@@ -2565,11 +2592,24 @@ function openCrafting(keep, fromRerender){
   openScreen(); currentScreen='craft';
   screenEl.innerHTML=''; var p=document.createElement('div'); p.className='panel';
   var h=document.createElement('h2'); h.textContent='Crafting Table'; p.appendChild(h);
-  renderCrafting(p,3);
-  p.appendChild(spacer(10));
-  renderInvAndHotbar(p);
-  p.appendChild(recipeBookBtn());
-  p.appendChild(closeBtn(3));
+  var L=document.createElement('div'); L.className='invlayout';
+  L.style.cssText='display:flex; gap:18px; align-items:flex-start; justify-content:center; flex-wrap:wrap;';
+  var col1=document.createElement('div'); col1.style.cssText='display:flex; flex-direction:column; gap:6px;';
+  col1.appendChild(label('Crafting (3×3)')); renderCrafting(col1,3);
+  var col2=document.createElement('div'); col2.style.cssText='display:flex; flex-direction:column; gap:6px;';
+  col2.appendChild(label('Inventory'));
+  var mg=gridContainer(9);
+  for(var i=0;i<27;i++){ (function(i){ mg.appendChild(makeGridSlot(inv.main,i,function(idx,btn){ clickSlot(inv.main,idx,btn); })); })(i); }
+  col2.appendChild(mg);
+  col2.appendChild(label('Hotbar'));
+  var hg=gridContainer(9);
+  for(var j=0;j<9;j++){ (function(j){ hg.appendChild(makeGridSlot(inv.hotbar,j,function(idx,btn){ clickSlot(inv.hotbar,idx,btn); })); })(j); }
+  col2.appendChild(hg);
+  L.appendChild(col1); L.appendChild(col2); p.appendChild(L);
+  var btnRow=document.createElement('div'); btnRow.style.cssText='display:flex; gap:8px; margin-top:6px;';
+  var rb=recipeBookBtn(); rb.style.marginTop='0'; rb.style.width='auto'; rb.style.flex='1';
+  var cb=closeBtn(3); cb.style.flex='1';
+  btnRow.appendChild(rb); btnRow.appendChild(cb); p.appendChild(btnRow);
   screenEl.appendChild(p);
   bindScreenBg();
 }
@@ -2916,6 +2956,23 @@ function makeFire(){ var g=new THREE.Group();
   function fb(c,s,y){ var m=new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:0.82,depthWrite:false,side:THREE.DoubleSide}); var me=new THREE.Mesh(new THREE.BoxGeometry(s,s*1.7,s),m); me.position.y=y; g.add(me); return me; }
   fb(0xff7a1a,0.42,0.55); fb(0xffd23a,0.26,0.85); fb(0xff3a12,0.32,1.15);
   return g; }
+function makeBoat(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
+  var W=0x9a6a3a, D=0x6b4a26;
+  p(1.5,0.16,0.74,W,0,0.16,0);                                  // floor
+  p(1.5,0.3,0.1,D,0,0.32,0.34); p(1.5,0.3,0.1,D,0,0.32,-0.34);  // long sides
+  p(0.1,0.3,0.78,D,0.72,0.32,0); p(0.1,0.3,0.78,D,-0.72,0.32,0);// bow/stern
+  p(0.5,0.08,0.12,D,0,0.34,0);                                  // seat plank
+  return g; }
+function boatTick(e,dt){
+  var feetW=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z))).liquid;
+  var headW=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.4),Math.floor(e.pos.z))).liquid;
+  e.vel.y-=16*dt; if(e.vel.y<-30)e.vel.y=-30;
+  if(headW) e.vel.y=1.6; else if(feetW) e.vel.y=(e.vel.y<0?e.vel.y*0.2:0);
+  var ny=e.pos.y+e.vel.y*dt, gy=Math.floor(ny-0.05);
+  if(e.vel.y<0 && isSolid(World.getBlock(Math.floor(e.pos.x),gy,Math.floor(e.pos.z)))){ e.pos.y=gy+1; e.vel.y=0; } else e.pos.y=ny;
+  e.mesh.position.set(e.pos.x, e.pos.y, e.pos.z);
+  e.mesh.position.y += Math.sin(now*0.002+e.pos.x)*0.03;            // gentle bob
+}
 function makeFish(){
   var g=new THREE.Group(); g.__mats=[];
   function part(w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex, side:THREE.DoubleSide}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
@@ -3062,6 +3119,7 @@ var MOBDEF={
   bird:{hp:4,w:0.4,h:0.3,sp:3.2,dmg:0,passive:true,bird:true},
   horse:{hp:15,w:0.8,h:1.6,sp:3.0,dmg:0,passive:true},
   dog:{hp:8,w:0.5,h:0.7,sp:3.4,dmg:0,passive:true},
+  boat:{hp:8,w:0.8,h:0.5,sp:0,dmg:0,passive:true},
   villager:{hp:20,w:0.6,h:1.9,sp:1.1,dmg:0,passive:true,villager:true}
 };
 function meshFor(kind){ switch(kind){
@@ -3071,6 +3129,7 @@ function meshFor(kind){ switch(kind){
   case 'shark':return makeShark(); case 'crab':return makeCrab(); case 'emberwisp':return makeWisp();
   case 'deer':return makeDeer(); case 'duck':return makeDuck(); case 'bird':return makeBird();
   case 'horse':return makeHorse(); case 'dog':return makeDog();
+  case 'boat':return makeBoat();
   case 'villager':return makeVillager();
   default:return makeZombie(); } }
 function spawnEnemy(kind, x,y,z){
@@ -3164,9 +3223,22 @@ var drops=[];
 function dropColor(key){ var it=ITEMS[key]; if(!it) return [200,200,200];
   if(it.block!=null && BLOCKS[it.block]) return BLOCKS[it.block].top||BLOCKS[it.block].col||[200,200,200];
   return it.color||[200,200,200]; }
+function dropCubeColors(blockId){
+  var cat=[2,2,0,1,2,2], shade=[0.8,0.8,1.0,0.55,0.8,0.8], cols=[];   // BoxGeometry faces: +X,-X,+Y,-Y,+Z,-Z
+  for(var f=0;f<6;f++){ var c=blockColor(blockId, cat[f]), s=shade[f];
+    for(var v=0;v<4;v++) cols.push(c[0]/255*s, c[1]/255*s, c[2]/255*s); }
+  return cols;
+}
 function spawnDrop(x,y,z,key,qty){
-  if(!ITEMS[key]) return; var c=dropColor(key);
-  var m=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.3), new THREE.MeshBasicMaterial({color:(c[0]<<16)|(c[1]<<8)|c[2]}));
+  if(!ITEMS[key]) return;
+  // merge into a nearby drop of the same item
+  for(var mi=0;mi<drops.length;mi++){ var dd=drops[mi]; if(dd.item.key===key){ var ddx=dd.pos.x-(x+0.5), ddz=dd.pos.z-(z+0.5), ddy=dd.pos.y-(y+0.4);
+    if(ddx*ddx+ddy*ddy+ddz*ddz < 1.4){ dd.item.qty+=qty; dd.life=Math.max(dd.life,300); return; } } }
+  var bid=(ITEMS[key].block!=null)?ITEMS[key].block:null;
+  var geo=new THREE.BoxGeometry(0.32,0.32,0.32), mat;
+  if(bid!=null && bid!==B.AIR){ geo.setAttribute('color', new THREE.Float32BufferAttribute(dropCubeColors(bid),3)); mat=new THREE.MeshBasicMaterial({vertexColors:true}); }
+  else { var c=dropColor(key); mat=new THREE.MeshBasicMaterial({color:(c[0]<<16)|(c[1]<<8)|c[2]}); }
+  var m=new THREE.Mesh(geo, mat);
   m.position.set(x+0.5, y+0.4, z+0.5); scene.add(m);
   drops.push({mesh:m, pos:new THREE.Vector3(x+0.5,y+0.4,z+0.5), vel:new THREE.Vector3((Math.random()-0.5)*1.6, 2.6, (Math.random()-0.5)*1.6), item:{key:key,qty:qty}, life:300, t:Math.random()*6.28, pickCd:0.45});
 }
@@ -3222,6 +3294,7 @@ function tickEntities(dt){
       if(e.pos.y<-5 || dist>70){ scene.remove(e.mesh); entities.splice(i,1); }
       continue;
     }
+    if(e.kind==='boat'){ boatTick(e,dt); continue; }
     if(e.kind==='bird'){ birdTick(e,dt);
       if(e.hp<=0){ scene.remove(e.mesh); entities.splice(i,1); if(Math.random()<0.7) giveItem('FEATHER',1); giveXP(1); continue; }
       if(dist>92){ scene.remove(e.mesh); entities.splice(i,1); }
@@ -3986,6 +4059,22 @@ function dismountHorse(){
   h.ridden=false; h.pos.x=Player.pos.x; h.pos.y=Player.pos.y; h.pos.z=Player.pos.z; h.vel.x=0; h.vel.z=0;
   Player.riding=null; toast('Dismounted');
 }
+var torchScanT=0;
+function updateTorchLights(dt){
+  torchFlkU.value = 0.84 + 0.16*(0.5+0.5*Math.sin(now*0.013)) + (Math.random()-0.5)*0.05;   // flicker
+  torchScanT-=dt; if(torchScanT>0) return; torchScanT=0.25;
+  var px=Math.floor(Player.pos.x), py=Math.floor(Player.pos.y), pz=Math.floor(Player.pos.z), found=[];
+  for(var dx=-8;dx<=8;dx++) for(var dz=-8;dz<=8;dz++) for(var dy=-5;dy<=6;dy++){
+    var x=px+dx, y=py+dy, z=pz+dz; if(y<1||y>=WORLD_H) continue;
+    if(World.getBlock(x,y,z)===B.TORCH){ var ax=x+0.5-Player.pos.x, ay=y+0.5-Player.pos.y, az=z+0.5-Player.pos.z; found.push([x+0.5,y+0.5,z+0.5, ax*ax+ay*ay+az*az]); }
+  }
+  found.sort(function(a,b){ return a[3]-b[3]; });
+  var n=0, heldTorch=inv.hotbar[hotbarSel] && inv.hotbar[hotbarSel].key==='TORCH';
+  if(heldTorch){ torchUVals[0].set(Player.pos.x, Player.pos.y+1.2, Player.pos.z, 0.8); n=1; }   // carried torch
+  for(var i=0;i<found.length && n<16;i++,n++) torchUVals[n].set(found[i][0],found[i][1],found[i][2], 0.95);
+  for(var j=n;j<16;j++) torchUVals[j].set(0,0,0,0);
+  torchNU.value=n;
+}
 function physics(dt){
   // movement direction relative to yaw
   var f=input.fwd, s=input.strafe;
@@ -4006,9 +4095,10 @@ function physics(dt){
   Player.sneaking = !!input.crouch || (!IS_MOBILE && (keys['ControlLeft']||keys['KeyC']));
   Player.sprinting = (!!input.sprint || (!IS_MOBILE && (keys['ShiftLeft']||keys['ShiftRight']) && !Player.flying)) && f>0.2 && !Player.sneaking;
   var riding = !!Player.riding && Player.riding.hp>0;
+  var ridingBoat = riding && Player.riding.kind==='boat';
   if(Player.riding && !riding) Player.riding=null;
   if(riding && (input.crouch || (!IS_MOBILE && (keys['ControlLeft']||keys['KeyC'])))){ dismountHorse(); riding=false; }
-  var speed = riding?8.2:(Player.inWater?3.2:(Player.sneaking?2.4:(Player.sprinting?6.8:4.6)));
+  var speed = ridingBoat?7.4:(riding?8.2:(Player.inWater?3.2:(Player.sneaking?2.4:(Player.sprinting?6.8:4.6))));
   Player.sneakGuard = Player.sneaking && grounded && !Player.flying;
   var accel = Player.onGround?40:8;
   Player.vel.x += (wishX*speed - Player.vel.x)*Math.min(1,accel*dt);
@@ -4020,6 +4110,10 @@ function physics(dt){
     Player.inWater=false;
   }
   else if(Player.inWater){ Player.vel.y += (-2 - Player.vel.y)*Math.min(1,6*dt); if((input.jump||keys['Space'])) Player.vel.y=3.0; }
+  if(ridingBoat && Player.inWater){
+    var headW=blk(World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y+1.2),Math.floor(Player.pos.z))).liquid;
+    if(headW) Player.vel.y=2.6; else Player.vel.y*=0.4;   // bob up if submerged, settle on the surface
+  }
   else { Player.vel.y -= 24*dt; if(Player.vel.y<-40)Player.vel.y=-40; }
   // jump
   if(!Player.flying && (input.jump||keys['Space']) && Player.onGround && !Player.inWater){ Player.vel.y=riding?9.8:8.2; Player.onGround=false; }
@@ -4079,6 +4173,7 @@ function loop(t){
   tickPlants(dt);
   World.tickWater(dt);
   tickLeaves(dt);
+  updateTorchLights(dt);
   // place camera
   if(viewMode!==0){
     var fwd=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
