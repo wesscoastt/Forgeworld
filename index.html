@@ -165,7 +165,7 @@
   .screenpanel h2{ margin:0 0 4px; color:#fff; font-size:22px; text-align:center; text-shadow:0 2px 0 #0008; }
   .screenpanel .mbtn{ min-width:0; width:100%; }
   #worldList{ display:flex; flex-direction:column; gap:8px; max-height:46vh; overflow:auto; }
-  #achscreen, #settings{ position:fixed; inset:0; z-index:41; display:flex; align-items:center; justify-content:center; padding:24px;
+  #achscreen, #settings, #guidescreen{ position:fixed; inset:0; z-index:41; display:flex; align-items:center; justify-content:center; padding:24px;
     background:#0b0f17e0; }
   #achList{ display:flex; flex-direction:column; gap:5px; max-height:58vh; overflow:auto; }
   .achrow{ display:flex; align-items:center; gap:10px; padding:7px 9px; border-radius:7px; background:#0003; }
@@ -417,6 +417,14 @@ defBlock({key:'CINDER', name:'Cinder Rock', col:[60,52,50], top:[92,58,44], soli
 defBlock({key:'AETHERIUM_ORE', name:'Aetherium Ore', col:[70,66,80], spec:[150,205,232], solid:true, tool:'pickaxe', tier:3, hard:3.2, drop:'AETHERIUM' });
 defBlock({key:'BRASS_BLOCK', name:'Brass Block', col:[181,143,68], top:[198,160,82], side:[166,130,60], solid:true, tool:'pickaxe', tier:1, hard:2.4 });
 defBlock({key:'RIFT_GATE', name:'Rift Gate', col:[126,72,156], top:[168,104,200], side:[110,62,140], solid:true, transparent:true, light:9, hard:2.0 });
+defBlock({key:'OBSIDIAN', name:'Obsidian', col:[30,24,42], top:[40,32,56], side:[24,20,36], solid:true, tool:'pickaxe', tier:4, hard:9.0, drop:'OBSIDIAN' });
+defBlock({key:'PRISMARINE', name:'Prismarine', col:[64,142,134], top:[78,160,150], side:[56,128,120], solid:true, tool:'pickaxe', tier:1, hard:1.6 });
+defBlock({key:'CORAL_PINK', name:'Pink Coral', col:[232,112,168], solid:true, hard:0.5 });
+defBlock({key:'CORAL_BLUE', name:'Blue Coral', col:[86,134,232], solid:true, hard:0.5 });
+defBlock({key:'CORAL_YELLOW', name:'Yellow Coral', col:[240,200,72], solid:true, hard:0.5 });
+defBlock({key:'SEA_LANTERN', name:'Sea Lantern', col:[178,224,214], top:[200,238,228], solid:true, hard:0.6, light:14 });
+defBlock({key:'FURNITURE_BENCH', name:'Carpenter\u2019s Bench', col:[150,110,64], top:[176,134,82], side:[126,92,52], solid:true, tool:'axe', hard:1.6 });
+defBlock({key:'FURN', name:'Furniture', col:[140,100,60], solid:false, hard:0.4 });
 defBlock({key:'LAVA', name:'Lava', col:[222,92,24], solid:false, transparent:true, liquid:true, lava:true, hurt:4, light:13 });
 defBlock({key:'WOOL', name:'Wool', col:[228,228,232], solid:true, hard:0.8 });
 defBlock({key:'DRY_GRASS', name:'Savanna Grass', col:[150,140,70], top:[166,158,84], side:[124,98,58], solid:true, tool:'shovel', hard:0.7, drop:'DIRT' });
@@ -505,6 +513,21 @@ mat('SAPLING','Sapling',[96,140,60]);
 mat('WHEAT','Wheat',[206,178,70]);
 mat('CARROT','Carrot',[226,128,40],{food:3});
 mat('POTATO','Potato',[206,176,120],{food:1,smeltTo:'BAKED_POTATO'});
+mat('BAKED_POTATO','Baked Potato',[214,168,96],{food:6});
+mat('TOMATO_SEEDS','Tomato Seeds',[180,90,70],{});
+mat('CORN_SEEDS','Corn Seeds',[214,196,90],{});
+mat('TOMATO','Tomato',[214,52,44],{food:3});
+mat('CORN','Corn',[238,206,72],{food:2,smeltTo:'GRILLED_CORN'});
+mat('GRILLED_CORN','Grilled Corn',[224,176,60],{food:5});
+mat('SALAD','Garden Salad',[96,176,72],{food:7});
+mat('VEGGIE_STEW','Veggie Stew',[182,128,72],{food:9});
+delete ITEMS.FURN;   // FURN is an internal marker block only
+mat('WOOD_CHAIR','Wooden Chair',[150,108,62],{stack:16}); ITEMS.WOOD_CHAIR.furnKind='chair';
+mat('WOOD_TABLE','Wooden Table',[150,108,62],{stack:16}); ITEMS.WOOD_TABLE.furnKind='table';
+mat('WOOD_STOOL','Wooden Stool',[150,108,62],{stack:16}); ITEMS.WOOD_STOOL.furnKind='stool';
+mat('SIDE_TABLE','Side Table',[150,108,62],{stack:16}); ITEMS.SIDE_TABLE.furnKind='sidetable';
+mat('WOOD_LAMP','Standing Lamp',[170,140,90],{stack:16}); ITEMS.WOOD_LAMP.furnKind='lamp';
+mat('BOOKSHELF_DECO','Bookshelf',[150,108,62],{stack:16}); ITEMS.BOOKSHELF_DECO.furnKind='bookshelf';
 mat('BAKED_POTATO','Baked Potato',[200,154,92],{food:6});
 // fuels that are also blocks
 ITEMS.PLANKS.fuel = 15; ITEMS.LOG.fuel = 15; ITEMS.CRAFTING.fuel = 15;
@@ -566,11 +589,14 @@ function iconFor(key){
       x.fillStyle=css([255,200,90]); x.beginPath(); x.arc(16,10,6,0,7); x.fill();
       x.fillStyle=css([255,150,40]); x.beginPath(); x.arc(16,11,3,0,7); x.fill();
     } else {
-      // simple iso cube
-      x.fillStyle=css(top); x.beginPath(); x.moveTo(16,3); x.lineTo(29,10); x.lineTo(16,17); x.lineTo(3,10); x.closePath(); x.fill();
-      x.fillStyle=css(side); x.beginPath(); x.moveTo(3,10); x.lineTo(16,17); x.lineTo(16,30); x.lineTo(3,23); x.closePath(); x.fill();
-      x.fillStyle=css(front); x.beginPath(); x.moveTo(29,10); x.lineTo(16,17); x.lineTo(16,30); x.lineTo(29,23); x.closePath(); x.fill();
-      if(b.spec){ x.fillStyle=css(b.spec); for(var s=0;s<5;s++){ var sx=6+((s*7)%20), sy=12+((s*9)%14); x.fillRect(sx,sy,2,2); } }
+      // textured iso cube
+      var ptop=null, pside=null;
+      try{ ptop=x.createPattern(faceCanvas(it.block,0),'repeat'); pside=x.createPattern(faceCanvas(it.block,2),'repeat'); }catch(e){}
+      x.fillStyle=ptop||css(top); x.beginPath(); x.moveTo(16,3); x.lineTo(29,10); x.lineTo(16,17); x.lineTo(3,10); x.closePath(); x.fill();
+      x.fillStyle=pside||css(side); x.beginPath(); x.moveTo(3,10); x.lineTo(16,17); x.lineTo(16,30); x.lineTo(3,23); x.closePath(); x.fill();
+      x.fillStyle='rgba(0,0,0,0.16)'; x.fill();
+      x.fillStyle=pside||css(front); x.beginPath(); x.moveTo(29,10); x.lineTo(16,17); x.lineTo(16,30); x.lineTo(29,23); x.closePath(); x.fill();
+      x.fillStyle='rgba(0,0,0,0.30)'; x.fill();
       if(b.transparent && b.id===B.GLASS){ x.globalAlpha=0.5; }
     }
   } else if(it.tool){
@@ -600,7 +626,15 @@ function iconFor(key){
     var K=key, drew=true;
     var R=function(a,b,w,h,c){ x.fillStyle=css(c); x.fillRect(a,b,w,h); };
     var C=function(a,b,r,c){ x.fillStyle=css(c); x.beginPath(); x.arc(a,b,r,0,7); x.fill(); };
-    if(K==='COAL'){ R(6,10,9,9,[30,30,36]); R(15,7,10,10,[40,40,48]); R(11,16,10,9,[24,24,30]); R(7,8,4,4,[52,52,60]); R(18,10,2,2,[140,140,150]); R(10,13,2,2,[130,130,140]); }
+    if(it.furnKind){ var wd=[138,98,56], wl=[170,128,78];
+      if(it.furnKind==='chair'){ R(9,6,3,14,wd); R(9,16,12,3,wl); R(9,19,2,7,wd); R(19,19,2,7,wd); R(9,16,12,2,wd); }
+      else if(it.furnKind==='stool'){ R(8,13,16,3,wl); R(9,16,2,9,wd); R(21,16,2,9,wd); }
+      else if(it.furnKind==='table'){ R(5,11,22,4,wl); R(7,15,2,12,wd); R(23,15,2,12,wd); }
+      else if(it.furnKind==='sidetable'){ R(8,9,16,3,wl); R(9,12,14,11,wd); R(14,16,4,2,[90,64,36]); R(9,23,2,4,wd); R(21,23,2,4,wd); }
+      else if(it.furnKind==='lamp'){ R(13,22,6,4,wd); R(15,8,2,15,wd); x.fillStyle=css([255,232,150]); x.beginPath(); x.moveTo(9,9); x.lineTo(23,9); x.lineTo(20,3); x.lineTo(12,3); x.closePath(); x.fill(); }
+      else { R(6,5,20,22,wd); R(8,7,16,2,wl); var bcc=[[176,73,47],[47,107,176],[64,145,90],[208,176,80]]; for(var fb=0;fb<8;fb++){ R(8+(fb%4)*4.4,10+(fb<4?0:9),3,8,bcc[fb%4]); } }
+    }
+    else if(K==='COAL'){ R(6,10,9,9,[30,30,36]); R(15,7,10,10,[40,40,48]); R(11,16,10,9,[24,24,30]); R(7,8,4,4,[52,52,60]); R(18,10,2,2,[140,140,150]); R(10,13,2,2,[130,130,140]); }
     else if(K==='REDSTONE'){ for(var ri=0;ri<13;ri++){ R(5+((ri*7)%21),7+((ri*11)%18),3,3,[198,28,28]); } R(12,12,2,2,[255,110,110]); }
     else if(K==='DIAMOND'||K==='EMERALD'){ x.fillStyle=css(col); x.beginPath(); x.moveTo(16,4); x.lineTo(27,13); x.lineTo(16,28); x.lineTo(5,13); x.closePath(); x.fill(); x.fillStyle=css([255,255,255],0.45); x.beginPath(); x.moveTo(16,4); x.lineTo(21,13); x.lineTo(16,17); x.lineTo(11,13); x.closePath(); x.fill(); R(12,8,2,2,[255,255,255]); }
     else if(/_INGOT$/.test(K)){ x.fillStyle=css(col); x.beginPath(); x.moveTo(7,21); x.lineTo(11,12); x.lineTo(25,12); x.lineTo(27,21); x.closePath(); x.fill(); R(11,13,12,2,[255,255,255]); x.globalAlpha=0.18; R(8,19,18,2,[0,0,0]); x.globalAlpha=1; }
@@ -611,6 +645,13 @@ function iconFor(key){
     else if(K==='COMPASS'){ C(16,16,10,[60,64,72]); C(16,16,7,[210,214,222]); x.strokeStyle=css([200,40,40]); x.lineWidth=2; x.beginPath(); x.moveTo(16,16); x.lineTo(16,9); x.stroke(); x.strokeStyle=css([240,240,250]); x.beginPath(); x.moveTo(16,16); x.lineTo(16,23); x.stroke(); C(16,16,1.5,[20,20,24]); }
     else if(K==='STICK'){ x.save(); x.translate(16,16); x.rotate(-0.62); R(-2,-12,4,24,[150,110,66]); R(-2,-12,2,24,[112,80,46]); x.restore(); }
     else if(K==='SEEDS'){ R(9,12,4,3,[122,150,58]); R(18,10,4,3,[142,166,70]); R(13,18,4,3,[110,140,52]); R(20,17,3,3,[132,160,64]); R(10,18,3,2,[150,170,80]); }
+    else if(K==='TOMATO_SEEDS'){ R(9,12,4,3,[176,86,70]); R(18,10,4,3,[196,100,82]); R(13,18,4,3,[160,76,60]); R(20,17,3,3,[186,92,74]); }
+    else if(K==='CORN_SEEDS'){ R(9,12,4,3,[210,190,86]); R(18,10,4,3,[224,204,96]); R(13,18,4,3,[198,178,76]); R(20,17,3,3,[218,198,90]); }
+    else if(K==='TOMATO'){ C(16,17,8,[214,52,44]); C(13,14,3,[255,120,110]); R(15,7,2,4,[90,150,60]); x.fillStyle=css([74,162,64]); x.beginPath(); x.arc(16,8,3,0,7); x.fill(); }
+    else if(K==='CORN'){ x.fillStyle=css([238,206,72]); roundRect(x,11,6,10,21,5); x.fill(); for(var ck2=0;ck2<5;ck2++){ R(13,8+ck2*4,2,2,[214,176,52]); R(17,9+ck2*4,2,2,[214,176,52]); } R(9,5,5,8,[90,160,70]); }
+    else if(K==='GRILLED_CORN'){ x.fillStyle=css([224,176,60]); roundRect(x,11,6,10,21,5); x.fill(); for(var gk=0;gk<5;gk++){ R(13,8+gk*4,2,2,[150,110,40]); R(17,9+gk*4,2,2,[150,110,40]); } }
+    else if(K==='BAKED_POTATO'){ x.fillStyle=css([176,128,72]); roundRect(x,8,11,16,12,6); x.fill(); R(13,15,3,2,[110,76,40]); R(18,17,3,2,[110,76,40]); R(11,14,2,2,[230,210,150]); }
+    else if(K==='SALAD'||K==='VEGGIE_STEW'){ var bowl=(K==='SALAD')?[120,90,60]:[150,110,70]; C(16,20,9,bowl); C(16,18,8,[60,50,40]); C(13,15,3,[96,176,72]); C(19,16,3,[214,80,60]); C(16,13,3,[230,180,70]); }
     else if(K==='WHEAT'){ R(15,6,2,21,[150,120,52]); for(var wi=0;wi<6;wi++){ var wy=(7+wi*3.2)|0; R(10,wy,5,2,[214,182,84]); R(17,wy,5,2,[214,182,84]); } R(14,4,4,4,[230,198,96]); }
     else if(K==='CARROT'){ x.fillStyle=css([230,130,40]); x.beginPath(); x.moveTo(11,12); x.lineTo(21,12); x.lineTo(15,28); x.closePath(); x.fill(); R(12,7,2,6,[70,160,60]); R(15,6,2,7,[80,175,66]); R(18,7,2,6,[70,160,60]); R(14,15,2,2,[255,190,120]); }
     else if(K==='POTATO'){ C(16,17,8,[208,176,120]); R(11,14,2,2,[170,138,86]); R(19,19,2,2,[170,138,86]); R(15,12,2,2,[170,138,86]); }
@@ -629,9 +670,9 @@ function iconFor(key){
   _iconCache[key]=url; _iconCanvasCache[key]=cv; return url;
 }
 // Procedural face texture for held/avatar block cubes (cat 0 top,1 bottom,2 side)
-var _faceTexCache={};
-function faceTex(id, cat){
-  var key=id+'_'+cat; if(_faceTexCache[key]) return _faceTexCache[key];
+var _faceTexCache={}, _faceCanvasCache={};
+function faceCanvas(id, cat){
+  var key=id+'_'+cat; if(_faceCanvasCache[key]) return _faceCanvasCache[key];
   var base=blockColor(id,cat);
   var S=16, cv=document.createElement('canvas'); cv.width=cv.height=S; var x=cv.getContext('2d');
   var img=x.createImageData(S,S), d=img.data;
@@ -662,7 +703,11 @@ function faceTex(id, cat){
   }
   if(id===B.GRASS && cat===2){ for(var jj=0;jj<4;jj++)for(var ii=0;ii<S;ii++){ var gn=0.8+0.4*R(ii,jj,id), o2=(jj*S+ii)*4; d[o2]=66*gn; d[o2+1]=150*gn; d[o2+2]=58*gn; } }
   x.putImageData(img,0,0);
-  var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter;
+  _faceCanvasCache[key]=cv; return cv;
+}
+function faceTex(id, cat){
+  var key=id+'_'+cat; if(_faceTexCache[key]) return _faceTexCache[key];
+  var t=new THREE.CanvasTexture(faceCanvas(id,cat)); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter;
   _faceTexCache[key]=t; return t;
 }
 function applyBlockTex(mats, bid){
@@ -807,6 +852,8 @@ var World = {
         else if(biome===2 && h>SEA+30) id=B.SNOW;
         else if(biome===4 && h>SEA+22) id=B.SNOW;
         else if(biome===9) id=B.SNOW;
+        else if(biome===7 && h<=SEA){ var ofr=hash3(wx,h,wz,this.seed^0xC0DE);
+          id = ofr<0.06?B.PRISMARINE : ofr<0.095?B.CORAL_PINK : ofr<0.125?B.CORAL_BLUE : ofr<0.155?B.CORAL_YELLOW : ofr<0.160?B.SEA_LANTERN : B.SAND; }
         else if(h<=SEA) id=B.SAND;
         else if(biome===8) id=B.DRY_GRASS;
         else id=B.GRASS;
@@ -1044,7 +1091,10 @@ var World = {
     // ~30% of structures are a varied village (no two alike)
     if(roll < 0.30 && h>SEA && h<WORLD_H-8 && biome!==2 && biome!==7){
       var pal=this.villagePalette(biome);
-      var plots=[[lx-3,lz-3],[lx+3,lz-3],[lx-3,lz+3],[lx+3,lz+3]], placedChest=false, built=0;
+      var plots=[], _po=[-5,0,5];
+      for(var _pa=0;_pa<3;_pa++) for(var _pb=0;_pb<3;_pb++){ if(_po[_pa]===0&&_po[_pb]===0) continue; plots.push([lx+_po[_pa], lz+_po[_pb]]); }
+      plots.push([lx-3,lz-3]); plots.push([lx+3,lz+3]);
+      var placedChest=false, built=0;
       for(var pi=0; pi<plots.length; pi++){
         var hx=plots[pi][0], hz=plots[pi][1];
         if(hx<3||hx>12||hz<3||hz>12) continue;
@@ -1216,8 +1266,14 @@ var World = {
       }
     }
   },
+  chillLava: function(x,y,z){
+    var d=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    for(var i=0;i<6;i++){ var nx=x+d[i][0],ny=y+d[i][1],nz=z+d[i][2];
+      if(this.getBlock(nx,ny,nz)===B.LAVA){ this.setBlock(nx,ny,nz,B.OBSIDIAN,true); this.markDirty(nx>>4,nz>>4); } }
+  },
   updateWaterCell: function(x,y,z){
     var k=this.ck(x,y,z), cur=this.getBlock(x,y,z);
+    if(cur===B.WATER) this.chillLava(x,y,z);
     if(this.wsrc[k] || (cur===B.WATER && !this.wlvl[k] && y<=SEA)){ this.spreadWater(x,y,z,8); return; }   // source
     if(cur!==B.AIR && cur!==B.WATER) return;
     var newL=0;
@@ -1396,7 +1452,7 @@ function buildChunkGeometry(chunk){
   for(var ly=0;ly<WORLD_H;ly++) for(var lz=0;lz<CHUNK;lz++) for(var lx=0;lx<CHUNK;lx++){
     var id=blocks[idx(lx,ly,lz)];
     if(id===B.AIR) continue;
-    if(id===B.BED) continue;   // beds render as a custom furniture mesh
+    if(id===B.BED || id===B.FURN) continue;   // beds & furniture render as custom meshes
     var b=blk(id);
     var transparent = b.transparent && (b.liquid || id===B.GLASS);
     var P = transparent?tP:oP, C=transparent?tC:oC, L=transparent?tL:oL, U=transparent?tU:oU, D=transparent?tD:oD, I=transparent?tI:oI;
@@ -1487,7 +1543,7 @@ var handTool=new THREE.Group();
 handTool.add((function(){ var m=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.62,0.07), handToolHandleMat); m.position.set(0,0.27,0); return m; })());   // handle (grip near base)
 var thHead=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.1,0.1), handToolHeadMat); thHead.position.set(0,0.56,0); thHead.rotation.z=0.4; handTool.add(thHead);   // pick/axe head
 var thBlade=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.62,0.04), handToolHeadMat); thBlade.position.set(0,0.5,0); thBlade.visible=false; handTool.add(thBlade);   // sword blade
-handTool.position.set(0.06,-0.18,-0.26); handTool.rotation.set(-0.12,0.18,-0.62); handTool.visible=false;
+handTool.position.set(0.04,-0.16,-0.22); handTool.rotation.set(-0.1,0.42,-0.72); handTool.visible=false;
 handMesh.add(handTool);
 var handIconMat=new THREE.MeshBasicMaterial({transparent:true, fog:false, alphaTest:0.4, side:THREE.DoubleSide});
 var handIcon=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.42), handIconMat);
@@ -1543,7 +1599,7 @@ var avTool=new THREE.Group();
 avTool.add((function(){ var m=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.55,0.06), avToolHandleMat); m.position.set(0,0.24,0); return m; })());
 var avThHead=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.1,0.09), avToolHeadMat); avThHead.position.set(0,0.48,0); avThHead.rotation.z=0.4; avTool.add(avThHead);
 var avThBlade=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.55,0.04), avToolHeadMat); avThBlade.position.set(0,0.42,0); avThBlade.visible=false; avTool.add(avThBlade);
-avTool.rotation.set(0.1,0,-0.32); avTool.visible=false;
+avTool.rotation.set(1.35,0,-0.15); avTool.visible=false;   // point forward out of the fist
 var avIconMat=new THREE.MeshBasicMaterial({transparent:true, alphaTest:0.4, side:THREE.DoubleSide});
 var avIcon=new THREE.Mesh(new THREE.PlaneGeometry(0.32,0.32), avIconMat); avIcon.visible=false;
 var avHeld=new THREE.Group(); avHeld.position.set(0.02,-0.74,-0.16); avHeld.add(avHeldBlock); avHeld.add(avTool); avHeld.add(avIcon);
@@ -1566,8 +1622,14 @@ function updateAvatarHeld(){
 function cycleView(){ viewMode=(viewMode+1)%3; toast(['First person','Third person (behind)','Third person (front)'][viewMode]); }
 function updateAvatar(){
   var sp=Math.hypot(Player.vel.x,Player.vel.z);
-  var sw=sp>0.4?Math.sin(now*0.012)*Math.min(0.9,sp*0.16):Math.sin(now*0.0025)*0.06;
-  if(avatarLimbs.armL){ avatarLimbs.armL.rotation.x=sw; avatarLimbs.armR.rotation.x=-sw; avatarLimbs.legL.rotation.x=-sw; avatarLimbs.legR.rotation.x=sw; }
+  var moving = sp>0.15;
+  var sw = moving ? Math.sin(now*0.013)*Math.min(1.15, 0.45+sp*0.14) : Math.sin(now*0.002)*0.05;
+  var act = handAnim>0 ? Math.sin((1-(handAnim/0.26))*Math.PI)*1.2 : 0;   // arm chops down on mine/attack/place
+  if(avatarLimbs.armL){
+    avatarLimbs.armL.rotation.x=sw;
+    avatarLimbs.armR.rotation.x=-sw - act;
+    avatarLimbs.legL.rotation.x=-sw; avatarLimbs.legR.rotation.x=sw;
+  }
   updateAvatarHeld();
 }
 var handAnim=0;
@@ -1659,6 +1721,23 @@ function lightningFlash(){ var el=document.getElementById('lflash');
   el.style.opacity='0.6'; setTimeout(function(){ el.style.opacity='0'; },80);
   setTimeout(function(){ el.style.opacity='0.35'; setTimeout(function(){ el.style.opacity='0'; },60); },190); }
 
+/* ----------------------------- UNDERWATER ----------------------------- */
+var waterVeil=null, bubbleT=0;
+function spawnBubble(){
+  var b=document.createElement('div'); var sz=4+Math.random()*8, lx=8+Math.random()*84;
+  b.style.cssText='position:fixed;z-index:31;pointer-events:none;bottom:16%;left:'+lx+'%;width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:radial-gradient(circle at 35% 30%, rgba(255,255,255,0.92), rgba(200,230,255,0.22));border:1px solid rgba(255,255,255,0.4);opacity:0.85;transition:transform 1.5s linear, opacity 1.5s linear;';
+  document.body.appendChild(b);
+  requestAnimationFrame(function(){ b.style.transform='translateY(-'+(130+Math.random()*130)+'px) translateX('+(Math.random()*40-20)+'px)'; b.style.opacity='0'; });
+  setTimeout(function(){ if(b.parentNode) b.parentNode.removeChild(b); }, 1550);
+}
+function tickUnderwater(dt){
+  if(!waterVeil){ waterVeil=document.createElement('div'); waterVeil.id='waterveil';
+    waterVeil.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:30;opacity:0;transition:opacity 0.25s;background:radial-gradient(circle at 50% 42%, rgba(34,98,158,0.28), rgba(10,44,90,0.58));'; document.body.appendChild(waterVeil); }
+  var hx=Math.floor(Player.pos.x), hy=Math.floor(Player.pos.y+Player.eye), hz=Math.floor(Player.pos.z);
+  var under = running && World.getBlock(hx,hy,hz)===B.WATER;
+  waterVeil.style.opacity = under ? '1' : '0';
+  if(under){ bubbleT-=dt; if(bubbleT<=0){ bubbleT=0.11+Math.random()*0.16; spawnBubble(); } }
+}
 /* ----------------------------- FIRE ----------------------------- */
 var fires={}, fireTimer=0, FIRE_MAX=48, fireSprites=[], fireDmgCd=0;
 var FLAMMABLE={};
@@ -1978,7 +2057,7 @@ function buildPlantMesh(ch){
     var pa=tk.split(','); var tx=+pa[0],ty=+pa[1],tz=+pa[2]; if((tx>>4)!==ch.cx||(tz>>4)!==ch.cz) continue;
     var lxp=tx-ch.cx*CHUNK, lzp=tz-ch.cz*CHUNK;
     if(tl.type==='sapling') pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.32, 0.5, 1);
-    else { var cell=tl.crop==='wheat'?2:tl.crop==='carrot'?3:4; pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, tl.mature?0.6:0.3, cell); }
+    else { var cell=(tl.crop==='wheat'||tl.crop==='corn')?2:(tl.crop==='carrot'||tl.crop==='tomato')?3:4; pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, tl.mature?0.6:0.3, cell); }
   }
   if(p.length){ var g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(p,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(u,2)); g.setIndex(ix);
     var m=new THREE.Mesh(g,plantAtlasMat); m.position.set(ch.cx*CHUNK,0,ch.cz*CHUNK); scene.add(m); ch.pmesh=m; }
@@ -2217,7 +2296,7 @@ function raycast(){
   }
   return null;
 }
-function isSolidTarget(id){ var b=blk(id); return b.solid || b.thin || id===B.BED; } // torches & beds selectable too
+function isSolidTarget(id){ var b=blk(id); return b.solid || b.thin || id===B.BED || id===B.FURN; } // torches, beds & furniture selectable too
 // Tall-grass tufts live in air cells (decorative), so the voxel raycast never hits them.
 // Scan the look ray for the first tuft air-cell encountered before any solid block.
 function lookTuft(){
@@ -2314,6 +2393,8 @@ function tryHarvest(){
   if(!tl.mature) return true; // immature: consume the tap so we don't plant on it
   if(tl.crop==='wheat'){ giveItem('WHEAT',1); giveItem('SEEDS',1+(hash3(hit.x,1,hit.z,World.seed)*2|0)); }
   else if(tl.crop==='carrot'){ giveItem('CARROT',1+(hash3(hit.x,2,hit.z,World.seed)*3|0)); }
+  else if(tl.crop==='tomato'){ giveItem('TOMATO',1+(hash3(hit.x,4,hit.z,World.seed)*3|0)); giveItem('TOMATO_SEEDS',1+(hash3(hit.x,5,hit.z,World.seed)*2|0)); }
+  else if(tl.crop==='corn'){ giveItem('CORN',1+(hash3(hit.x,6,hit.z,World.seed)*2|0)); giveItem('CORN_SEEDS',1+(hash3(hit.x,7,hit.z,World.seed)*2|0)); }
   else { giveItem('POTATO',1+(hash3(hit.x,3,hit.z,World.seed)*3|0)); }
   delete World.tiles[tk];
   var ch=World.getChunk(hit.x>>4,hit.z>>4,false); if(ch) buildPlantMesh(ch);
@@ -2322,6 +2403,7 @@ function tryHarvest(){
 function breakBlock(hit){
   var id=hit.id; var b=blk(id);
   if(id===B.BED){ breakBed(hit.x,hit.y,hit.z); if(gameMode!=='creative') spawnDrop(hit.x,hit.y,hit.z,'BED',1); damageTool(); sfxBreak(); return; }
+  if(id===B.FURN){ breakFurniture(hit.x,hit.y,hit.z); damageTool(); sfxBreak(); return; }
   // TreeCapitator: chopping a log with an axe fells the whole connected tree
   if(gameMode!=='creative' && isLogId(id)){
     var heldAxe=inv.hotbar[hotbarSel];
@@ -2341,7 +2423,7 @@ function breakBlock(hit){
       if(hash3(hit.x,hit.y,hit.z,World.seed^23)<0.10) spawnDrop(hit.x,hit.y,hit.z,'SAPLING',1);
     }
     if(id===B.GRASS){ dropKey='DIRT'; var sr=hash3(hit.x,hit.y,hit.z,World.seed^41);
-      if(sr<0.45){ spawnDrop(hit.x,hit.y,hit.z, sr<0.27?'SEEDS':sr<0.38?'CARROT':'POTATO',1); } }
+      if(sr<0.5){ spawnDrop(hit.x,hit.y,hit.z, sr<0.22?'SEEDS':sr<0.30?'CARROT':sr<0.38?'POTATO':sr<0.44?'TOMATO_SEEDS':'CORN_SEEDS',1); } }
     if(id===B.COAL_ORE) dropKey='COAL';
     if(dropKey) spawnDrop(hit.x,hit.y,hit.z,dropKey,1);
   } else if(gameMode!=='creative' && blk(id).tier && !canHarvest(id)){
@@ -2444,6 +2526,11 @@ function doPlace(){
   if(hit.id===B.MACERATOR){ openMacerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.CHEST){ openChest(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.BED){ sleepInBed(hit); return; }
+  if(hit.id===B.FURNITURE_BENCH){ openFurnitureBench(); return; }
+  if(slot && ITEMS[slot.key] && ITEMS[slot.key].furnKind){
+    if(placeFurniture(slot, hit)){ if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(); }
+    return;
+  }
   if(hit.id===B.RIFT_GATE){ travelDim(World.dim==='ashlands'?'overworld':'ashlands'); return; }
   if(slot && slot.key==='MAP'){ openMapScreen(); return; }
   if(slot && ITEMS[slot.key] && ITEMS[slot.key].igniter){
@@ -2496,16 +2583,16 @@ function doPlace(){
       }
     }
   }
-  // plant crops (seeds=wheat, carrot, potato)
-  if(slot && (slot.key==='SEEDS'||slot.key==='CARROT'||slot.key==='POTATO')){
+  // plant crops (seeds=wheat, carrot, potato, tomato, corn)
+  if(slot && (slot.key==='SEEDS'||slot.key==='CARROT'||slot.key==='POTATO'||slot.key==='TOMATO_SEEDS'||slot.key==='CORN_SEEDS')){
     var gnd=World.getBlock(hit.x,hit.y,hit.z), cx2=hit.x+hit.nx, cy2=hit.y+hit.ny, cz2=hit.z+hit.nz;
     if((gnd===B.GRASS||gnd===B.DIRT) && hit.ny>0 && World.getBlock(cx2,cy2,cz2)===B.AIR && !World.tiles[World.ck(cx2,cy2,cz2)]){
-      var crop = slot.key==='SEEDS'?'wheat':slot.key==='CARROT'?'carrot':'potato';
+      var crop = slot.key==='SEEDS'?'wheat':slot.key==='CARROT'?'carrot':slot.key==='POTATO'?'potato':slot.key==='TOMATO_SEEDS'?'tomato':'corn';
       World.tiles[World.ck(cx2,cy2,cz2)]={type:'crop', crop:crop, t:0};
       consumeSlot(slot,1); renderHotbar();
       var cch=World.getChunk(cx2>>4,cz2>>4,false); if(cch) buildPlantMesh(cch); sfxPlace(); return;
     }
-    if(slot.key==='SEEDS') return; // seeds aren't edible; carrot/potato fall through to eat
+    if(slot.key==='SEEDS'||slot.key==='TOMATO_SEEDS'||slot.key==='CORN_SEEDS') return; // seeds aren't edible
   }
   // plant sapling
   if(slot && slot.key==='SAPLING'){
@@ -2635,7 +2722,10 @@ shaped([[null,'IRON_INGOT'],['IRON_INGOT',null]], 'SHEARS', 1);
 shaped([['WOOL','WOOL','WOOL'],['PLANKS','PLANKS','PLANKS']], 'BED', 1);
 shapeless([{key:'COPPER_INGOT',qty:2},{key:'GOLD_ORE',qty:1}],'BRASS_INGOT',2);
 shaped([['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT'],['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT'],['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT']], 'BRASS_BLOCK', 1);
-shaped([['BRASS_INGOT','REDSTONE','BRASS_INGOT'],['REDSTONE','DIAMOND','REDSTONE'],['BRASS_INGOT','REDSTONE','BRASS_INGOT']], 'RIFT_GATE', 1);
+shaped([['OBSIDIAN','BRASS_INGOT','OBSIDIAN'],['BRASS_INGOT','DIAMOND','BRASS_INGOT'],['OBSIDIAN','BRASS_INGOT','OBSIDIAN']], 'RIFT_GATE', 1);
+shapeless([{key:'TOMATO',qty:1},{key:'CARROT',qty:1}], 'SALAD', 1);
+shapeless([{key:'PLANKS',qty:4},{key:'STICK',qty:2}], 'FURNITURE_BENCH', 1);
+shapeless([{key:'CARROT',qty:1},{key:'POTATO',qty:1},{key:'TOMATO',qty:1},{key:'CORN',qty:1}], 'VEGGIE_STEW', 1);
 toolRecipes('AETHERIUM','AETHERIUM');
 shaped([['PLANKS',null,'PLANKS'],['PLANKS','PLANKS','PLANKS']], 'BOAT', 1);
 shaped([['STEEL_INGOT','STEEL_INGOT','STEEL_INGOT'],['STEEL_INGOT','STICK','STEEL_INGOT'],[null,'STICK',null]], 'STEEL_BATTLEAXE', 1);
@@ -3214,6 +3304,70 @@ function rebuildBeds(){
     var m=makeBedMesh(); m.position.set(fx+0.5, fy, fz+0.5); m.rotation.y=Math.atan2(t.dx, t.dz);
     scene.add(m); bedMeshes[tk]=m;
   }
+}
+/* ---- generic furniture (chairs, tables, etc.) ---- */
+var furnMeshes={};
+function fbox(g,w,h,d,c,x,y,z){ var m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshBasicMaterial({color:c})); m.position.set(x,y,z); g.add(m); return m; }
+function makeFurnitureMesh(kind){
+  var g=new THREE.Group(), W=0x8a6038, Wd=0x6b4a26, L=0.07;
+  function legs(h,sp){ fbox(g,L,h,L,Wd,-sp,h/2,-sp); fbox(g,L,h,L,Wd,sp,h/2,-sp); fbox(g,L,h,L,Wd,-sp,h/2,sp); fbox(g,L,h,L,Wd,sp,h/2,sp); }
+  if(kind==='chair'){ legs(0.45,0.28); fbox(g,0.66,0.08,0.66,W,0,0.49,0); fbox(g,0.66,0.5,0.08,W,0,0.74,-0.29); }
+  else if(kind==='stool'){ legs(0.45,0.26); fbox(g,0.6,0.08,0.6,W,0,0.49,0); }
+  else if(kind==='table'){ legs(0.72,0.42); fbox(g,1.0,0.1,1.0,W,0,0.77,0); }
+  else if(kind==='sidetable'){ legs(0.55,0.3); fbox(g,0.74,0.09,0.74,W,0,0.59,0); fbox(g,0.66,0.22,0.66,Wd,0,0.4,0); }
+  else if(kind==='lamp'){ fbox(g,0.16,0.06,0.16,Wd,0,0.03,0); fbox(g,0.08,0.95,0.08,Wd,0,0.5,0); var sh=fbox(g,0.4,0.34,0.4,0xffe9a0,0,1.1,0); }
+  else if(kind==='bookshelf'){ fbox(g,0.94,0.94,0.5,W,0,0.5,0); fbox(g,0.84,0.06,0.42,Wd,0,0.5,0.05); var bc=[0xb0492f,0x2f6bb0,0x40915a,0xd0b050,0x8a4fb0];
+    for(var bi=0;bi<10;bi++){ var row=bi<5?0.74:0.26, bx=-0.34+(bi%5)*0.17; fbox(g,0.12,0.32,0.36,bc[(bi*3)%5],bx,row,0.08); } }
+  return g;
+}
+function placeFurniture(slot, hit){
+  var fx=hit.x+hit.nx, fy=hit.y+hit.ny, fz=hit.z+hit.nz;
+  if(fy<0||fy>=WORLD_H) return false;
+  if(World.getBlock(fx,fy,fz)!==B.AIR || !isSolid(World.getBlock(fx,fy-1,fz))) return false;
+  var rot=Math.round(Player.yaw/(Math.PI/2))*(Math.PI/2);
+  World.setBlock(fx,fy,fz,B.FURN,true);
+  World.tiles[World.ck(fx,fy,fz)]={type:'furniture', kind:ITEMS[slot.key].furnKind, rot:rot, item:slot.key};
+  rebuildFurniture(); return true;
+}
+function breakFurniture(x,y,z){
+  var t=World.tiles[World.ck(x,y,z)];
+  if(t && t.item && gameMode!=='creative') spawnDrop(x,y,z,t.item,1);
+  delete World.tiles[World.ck(x,y,z)];
+  World.setBlock(x,y,z,B.AIR,true); rebuildFurniture();
+}
+function rebuildFurniture(){
+  for(var k in furnMeshes){ scene.remove(furnMeshes[k]); }
+  furnMeshes={};
+  for(var tk in World.tiles){ var t=World.tiles[tk]; if(!t || t.type!=='furniture') continue;
+    var pa=tk.split(','), fx=+pa[0],fy=+pa[1],fz=+pa[2];
+    var m=makeFurnitureMesh(t.kind||'chair'); m.position.set(fx+0.5, fy, fz+0.5); m.rotation.y=t.rot||0;
+    scene.add(m); furnMeshes[tk]=m;
+  }
+}
+function invCount(key){ var n=0,i; for(i=0;i<inv.hotbar.length;i++){ if(inv.hotbar[i]&&inv.hotbar[i].key===key) n+=inv.hotbar[i].qty; } for(i=0;i<inv.main.length;i++){ if(inv.main[i]&&inv.main[i].key===key) n+=inv.main[i].qty; } return n; }
+function invTake(key,qty){ var i; for(i=0;i<inv.hotbar.length&&qty>0;i++){ var s=inv.hotbar[i]; if(s&&s.key===key){ var t=Math.min(qty,s.qty); s.qty-=t; qty-=t; if(s.qty<=0) inv.hotbar[i]=null; } } for(i=0;i<inv.main.length&&qty>0;i++){ var s2=inv.main[i]; if(s2&&s2.key===key){ var t2=Math.min(qty,s2.qty); s2.qty-=t2; qty-=t2; if(s2.qty<=0) inv.main[i]=null; } } }
+var FURN_RECIPES=[
+  {item:'WOOD_CHAIR', cost:{PLANKS:4}}, {item:'WOOD_STOOL', cost:{PLANKS:3}},
+  {item:'WOOD_TABLE', cost:{PLANKS:5}}, {item:'SIDE_TABLE', cost:{PLANKS:4}},
+  {item:'WOOD_LAMP', cost:{PLANKS:3, TORCH:1}}, {item:'BOOKSHELF_DECO', cost:{PLANKS:4, WHEAT:3}}
+];
+function openFurnitureBench(){
+  openScreen(); currentScreen='furnbench';
+  screenEl.innerHTML=''; var p=document.createElement('div'); p.className='panel';
+  var h=document.createElement('h2'); h.textContent='\uD83E\uDE91 Carpenter\u2019s Bench'; p.appendChild(h);
+  var sub=document.createElement('div'); sub.className='small'; sub.style.cssText='text-align:center;opacity:0.8;margin-bottom:8px;'; sub.textContent='Build furniture, then place it anywhere.'; p.appendChild(sub);
+  FURN_RECIPES.forEach(function(rc){
+    var costStr=Object.keys(rc.cost).map(function(k){ return rc.cost[k]+'\u00d7 '+ITEMS[k].name; }).join(', ');
+    var can=Object.keys(rc.cost).every(function(k){ return invCount(k)>=rc.cost[k]; });
+    var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 9px;background:#0006;border-radius:7px;margin-bottom:6px;';
+    var ic=document.createElement('img'); ic.src=iconFor(rc.item); ic.style.cssText='width:34px;height:34px;image-rendering:pixelated;';
+    var tx=document.createElement('div'); tx.style.cssText='flex:1;'; tx.innerHTML='<div style="font-size:14px">'+ITEMS[rc.item].name+'</div><div class="small" style="opacity:.7">'+costStr+'</div>';
+    var bt=document.createElement('button'); bt.className='tog'+(can?' on':''); bt.textContent='Build'; bt.style.cssText='padding:6px 14px;'; bt.disabled=!can;
+    bt.onclick=function(){ if(!Object.keys(rc.cost).every(function(k){ return invCount(k)>=rc.cost[k]; })) return;
+      Object.keys(rc.cost).forEach(function(k){ invTake(k, rc.cost[k]); }); giveItem(rc.item,1); sfxClick(); openFurnitureBench(); };
+    row.appendChild(ic); row.appendChild(tx); row.appendChild(bt); p.appendChild(row);
+  });
+  p.appendChild(closeBtn(0)); screenEl.appendChild(p); bindScreenBg();
 }
 function openMapScreen(){
   openScreen(); currentScreen='map';
@@ -4513,7 +4667,7 @@ function travelDim(target){
   ashStorm=0; ashStormOn=false; ashStormTimer=22+Math.random()*30;
   toast(target==='ashlands'?'\uD83C\uDF2B\uFE0F You cross into the Ashlands\u2026':'\u2728 You return to the overworld');
   updateChunks(Player.pos.x, Player.pos.z);
-  rebuildBeds();
+  rebuildBeds(); rebuildFurniture();
   saveGame(true);
 }
 function startWorld(seed, save, mode){
@@ -4594,7 +4748,7 @@ function startWorld(seed, save, mode){
   // prebuild near chunks
   updateChunks(Player.pos.x,Player.pos.z);
   processBuildQueue(IS_MOBILE?70:130);
-  rebuildBeds();
+  rebuildBeds(); rebuildFurniture();
 }
 function restoreInv(arr,n){ var out=newArray(n); if(!arr) return out; for(var i=0;i<n;i++){ var s=arr[i]; out[i]= s? {key:s.key,qty:s.qty,dur:s.dur} : null; } return out; }
 
@@ -4743,6 +4897,7 @@ function loop(t){
   }
   tickWeather(dt);
   tickFire(dt);
+  tickUnderwater(dt);
   tickDayNight(dt);
   tickFurnaces(dt);
   tickMacerators(dt);
@@ -4880,6 +5035,12 @@ function openGuide(){
     '<ul><li><b>Macerator</b> \u2014 grinds ore into 2\u00d7 dust; smelt the dust for double ingots.</li><li><b>Bronze</b> \u2014 alloy 3 copper + 1 tin \u2192 bronze ingots \u2192 an iron-level tool set.</li><li><b>Brass</b> \u2014 2 copper + 1 gold ore \u2192 brass ingots (steampunk building + portal parts).</li><li><b>Steel</b> \u2014 iron + coal.</li></ul>',
     '<h3>\uD83D\uDCA7 World Tools</h3>',
     '<ul><li><b>Bucket</b> (3 iron) scoops &amp; places water. Water flows and settles like real liquid.</li><li><b>Boat</b> (5 planks) \u2014 place on water and tap to sail; SNEAK to exit, SNEAK+tap to pick up.</li><li><b>Torch</b> \u2014 lights the area with a warm flicker. Put one in your <b>Off-Hand</b> slot to carry light in your left hand while you mine.</li><li><b>Shield</b> (planks + iron) in the off-hand blocks about half of incoming damage.</li><li><b>Shears</b> (2 iron) \u2014 tap a sheep for 1\u20133 wool; it goes naked and regrows its coat in time.</li><li><b>Bed</b> (3 wool + 3 planks) \u2014 tap at night to skip to morning and set your respawn point.</li><li><b>Map</b> (8 planks + redstone) \u2014 hold and tap to see a top-down view of explored land; add named <b>waypoints</b> at your spot.</li><li><b>Compass</b> (4 iron + redstone) \u2014 hold it for the heading and distance back to spawn.</li></ul>',
+    '<h3>\uD83C\uDF31 Farming</h3>',
+    '<p>Hoe-free planting: tap grass/dirt with <b>seeds</b> (wheat, tomato, corn) or a <b>carrot/potato</b> to plant a crop, then tap it again once grown to harvest \u2014 you get the food plus seeds to replant. Breaking grass sometimes drops seeds. Smelt potatoes and corn for baked potato &amp; grilled corn, or craft a salad/stew from mixed veg.</p>',
+    '<h3>\uD83E\uDE91 Furniture</h3>',
+    '<p>Craft a <b>Carpenter\u2019s Bench</b> (4 planks + 2 sticks), place it, and tap it to build chairs, tables, stools, side tables, standing lamps and bookshelves. Place the furniture anywhere to decorate your home.</p>',
+    '<h3>\u26ab Obsidian</h3>',
+    '<p>Pour <b>water</b> (a bucket) onto <b>lava</b> and it hardens into <b>Obsidian</b> \u2014 mineable only with a diamond or aetherium pickaxe. You\u2019ll need obsidian to build the <b>Rift Gate</b> to the Ashlands.</p>',
     '<h3>\uD83D\uDD25 Fire & Storms</h3>',
     '<p>Craft <b>Flint &amp; Steel</b> (iron + coal) and tap a block to set it alight. Fire hurts anyone in it, spreads through wood, leaves and wool, and burns them away. During thunderstorms <b>lightning can spark fires</b>. Turn <b>Fire Spread</b> off in the Game Menu so fire never eats terrain, and <b>Mob Griefing</b> off so creeper blasts hurt you but leave blocks intact.</p>',
     '<h3>\uD83C\uDF2B\uFE0F The Ashlands</h3>',
