@@ -158,6 +158,14 @@
   .mbtn.primary{ background:linear-gradient(#74c060,#4f9e3a); border-color:#2c5a1d; }
   .mbtn:active{ transform:translateY(2px); box-shadow:inset 0 2px 0 #ffffff33, inset 0 -2px 0 #00000055, 0 1px 0 #1c1c1c; }
   .mbtn:disabled{ opacity:.5; }
+  @media (max-height:600px){
+    #menu{ justify-content:flex-start; overflow-y:auto; padding:12px 12px 28px; }
+    #logo{ font-size:clamp(26px,9vh,50px); }
+    #splash{ font-size:12px; margin-top:3px; }
+    #menuBtns{ margin-top:12px; gap:8px; }
+    .mbtn{ padding:9px 22px; font-size:15px; min-width:210px; }
+    #ver{ position:static; margin-top:10px; }
+  }
   #worldsel, #createworld{ position:fixed; inset:0; z-index:31; display:flex; align-items:center; justify-content:center; padding:24px;
     background:linear-gradient(#7ec0ee 0%, #aee0ff 42%, #4f8a3a 100%); overflow:auto; }
   .screenpanel{ width:min(440px,94vw); background:#1c2230ee; border:2px solid #0a0d14; border-radius:10px; padding:20px;
@@ -383,7 +391,7 @@ defBlock({key:'STONE', name:'Stone', col:[125,125,128], solid:true, tool:'pickax
 defBlock({key:'COBBLE', name:'Cobblestone', col:[120,120,122], side:[108,108,110], solid:true, tool:'pickaxe', tier:1, hard:2.0 });
 defBlock({key:'SAND', name:'Sand', col:[219,206,148], solid:true, tool:'shovel', hard:0.6 });
 defBlock({key:'WATER', name:'Water', col:[58,118,205], solid:false, transparent:true, liquid:true });
-defBlock({key:'LOG', name:'Oak Log', col:[102,76,44], top:[160,128,82], side:[96,72,42], solid:true, tool:'axe', hard:1.2 });
+defBlock({key:'LOG', name:'Oak Log', col:[102,76,44], top:[160,128,82], side:[96,72,42], solid:true, tool:'axe', hard:1.2 , log:true });
 defBlock({key:'LEAVES', name:'Oak Leaves', col:[54,118,46], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'PLANKS', name:'Oak Planks', col:[176,140,86], top:[182,146,92], solid:true, tool:'axe', hard:1.0 });
 defBlock({key:'GLASS', name:'Glass', col:[200,225,235], solid:true, transparent:true, hard:0.4 });
@@ -402,11 +410,11 @@ defBlock({key:'CHEST', name:'Chest', col:[150,112,58], top:[170,130,72], solid:t
 defBlock({key:'SNOW', name:'Snow Block', col:[250,252,255], solid:true, tool:'shovel', hard:0.5 });
 defBlock({key:'CACTUS', name:'Cactus', col:[54,116,58], top:[92,156,86], side:[48,104,52], solid:true, hard:0.5, hurt:1 });
 defBlock({key:'GRAVEL', name:'Gravel', col:[122,114,108], solid:true, tool:'shovel', hard:0.7 });
-defBlock({key:'SPRUCE_LOG', name:'Spruce Log', col:[74,54,34], top:[120,92,60], solid:true, tool:'axe', hard:1.2 });
+defBlock({key:'SPRUCE_LOG', name:'Spruce Log', col:[74,54,34], top:[120,92,60], solid:true, tool:'axe', hard:1.2 , log:true });
 defBlock({key:'SPRUCE_LEAVES', name:'Spruce Leaves', col:[40,86,54], solid:true, leaf:true, hard:0.3 });
-defBlock({key:'BIRCH_LOG', name:'Birch Log', col:[206,202,186], top:[170,166,150], solid:true, tool:'axe', hard:1.2 });
+defBlock({key:'BIRCH_LOG', name:'Birch Log', col:[206,202,186], top:[170,166,150], solid:true, tool:'axe', hard:1.2 , log:true });
 defBlock({key:'BIRCH_LEAVES', name:'Birch Leaves', col:[118,168,86], solid:true, leaf:true, hard:0.3 });
-defBlock({key:'CHERRY_LOG', name:'Cherry Log', col:[120,80,80], top:[150,108,108], solid:true, tool:'axe', hard:1.2 });
+defBlock({key:'CHERRY_LOG', name:'Cherry Log', col:[120,80,80], top:[150,108,108], solid:true, tool:'axe', hard:1.2 , log:true });
 defBlock({key:'CHERRY_LEAVES', name:'Cherry Blossom', col:[240,168,208], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'SPRUCE_PLANKS', name:'Spruce Planks', col:[114,84,50], top:[124,92,56], solid:true, tool:'axe', hard:1.0 });
 defBlock({key:'BIRCH_PLANKS', name:'Birch Planks', col:[200,180,132], top:[208,188,140], solid:true, tool:'axe', hard:1.0 });
@@ -476,6 +484,9 @@ for(var bi=1; bi<BLOCKS.length; bi++){
 // raw materials / drops
 function mat(key,name,col,extra){ var o={key:key,name:name,stack:64,color:col}; if(extra) for(var k in extra) o[k]=extra[k]; defItem(o); }
 mat('STICK','Stick',[150,110,66]);
+mat('STRING','String',[228,228,222]);
+mat('STEAM_SILK','Steam Silk',[206,224,236]);
+mat('SADDLE','Saddle',[138,84,42]);
 mat('COAL','Coal',[40,40,44],{fuel:80});
 mat('CHARCOAL','Charcoal',[58,52,46],{fuel:80});
 mat('BONE','Bone',[230,226,210]);
@@ -1426,6 +1437,8 @@ var FACES = [
   { dir:[ 0,0,-1],cat:2, corners:[[0,0,0],[0,1,0],[1,1,0],[1,0,0]] }
 ];
 var SHADE = [1.0, 0.55, 0.78]; // top, bottom, side
+// remap a face to its texture-face for axis-oriented logs (rings follow the axis)
+function logFace(f, ax){ if(ax==='x') return f===0?2:(f===1?3:0); if(ax==='z') return f===4?2:(f===5?3:0); return f; }
 
 function shouldDraw(cur, nb){
   if(nb===B.AIR) return true;
@@ -1526,6 +1539,7 @@ function buildChunkGeometry(chunk){
     if(b.thin){ emitTorch(P,C,L,U,D,I, lx,ly,lz); continue; }
     if(b.shape){ emitShape(P,C,L,U,D,I, id,b, lx,ly,lz, wx,wz); continue; }
     var surf=1.0;
+    var logAx = b.log ? (World.tiles[World.ck(wx,ly,wz)]||{}).axis : null;
     if(id===B.WATER){ var ab=World.getBlock(wx,ly+1,wz); if(ab!==B.WATER){ var lvl=World.waterLevel(wx,ly,wz); surf=0.12+0.78*(lvl/8); } }
     for(var f=0;f<6;f++){
       var d=FACES[f].dir;
@@ -1540,8 +1554,9 @@ function buildChunkGeometry(chunk){
       // sky/block light sampled at the neighbor cell
       var sky=World.skyLightAt(wx+d[0],ly+d[1],wz+d[2]);
       var bl=blk(id).lava? 14 : World.blockLightAt(wx+d[0],ly+d[1],wz+d[2]);
-      var col = blockColor(id, FACES[f].cat);
-      emit(P,C,L,U,D,I, lx,ly,lz, f, col, {sky:sky,blk:bl}, decorFor(id, f), surf);
+      var tf = logAx ? logFace(f, logAx) : f;
+      var col = blockColor(id, FACES[tf].cat);
+      emit(P,C,L,U,D,I, lx,ly,lz, f, col, {sky:sky,blk:bl}, decorFor(id, tf), surf);
     }
   }
   function emitTorch(P,C,L,U,D,I, lx,ly,lz){
@@ -1713,10 +1728,22 @@ handMesh.add(handHeld);
 var handToolHeadMat=new THREE.MeshBasicMaterial({color:0xcccccc, fog:false});
 var handToolHandleMat=new THREE.MeshBasicMaterial({color:0x6b4a26, fog:false});
 var handTool=new THREE.Group();
-handTool.add((function(){ var m=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.62,0.07), handToolHandleMat); m.position.set(0,0.27,0); return m; })());   // handle (grip near base)
-var thHead=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.1,0.1), handToolHeadMat); thHead.position.set(0,0.56,0); thHead.rotation.z=0.4; handTool.add(thHead);   // pick/axe head
-var thBlade=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.62,0.04), handToolHeadMat); thBlade.position.set(0,0.5,0); thBlade.visible=false; handTool.add(thBlade);   // sword blade
-handTool.position.set(0.05,-0.05,-0.3); handTool.rotation.set(0.08,-0.46,0.72); handTool.visible=false;
+// reusable tool model: a handle + 5 distinct heads (only one shown at a time)
+function buildToolHeads(headMat, handleMat, sc){
+  var g=new THREE.Group();
+  function box(w,h,d,mat,x,y,z,rz){ var m=new THREE.Mesh(new THREE.BoxGeometry(w*sc,h*sc,d*sc), mat); m.position.set(x*sc,y*sc,z*sc); if(rz)m.rotation.z=rz; return m; }
+  g.add(box(0.06,0.6,0.06,handleMat,0,0.26,0));                       // handle
+  var refs={};
+  var pick=new THREE.Group(); pick.add(box(0.30,0.055,0.06,headMat,0,0.57,0)); pick.add(box(0.11,0.05,0.05,headMat,-0.16,0.53,0,0.6)); pick.add(box(0.11,0.05,0.05,headMat,0.16,0.53,0,-0.6)); g.add(pick); refs.pickaxe=pick;
+  var axe=new THREE.Group(); axe.add(box(0.15,0.22,0.05,headMat,0.085,0.55,0)); axe.add(box(0.06,0.28,0.05,headMat,0.175,0.55,0)); g.add(axe); refs.axe=axe; refs.battleaxe=axe;
+  var shovel=new THREE.Group(); shovel.add(box(0.16,0.19,0.035,headMat,0,0.60,0)); shovel.add(box(0.05,0.07,0.05,headMat,0,0.48,0)); g.add(shovel); refs.shovel=shovel;
+  var hoe=new THREE.Group(); hoe.add(box(0.20,0.05,0.05,headMat,0.07,0.59,0)); hoe.add(box(0.05,0.10,0.05,headMat,0.16,0.55,0)); g.add(hoe); refs.hoe=hoe;
+  var sword=new THREE.Group(); sword.add(box(0.07,0.5,0.03,headMat,0,0.66,0)); sword.add(box(0.22,0.05,0.05,handleMat,0,0.40,0)); g.add(sword); refs.sword=sword;
+  for(var k in refs) refs[k].visible=false;
+  return {group:g, refs:refs};
+}
+var handTM=buildToolHeads(handToolHeadMat, handToolHandleMat, 1.0); handTool.add(handTM.group);
+handTool.position.set(0.05,-0.04,-0.32); handTool.rotation.set(0.02,-0.26,0.26); handTool.visible=false;
 handMesh.add(handTool);
 var handIconMat=new THREE.MeshBasicMaterial({transparent:true, fog:false, alphaTest:0.4, side:THREE.DoubleSide});
 var handIcon=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.42), handIconMat);
@@ -1757,6 +1784,8 @@ var playerAvatar=(function(){ var g=new THREE.Group();
   p(0.5,0.5,0.5,SKIN,0,1.62,0);                 // head
   p(0.52,0.12,0.52,0x6b4a2e,0,1.84,0);          // hair top
   p(0.1,0.1,0.02,0x14110f,-0.12,1.64,0.26); p(0.1,0.1,0.02,0x14110f,0.12,1.64,0.26); // eyes
+  p(0.04,0.04,0.02,0xf4f4ff,-0.13,1.66,0.27); p(0.04,0.04,0.02,0xf4f4ff,0.11,1.66,0.27); // eye glints
+  p(0.18,0.035,0.02,0x6e3a2c,0,1.52,0.26);     // mouth
   p(0.5,0.74,0.26,SHIRT,0,1.05,0);              // torso
   avatarLimbs.armL=limb(0.18,0.74,0.22,SKIN,-0.34,1.4,0);
   avatarLimbs.armR=limb(0.18,0.74,0.22,SKIN,0.34,1.4,0);
@@ -1769,9 +1798,7 @@ var avHeldMats=[]; for(var _av=0;_av<6;_av++) avHeldMats.push(new THREE.MeshBasi
 var avHeldBlock=new THREE.Mesh(new THREE.BoxGeometry(0.24,0.24,0.24), avHeldMats); avHeldBlock.visible=false;
 var avToolHeadMat=new THREE.MeshBasicMaterial({color:0xcccccc}), avToolHandleMat=new THREE.MeshBasicMaterial({color:0x6b4a26});
 var avTool=new THREE.Group();
-avTool.add((function(){ var m=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.55,0.06), avToolHandleMat); m.position.set(0,0.24,0); return m; })());
-var avThHead=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.1,0.09), avToolHeadMat); avThHead.position.set(0,0.48,0); avThHead.rotation.z=0.4; avTool.add(avThHead);
-var avThBlade=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.55,0.04), avToolHeadMat); avThBlade.position.set(0,0.42,0); avThBlade.visible=false; avTool.add(avThBlade);
+var avTM=buildToolHeads(avToolHeadMat, avToolHandleMat, 0.9); avTool.add(avTM.group);
 avTool.rotation.set(1.35,0,-0.15); avTool.visible=false;   // point forward out of the fist
 var avIconMat=new THREE.MeshBasicMaterial({transparent:true, alphaTest:0.4, side:THREE.DoubleSide});
 var avIcon=new THREE.Mesh(new THREE.PlaneGeometry(0.32,0.32), avIconMat); avIcon.visible=false;
@@ -1779,13 +1806,14 @@ var avHeld=new THREE.Group(); avHeld.position.set(0.02,-0.74,-0.16); avHeld.add(
 if(avatarLimbs.armR) avatarLimbs.armR.add(avHeld);
 function updateAvatarHeld(){
   var s=inv.hotbar[hotbarSel], it=s?ITEMS[s.key]:null;
-  if(it && it.block!=null && !blk(it.block).thin && s.key!=='BED'){
+  if(it && it.block!=null && !blk(it.block).thin && !blk(it.block).shape && s.key!=='BED'){
     var bid=it.block;
     if(avHeldBlock.__key!==s.key){ applyBlockTex(avHeldMats, bid); avHeldBlock.__key=s.key; }
     avHeldBlock.visible=true; avTool.visible=false; avIcon.visible=false;
   } else if(it && it.tool){
     var tc=it.color||[200,200,200]; avToolHeadMat.color.setRGB(tc[0]/255,tc[1]/255,tc[2]/255);
-    var isSword=(it.tool==='sword'||it.tool==='battleaxe'); avThHead.visible=!isSword; avThBlade.visible=isSword;
+    for(var atk in avTM.refs) avTM.refs[atk].visible=false;
+    (avTM.refs[it.tool]||avTM.refs.pickaxe).visible=true;
     avTool.visible=true; avHeldBlock.visible=false; avIcon.visible=false;
   } else if(it){
     if(avIcon.__key!==s.key){ avIconMat.map=iconTexture(s.key); avIconMat.needsUpdate=true; avIcon.__key=s.key; }
@@ -1817,15 +1845,15 @@ function updateHand(){
   handMesh.rotation.set(0.55 - sw*1.3, 0.42, 0.22);
   handMesh.scale.setScalar(0.8);
   var s=inv.hotbar[hotbarSel], it=s?ITEMS[s.key]:null;
-  if(it && it.block!=null && !blk(it.block).thin && s.key!=='BED'){
+  if(it && it.block!=null && !blk(it.block).thin && !blk(it.block).shape && s.key!=='BED'){
     var bid=it.block;
     if(handHeld.__key!==s.key){ applyBlockTex(handHeldMats, bid); handHeld.__key=s.key; }
     handHeld.visible=true; handTool.visible=false; handIcon.visible=false; handTorch.visible=false;
   } else if(it && it.tool){
     var tcol=it.color||[200,200,200];
     handToolHeadMat.color.setRGB(tcol[0]/255,tcol[1]/255,tcol[2]/255);
-    var isSword=(it.tool==='sword'||it.tool==='battleaxe');
-    thHead.visible=!isSword; thBlade.visible=isSword;
+    for(var htk in handTM.refs) handTM.refs[htk].visible=false;
+    (handTM.refs[it.tool]||handTM.refs.pickaxe).visible=true;
     handTool.visible=true; handHeld.visible=false; handIcon.visible=false; handTorch.visible=false;
   } else if(it && s.key==='TORCH'){
     handTorch.visible=true; handHeld.visible=false; handTool.visible=false; handIcon.visible=false;
@@ -2130,7 +2158,7 @@ function chunkFrag(alpha, grain){
   return ['precision highp float;',
     'varying vec3 vColor; varying float vFog; varying vec3 vWorld; varying vec2 vUV; varying float vDecor;',
     'uniform vec3 uFogColor; uniform vec4 uTorch[16]; uniform int uTorchN; uniform float uTorchFlk;'].concat(grain?[]:['uniform float uTime;']).concat([
-    'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.020,0.0,1.0); tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.6); return col*(1.0+vec3(0.95,0.58,0.26)*tl); }'
+    'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.011,0.0,1.0); f=f*f; tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.7); return col*(1.0+vec3(0.95,0.58,0.26)*tl); }'
     ]).concat(helpers).concat([
     'void main(){']).concat(body).concat([' gl_FragColor=vec4(c,'+alpha+');','}']).join('\n');
 }
@@ -2704,6 +2732,7 @@ function breakBlock(hit){
   // gravity blocks (sand/gravel) above? simple: leave for now
   World.setBlock(hit.x,hit.y,hit.z,B.AIR,true);
   World.floodSeed(hit.x,hit.y,hit.z);
+  if(isLogId(id)) scheduleLeafDecay(hit.x,hit.y,hit.z);
   if(id===B.LOG) unlock('getting_wood');
   if(id===B.STONE||id===B.COBBLE) unlock('stone_age');
   if(id===B.DIAMOND_ORE) unlock('diamonds');
@@ -2711,6 +2740,40 @@ function breakBlock(hit){
   sfxBreak();
 }
 function isLogId(id){ return id===B.LOG||id===B.SPRUCE_LOG||id===B.BIRCH_LOG||id===B.CHERRY_LOG; }
+var leafDecayQ=[];
+function scheduleLeafDecay(x,y,z){
+  for(var dx=-4;dx<=4;dx++)for(var dy=-4;dy<=4;dy++)for(var dz=-4;dz<=4;dz++){
+    var ly=y+dy; if(ly<1||ly>=WORLD_H) continue;
+    if(blk(World.getBlock(x+dx,ly,z+dz)).leaf) leafDecayQ.push({x:x+dx,y:ly,z:z+dz,t:0.5+Math.random()*2.4});
+  }
+}
+function logNear(x,y,z){
+  for(var dx=-4;dx<=4;dx++)for(var dy=-4;dy<=4;dy++)for(var dz=-4;dz<=4;dz++){
+    if(Math.abs(dx)+Math.abs(dy)+Math.abs(dz)>5) continue;
+    if(isLogId(World.getBlock(x+dx,y+dy,z+dz))) return true;
+  }
+  return false;
+}
+var LEAF_NB=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+function tickLeafDecay(dt){
+  if(!leafDecayQ.length || uiOpen) return;
+  if(leafDecayQ.length>4000) leafDecayQ.length=4000;
+  var done=0;
+  for(var i=leafDecayQ.length-1; i>=0 && done<10; i--){ var L=leafDecayQ[i]; L.t-=dt;
+    if(L.t>0) continue;
+    leafDecayQ.splice(i,1); done++;
+    if(!blk(World.getBlock(L.x,L.y,L.z)).leaf) continue;
+    if(logNear(L.x,L.y,L.z)) continue;          // still attached to a tree
+    if(gameMode!=='creative'){
+      if(hash3(L.x,L.y,L.z,World.seed^77)<0.09) spawnDrop(L.x,L.y,L.z,'SAPLING',1);
+      if(hash3(L.x,L.y,L.z,World.seed^91)<0.04) spawnDrop(L.x,L.y,L.z,'APPLE',1);
+    }
+    var tk=World.ck(L.x,L.y,L.z); if(World.tiles[tk]) delete World.tiles[tk];
+    World.setBlock(L.x,L.y,L.z,B.AIR,true); World.floodSeed(L.x,L.y,L.z);
+    for(var k=0;k<6;k++){ var nx=L.x+LEAF_NB[k][0],ny=L.y+LEAF_NB[k][1],nz=L.z+LEAF_NB[k][2];
+      if(ny>=1 && ny<WORLD_H && blk(World.getBlock(nx,ny,nz)).leaf) leafDecayQ.push({x:nx,y:ny,z:nz,t:0.25+Math.random()*0.7}); }
+  }
+}
 function isLeafId(id){ return id===B.LEAVES||id===B.SPRUCE_LEAVES||id===B.BIRCH_LEAVES||id===B.CHERRY_LEAVES||id===B.JUNGLE_LEAVES; }
 function treeCapitate(bx,by,bz){
   var logs=[], seen={}, stack=[[bx,by,bz]], cap=170;
@@ -2798,8 +2861,8 @@ function doPlace(){
   if(hit.id===B.BED){ sleepInBed(hit); return; }
   if(hit.id===B.FURNITURE_BENCH){ openFurnitureBench(); return; }
   if(blk(hit.id).shape==='door'){ toggleDoor(hit.x,hit.y,hit.z); return; }
-  if(hit.id===B.FENCE_GATE){ var gt=World.tiles[World.ck(hit.x,hit.y,hit.z)]; if(gt){ gt.open=!gt.open; World.markDirty(hit.x>>4,hit.z>>4); sfxClick(); } return; }
-  if(blk(hit.id).shape==='trapdoor'){ var td=World.tiles[World.ck(hit.x,hit.y,hit.z)]; if(td){ td.open=!td.open; World.markDirty(hit.x>>4,hit.z>>4); sfxClick(); } return; }
+  if(hit.id===B.FENCE_GATE){ var gt=World.tiles[World.ck(hit.x,hit.y,hit.z)]; if(gt){ gt.open=!gt.open; World.markDirty(hit.x>>4,hit.z>>4); sfxDoor(gt.open); } return; }
+  if(blk(hit.id).shape==='trapdoor'){ var td=World.tiles[World.ck(hit.x,hit.y,hit.z)]; if(td){ td.open=!td.open; World.markDirty(hit.x>>4,hit.z>>4); sfxDoor(td.open); } return; }
   if(slot && ITEMS[slot.key] && ITEMS[slot.key].tool==='hoe'){
     var till=World.getBlock(hit.x,hit.y,hit.z);
     if((till===B.GRASS||till===B.DIRT) && hit.ny>0 && World.getBlock(hit.x,hit.y+1,hit.z)===B.AIR){
@@ -2853,10 +2916,15 @@ function doPlace(){
   // tame horses (wheat/carrot/apple) and wild dogs (raw meat)
   if(slot){
     var tameT=mobInFront(3.2);
-    if(tameT && !tameT.tamed && (tameT.kind==='horse'||tameT.kind==='dog')){
+    if(tameT && tameT.kind==='horse' && slot.key==='SADDLE' && !Player.riding){
+      consumeSlot(slot,1); renderHotbar(); tameT.tamed=true; tameT.saddled=true;
+      Player.riding=tameT; tameT.ridden=true; sfxClick(); toast('\uD83D\uDC0E Saddled \u2014 tap SNEAK to dismount'); unlock('rancher'); return;
+    }
+    if(tameT && !tameT.tamed && (tameT.kind==='horse'||tameT.kind==='dog'||tameT.kind==='cat')){
       var hF=(tameT.kind==='horse' && (slot.key==='WHEAT'||slot.key==='CARROT'||slot.key==='APPLE'));
       var dF=(tameT.kind==='dog' && (slot.key==='RAW_BEEF'||slot.key==='RAW_VENISON'||slot.key==='RAW_CHICKEN'||slot.key==='RAW_DUCK'||slot.key==='RAW_PORK'||slot.key==='RAW_MUTTON'));
-      if(hF||dF){ consumeSlot(slot,1); renderHotbar(); sfxClick();
+      var cF=(tameT.kind==='cat' && (slot.key==='RAW_FISH'||slot.key==='COOKED_FISH'||slot.key==='CRAB_MEAT'));
+      if(hF||dF||cF){ consumeSlot(slot,1); renderHotbar(); sfxClick();
         tameT.tameProg=(tameT.tameProg||0)+1;
         if(Math.random()<0.34 || tameT.tameProg>=4){ tameT.tamed=true; tameT.love=8; toast('\u2764 Tamed the '+tameT.kind+'!'); unlock('rancher'); }
         else toast('\u2764');
@@ -2928,6 +2996,7 @@ function doPlace(){
     if(!sup) return;
   }
   World.setBlock(nx,ny,nz,pid,true);
+  if(blk(pid).log){ World.tiles[World.ck(nx,ny,nz)]={axis: hit.ny!==0?'y':(hit.nx!==0?'x':'z')}; }
   if(pid===B.FURNACE) World.tiles[World.ck(nx,ny,nz)]={type:'furnace', input:null, fuel:null, output:null, burn:0, burnMax:0, cook:0};
   if(pid===B.MACERATOR) World.tiles[World.ck(nx,ny,nz)]={type:'macerator', input:null, output:null, grind:0};
   if(pid===B.GENERATOR) World.tiles[World.ck(nx,ny,nz)]={type:'generator', slot:null, burn:0, burnMax:0, energy:0};
@@ -3015,7 +3084,7 @@ function toggleDoor(x,y,z){
   var bt=World.tiles[World.ck(bx,by,bz)]; if(!bt) return;
   bt.open=!bt.open;
   World.markDirty(bx>>4, bz>>4);
-  sfxClick();
+  sfxDoor(bt.open);
 }
 function tryEat(slot){
   if(Player.hunger>=Player.maxHunger) return false;
@@ -3024,7 +3093,7 @@ function tryEat(slot){
   Player.sat=Math.min(20, Player.sat+(it.food||0)*0.6);
   if(it.heal) Player.hp=Math.min(Player.maxHp, Player.hp+it.heal);
   consumeSlot(slot,1); renderHotbar(); updateStats();
-  toast('Ate '+it.name); return true;
+  sfxEat(); toast('Ate '+it.name); return true;
 }
 
 /* ----------------------------- INVENTORY -------------------------------- */
@@ -3097,6 +3166,8 @@ shaped([['COBBLE','COBBLE','COBBLE'],['COBBLE','IRON_INGOT','COBBLE'],['COBBLE',
 shaped([['IRON_INGOT','IRON_INGOT','IRON_INGOT'],['IRON_INGOT','FURNACE','IRON_INGOT'],['IRON_INGOT','REDSTONE','IRON_INGOT']], 'GENERATOR', 1);
 shaped([['COPPER_INGOT','COPPER_INGOT','COPPER_INGOT']], 'CABLE', 6);
 shaped([['GLASS','GLASS','GLASS'],['COAL','REDSTONE','COAL'],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'SOLAR_PANEL', 1);
+shaped([['STRING','STRING'],['STRING','STRING']], 'WOOL', 1);
+shaped([['STEAM_SILK','STEAM_SILK','STEAM_SILK'],['LEATHER',null,'LEATHER']], 'SADDLE', 1);
 shaped([['IRON_INGOT','IRON_INGOT','IRON_INGOT'],['IRON_INGOT','STICK','IRON_INGOT'],[null,'STICK',null]], 'IRON_BATTLEAXE', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],[null,'IRON_INGOT',null]], 'BUCKET', 1);
 shaped([['PLANKS','PLANKS','PLANKS'],['PLANKS','IRON_INGOT','PLANKS'],[null,'PLANKS',null]], 'SHIELD', 1);
@@ -3313,7 +3384,7 @@ function clickArmorSlot(i){
   setHeld(); rerenderScreen(); updateStats();
 }
 
-function openScreen(){ uiOpen=true; screenEl.classList.remove('hidden'); document.getElementById('hint').classList.add('hidden');
+function openScreen(){ uiOpen=true; sfxOpenUI(); screenEl.classList.remove('hidden'); document.getElementById('hint').classList.add('hidden');
   if(pointerLocked && document.exitPointerLock) document.exitPointerLock(); }
 function closeScreen(){
   // return cursor item to inventory
@@ -3388,6 +3459,10 @@ function renderInvAndHotbar(panel){
 }
 function label(t){ var d=document.createElement('div'); d.className='lbl'; d.textContent=t; d.style.margin='6px 0 3px'; return d; }
 function machineLayout(p, widget){
+  var bar=document.createElement('div'); bar.style.cssText='position:sticky; top:-14px; margin:-14px -14px 8px; padding:7px 10px; display:flex; justify-content:flex-end; background:var(--panel); border-bottom:1px solid #ffffff18; z-index:5;';
+  var x=document.createElement('button'); x.className='mbtn'; x.textContent='\u2715 Close'; x.style.cssText='min-width:0; padding:6px 14px; font-size:14px;';
+  x.addEventListener('click', function(){ sfxClick(); closeScreen(); });
+  bar.appendChild(x); p.insertBefore(bar, p.firstChild);
   var L=document.createElement('div'); L.className='invlayout';
   L.style.cssText='display:flex; gap:18px; align-items:flex-start; justify-content:center; flex-wrap:wrap;';
   var col1=document.createElement('div'); col1.style.cssText='display:flex; flex-direction:column; gap:6px; align-items:center;';
@@ -3413,6 +3488,9 @@ function makeAvatarPreview(){
   function aCol(slot, base){ if(slot && ITEMS[slot.key]){ var n=slot.key; if(n.indexOf('DIAMOND')>=0) return '#5fe9e0'; if(n.indexOf('IRON')>=0) return '#d2d2d2'; if(n.indexOf('GOLD')>=0) return '#e9d24a'; if(n.indexOf('LEATHER')>=0) return '#9a6a3a'; } return base; }
   function pc(w,hh,t,l,c){ var d=document.createElement('div'); d.style.cssText='position:absolute;width:'+w+'px;height:'+hh+'px;top:'+t+'px;left:'+l+'px;background:'+c+';border-radius:2px;'; fig.appendChild(d); }
   pc(24,22,2,13, aCol(inv.armor[0],'#d6a47c'));                                   // head / helmet
+  pc(4,5,11,18,'#23150e'); pc(4,5,11,29,'#23150e');                               // eyes
+  pc(2,2,12,19,'#eef6ff'); pc(2,2,12,30,'#eef6ff');                               // eye glints
+  pc(9,2,20,21,'#6e3a2c');                                                        // mouth
   pc(32,38,26,9, aCol(inv.armor[1],'#3a7d8c'));                                   // chest
   pc(8,34,28,1,'#d6a47c'); pc(8,34,28,41,'#d6a47c');                              // arms
   pc(13,34,66,10, aCol(inv.armor[2],'#37506e')); pc(13,34,66,27, aCol(inv.armor[2],'#37506e')); // legs
@@ -3964,26 +4042,57 @@ function makeZombie(){
   g.userData.legs=[legL,legR]; g.userData.arms=[armL,armR];
   return g;
 }
-function makeSpider(){
+function makeSpooler(){
+  // tiny clockwork critter: brass body, copper legs, spinning thread reels on its back
   var g=new THREE.Group(); g.__mats=[];
   function part(w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex, side:THREE.DoubleSide}); var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
     mesh.position.set(x,y,z); m.__base=hex; g.__mats.push(m); g.add(mesh); return mesh; }
-  var BODY=0x24242b, HEAD=0x2e2e36;
-  part(0.7,0.42,0.8, BODY, 0,0.34,0.15);   // abdomen
-  part(0.5,0.38,0.4, HEAD, 0,0.36,-0.42);  // cephalothorax
-  var eyeM=new THREE.MeshBasicMaterial({color:0xd83b3b});
-  var e1=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.02),eyeM); e1.position.set(-0.12,0.42,-0.62); g.add(e1);
-  var e2=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.02),eyeM); e2.position.set(0.12,0.42,-0.62); g.add(e2);
-  var legGeo=new THREE.BoxGeometry(0.62,0.08,0.08);
-  var legs=[];
-  for(var s=0;s<2;s++){ for(var i=0;i<4;i++){
-    var m=new THREE.MeshBasicMaterial({color:BODY}); m.__base=BODY; g.__mats.push(m);
-    var leg=new THREE.Mesh(legGeo,m);
-    var side=s===0?-1:1; var zoff=-0.25+i*0.22;
-    leg.position.set(side*0.42,0.3,zoff); leg.rotation.z=side*0.5; leg.rotation.y=side*((i-1.5)*0.18);
+  var BRASS=0xb08d3e, COPPER=0xb5703a, DARK=0x6e5a2c;
+  part(0.56,0.34,0.66, BRASS, 0,0.3,0.08);      // body
+  part(0.30,0.06,0.40, DARK, 0,0.48,0.08);      // back plate
+  part(0.42,0.32,0.34, COPPER,0,0.32,-0.42);    // head
+  // glowing amber eye
+  var eyeM=new THREE.MeshBasicMaterial({color:0xffd24a});
+  var e1=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.09,0.02),eyeM); e1.position.set(-0.1,0.36,-0.60); g.add(e1);
+  var e2=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.09,0.02),eyeM); e2.position.set(0.1,0.36,-0.60); g.add(e2);
+  // two spinning thread reels on the back (cylinders lying across the body)
+  var reels=[];
+  for(var r=0;r<2;r++){
+    var rg=new THREE.Group(); rg.position.set(0, 0.56, -0.06 + r*0.30);
+    var spoolM=new THREE.MeshBasicMaterial({color:0xe7e2d2}); spoolM.__base=0xe7e2d2; g.__mats.push(spoolM);
+    var spool=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,0.34,10), spoolM); spool.rotation.z=Math.PI/2; rg.add(spool);
+    var capM=new THREE.MeshBasicMaterial({color:DARK});
+    var c1=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,0.05,10), capM); c1.rotation.z=Math.PI/2; c1.position.x=0.17; rg.add(c1);
+    var c2=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.16,0.05,10), capM); c2.rotation.z=Math.PI/2; c2.position.x=-0.17; rg.add(c2);
+    g.add(rg); reels.push(rg);
+  }
+  g.userData.reels=reels;
+  // six little clockwork legs
+  var legGeo=new THREE.BoxGeometry(0.46,0.07,0.07); var legs=[];
+  for(var s=0;s<2;s++){ for(var i=0;i<3;i++){
+    var m=new THREE.MeshBasicMaterial({color:COPPER}); m.__base=COPPER; g.__mats.push(m);
+    var leg=new THREE.Mesh(legGeo,m); var side=s===0?-1:1; var zoff=-0.2+i*0.26;
+    leg.position.set(side*0.32,0.22,zoff); leg.rotation.z=side*0.5; leg.rotation.y=side*((i-1)*0.22);
     g.add(leg); legs.push(leg);
   }}
   g.userData.spiderLegs=legs;
+  return g;
+}
+function makeCat(){
+  var g=new THREE.Group(); g.__mats=[];
+  function part(w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex, side:THREE.DoubleSide}); var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
+    mesh.position.set(x,y,z); m.__base=hex; g.__mats.push(m); g.add(mesh); return mesh; }
+  var FUR=([0xd9a05b,0x4a4a4a,0xe8e8e8,0xc97b3a])[(Math.random()*4)|0];   // tabby / grey / white / ginger
+  part(0.26,0.24,0.5, FUR, 0,0.34,0.04);        // body
+  var head=part(0.26,0.24,0.24, FUR, 0,0.42,-0.3); // head
+  part(0.06,0.1,0.04, FUR, -0.08,0.56,-0.34); part(0.06,0.1,0.04, FUR, 0.08,0.56,-0.34); // ears
+  var eyeM=new THREE.MeshBasicMaterial({color:0x6fe07a});
+  var e1=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.02),eyeM); e1.position.set(-0.06,0.44,-0.42); g.add(e1);
+  var e2=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.02),eyeM); e2.position.set(0.06,0.44,-0.42); g.add(e2);
+  var tail=part(0.06,0.06,0.3, FUR, 0,0.4,0.32); tail.rotation.x=-0.5;  // tail
+  var l1=part(0.07,0.26,0.07,FUR,-0.08,0.13,-0.14), l2=part(0.07,0.26,0.07,FUR,0.08,0.13,-0.14);
+  var l3=part(0.07,0.26,0.07,FUR,-0.08,0.13,0.18), l4=part(0.07,0.26,0.07,FUR,0.08,0.13,0.18);
+  g.userData.legs=[l1,l2,l3,l4];
   return g;
 }
 function makeSkeleton(){
@@ -4251,7 +4360,7 @@ function makeDuck(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,
   g.userData.legs=[l1,l2]; return g; }
 var MOBDEF={
   zombie:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:3}, skeleton:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:2},
-  spider:{hp:8,w:0.9,h:0.7,sp:3.7,dmg:2}, creeper:{hp:12,w:0.55,h:1.9,sp:2.6,dmg:2},
+  spooler:{hp:8,w:0.8,h:0.6,sp:4.0,dmg:0}, creeper:{hp:12,w:0.55,h:1.9,sp:2.6,dmg:2},
   fish:{hp:3,w:0.4,h:0.3,sp:2.0,dmg:0}, cow:{hp:14,w:0.8,h:1.3,sp:1.4,dmg:0,passive:true},
   pig:{hp:10,w:0.7,h:0.9,sp:1.5,dmg:0,passive:true}, sheep:{hp:10,w:0.8,h:1.2,sp:1.4,dmg:0,passive:true},
   chicken:{hp:4,w:0.4,h:0.7,sp:1.7,dmg:0,passive:true},
@@ -4262,16 +4371,17 @@ var MOBDEF={
   bird:{hp:4,w:0.4,h:0.3,sp:3.2,dmg:0,passive:true,bird:true},
   horse:{hp:15,w:0.8,h:1.6,sp:3.0,dmg:0,passive:true},
   dog:{hp:8,w:0.5,h:0.7,sp:3.4,dmg:0,passive:true},
+  cat:{hp:8,w:0.4,h:0.6,sp:3.4,dmg:0,passive:true},
   boat:{hp:8,w:0.8,h:0.5,sp:0,dmg:0,passive:true},
   villager:{hp:20,w:0.6,h:1.9,sp:1.1,dmg:0,passive:true,villager:true}
 };
 function meshFor(kind){ switch(kind){
-  case 'spider':return makeSpider(); case 'skeleton':return makeSkeleton(); case 'creeper':return makeCreeper();
+  case 'spooler':return makeSpooler(); case 'skeleton':return makeSkeleton(); case 'creeper':return makeCreeper();
   case 'fish':return makeFish(); case 'cow':return makeCow(); case 'pig':return makePig();
   case 'sheep':return makeSheep(); case 'chicken':return makeChicken();
   case 'shark':return makeShark(); case 'crab':return makeCrab(); case 'emberwisp':return makeWisp();
   case 'deer':return makeDeer(); case 'duck':return makeDuck(); case 'bird':return makeBird();
-  case 'horse':return makeHorse(); case 'dog':return makeDog();
+  case 'horse':return makeHorse(); case 'dog':return makeDog(); case 'cat':return makeCat();
   case 'boat':return makeBoat();
   case 'villager':return makeVillager();
   default:return makeZombie(); } }
@@ -4482,6 +4592,21 @@ function tickEntities(dt){
       if(e.wanderCd<=0){ e.wanderCd=2+Math.random()*3; e.wDir=Math.random()*6.283; e.wMove=Math.random()<0.55; }
       if(e.wMove){ e.vel.x=Math.sin(e.wDir)*e.speed*0.4; e.vel.z=Math.cos(e.wDir)*e.speed*0.4; e.mesh.rotation.y=e.wDir; }
       else { e.vel.x=0; e.vel.z=0; }
+    } else if(e.kind==='spooler'){
+      var sang=Math.atan2(dx,dz);
+      var spooked = dist<7 || e.hurt>0 || e.provoked;
+      if(e.hurt>0) e.provoked=true;
+      if(spooked){
+        if(dist<7) e.provoked=true;
+        e.mesh.rotation.y=sang+Math.PI;                                  // turn tail to player
+        e.vel.x=-Math.sin(sang)*e.speed*1.25; e.vel.z=-Math.cos(sang)*e.speed*1.25;  // scatter away
+        if(e.onGround && Math.hypot(e.vel.x,e.vel.z)>0.1){ var sahx=e.pos.x+Math.sign(e.vel.x)*0.4, sahz=e.pos.z+Math.sign(e.vel.z)*0.4; if(isSolid(World.getBlock(Math.floor(sahx),Math.floor(e.pos.y),Math.floor(sahz)))) e.vel.y=6.0; }
+        if(dist>24) e.provoked=false;                                    // settle once far away
+      } else {
+        e.wcd=(e.wcd||0)-dt; if(e.wcd<=0){ e.wcd=2+Math.random()*3; e.wdir=Math.random()*6.283; e.wmove=Math.random()<0.5; }
+        if(e.wmove){ e.vel.x=Math.sin(e.wdir)*e.speed*0.35; e.vel.z=Math.cos(e.wdir)*e.speed*0.35; e.mesh.rotation.y=e.wdir; }
+        else { e.vel.x=0; e.vel.z=0; }
+      }
     } else if(e.kind==='skeleton' && dist<40){
       var ang=Math.atan2(dx,dz); e.mesh.rotation.y=ang;
       if(dist<5){ e.vel.x=-Math.sin(ang)*e.speed; e.vel.z=-Math.cos(ang)*e.speed; }      // kite away
@@ -4519,6 +4644,7 @@ function tickEntities(dt){
     if(e.mesh.userData.arms){ e.mesh.userData.arms[0].rotation.x=-1.4+Math.sin(now*0.004)*0.12; e.mesh.userData.arms[1].rotation.x=-1.4-Math.sin(now*0.004)*0.12; }
     if(e.mesh.userData.spiderLegs){ var sl=e.mesh.userData.spiderLegs, a=Math.sin(now*0.02)*(moving?0.28:0.06);
       for(var li=0; li<sl.length; li++){ sl[li].rotation.x=a*((li%2)?1:-1); } }
+    if(e.mesh.userData.reels){ var rl=e.mesh.userData.reels, rspin=(moving?0.18:0.05)+(e.provoked?0.22:0); for(var ri2=0;ri2<rl.length;ri2++){ rl[ri2].rotation.x += rspin; } }
     // hurt flash
     if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats;
       if(mm){ for(var mi=0;mi<mm.length;mi++){ mm[mi].color.setHex(red?0xff5555:mm[mi].__base); } } }
@@ -4536,7 +4662,7 @@ function tickEntities(dt){
       var rr=hash3(i,now|0,0,1);
       if(e.kind==='zombie'){ giveItem('RAW_PORK',1+(rr*2|0)); if(rr<0.12) giveItem('IRON_INGOT',1); }
       else if(e.kind==='skeleton'){ giveItem('BONE',1+(rr*2|0)); if(rr<0.4) giveItem('STICK',1); unlock('marksman'); }
-      else if(e.kind==='spider'){ if(rr<0.7) giveItem('STICK',1+(rr*2|0)); }
+      else if(e.kind==='spooler'){ giveItem('STRING',1+(rr*2|0)); if(rr<0.10) giveItem('STEAM_SILK',1); }
       else if(e.kind==='creeper'){ giveItem('GUNPOWDER',1+(rr*2|0)); if(rr<0.4) giveItem('COAL',1); }
       else if(rr<0.5){ giveItem('STICK',1); }
       continue;
@@ -4593,7 +4719,7 @@ function maybeSpawnEnemies(){
   for(var y=WORLD_H-1;y>1;y--){ if(isSolid(World.getBlockLoaded(x,y,z))){ cy=y+1; break; } }
   if(cy<0) return;
   if(World.blockLightAt(x,cy,z) > 7) return; // it's already night here; only block near torches/light
-  var r=Math.random(); var kind = r<0.45?'zombie' : r<0.78?'skeleton' : 'creeper';
+  var r=Math.random(); var kind = r<0.42?'zombie' : r<0.70?'skeleton' : r<0.86?'creeper' : 'spooler';
   spawnEnemy(kind, x+0.5, cy, z+0.5);
 }
 function maybeSpawnVillagers(){
@@ -4606,7 +4732,7 @@ function maybeSpawnVillagers(){
     var x=Math.floor(v.x), z=Math.floor(v.z), cy=-1;
     for(var y=WORLD_H-1;y>1;y--){ if(isSolid(World.getBlockLoaded(x,y,z))){ cy=y+1; break; } }
     if(cy<0) continue;
-    spawnEnemy('villager', x+0.5, cy, z+0.5); return;
+    spawnEnemy(Math.random()<0.28?'cat':'villager', x+0.5, cy, z+0.5); return;
   }
 }
 function maybeSpawnFish(){
@@ -4941,7 +5067,8 @@ function mobSound(kind, hurt){
     case 'zombie': tone(140,hurt?0.3:0.5,'sawtooth',v,86); tone(96,hurt?0.32:0.55,'sawtooth',v*0.7,68); break;
     case 'skeleton': for(var _r=0;_r<5;_r++){ (function(d){ setTimeout(function(){ if(sfxOn) noiseBurst(0.04,v*0.85,3000); }, d); })(_r*55); } break;
     case 'creeper': tone(380,0.5,'sawtooth',v*0.7,120); noiseBurst(0.4,v,1100); break;
-    case 'spider': noiseBurst(0.2,v,1700); tone(600,0.1,'sawtooth',v*0.5,260); break;
+    case 'spooler': for(var _sp=0;_sp<3;_sp++){ (function(d){ setTimeout(function(){ if(sfxOn) tone(1500,0.02,'square',v*0.5); }, d); })(_sp*70); } noiseBurst(0.05,v*0.4,2600); break;
+    case 'cat': tone(700,0.16,'sawtooth',v,520); setTimeout(function(){ if(sfxOn) tone(880,0.12,'sawtooth',v*0.8,760); },150); break;
     case 'cow': tone(184,0.6,'sawtooth',v,120); tone(150,0.5,'sawtooth',v*0.8,108); break;
     case 'pig': tone(320,0.1,'square',v,250); setTimeout(function(){ if(sfxOn) tone(298,0.1,'square',v,224); },120); break;
     case 'sheep': tone(440,0.34,'triangle',v,400); setTimeout(function(){ if(sfxOn) tone(415,0.16,'triangle',v*0.8,380); },180); break;
@@ -4961,6 +5088,9 @@ function sfxHurtMob(kind){ mobSound(kind, true); }
 function sfxExplode(){ noiseBurst(0.5,0.32,260); tone(70,0.45,'square',0.18,40); noiseBurst(0.3,0.18,140); }
 function sfxSplash(){ noiseBurst(0.30,0.13,520); tone(300,0.18,'sine',0.06,150); noiseBurst(0.16,0.05,1300); }
 function sfxBow(){ tone(440,0.12,'square',0.05,180); noiseBurst(0.06,0.04,1800); }
+function sfxDoor(open){ tone(open?300:230,0.09,'square',0.05, open?380:165); noiseBurst(0.045,0.03,1500); }
+function sfxEat(){ noiseBurst(0.06,0.05,900); setTimeout(function(){ if(sfxOn) noiseBurst(0.05,0.04,760); },120); }
+function sfxOpenUI(){ tone(440,0.05,'triangle',0.045,580); }
 // ambient: idle animal calls + eerie cave tones
 var ambCd=0;
 function caveAmbient(){ var a=ac(); if(!a||!sfxOn) return; var f=58+Math.random()*120; tone(f,1.6+Math.random(),'sine',0.05,f*0.55);
@@ -5262,7 +5392,7 @@ function updateTorchLights(dt){
   torchFlkU.value = 0.84 + 0.16*(0.5+0.5*Math.sin(now*0.013)) + (Math.random()-0.5)*0.05;   // flicker
   torchScanT-=dt; if(torchScanT>0) return; torchScanT=0.25;
   var px=Math.floor(Player.pos.x), py=Math.floor(Player.pos.y), pz=Math.floor(Player.pos.z), found=[];
-  for(var dx=-8;dx<=8;dx++) for(var dz=-8;dz<=8;dz++) for(var dy=-5;dy<=6;dy++){
+  for(var dx=-10;dx<=10;dx++) for(var dz=-10;dz<=10;dz++) for(var dy=-5;dy<=6;dy++){
     var x=px+dx, y=py+dy, z=pz+dz; if(y<1||y>=WORLD_H) continue;
     if(World.getBlock(x,y,z)===B.TORCH){ var ax=x+0.5-Player.pos.x, ay=y+0.5-Player.pos.y, az=z+0.5-Player.pos.z; found.push([x+0.5,y+0.5,z+0.5, ax*ax+ay*ay+az*az]); }
   }
@@ -5379,6 +5509,7 @@ function loop(t){
   tickFurnaces(dt);
   tickMacerators(dt);
   tickGenerators(dt);
+  tickLeafDecay(dt);
   tickPlants(dt);
   World.tickWater(dt);
   tickLeaves(dt);
@@ -5468,14 +5599,17 @@ document.getElementById('btnCreateGo').addEventListener('click', function(){ ac(
   loadWorld(w.id);
 });
 document.getElementById('btnRespawn').addEventListener('click', respawn);
-var SPLASHES=['Now with chunk lighting!','100% organic voxels!','Punch a tree to begin!','Mine. Craft. Survive.','Forged from nothing!','It is night somewhere...','Watch for spiders!','Single file, big dreams!','Don\'t dig straight down!','Survive the first night!','Creative mode: just fly!','Build anything!'];
+var SPLASHES=['Now with chunk lighting!','100% organic voxels!','Punch a tree to begin!','Mine. Craft. Survive.','Forged from nothing!','It is night somewhere...','Wind-up spoolers about!','Single file, big dreams!','Don\'t dig straight down!','Survive the first night!','Creative mode: just fly!','Build anything!'];
 document.getElementById('splash').textContent = SPLASHES[(Math.random()*SPLASHES.length)|0];
 document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 49';
+var VERSION='Update 52';
 var CHANGELOG=[
+  { v:'Update 52', t:'Spoolers, Cats & Critters', items:['\u2699\ufe0f Spoolers replace spiders \u2014 wind-up clockwork critters with spinning thread reels','They\u2019re harmless until you hit them, and scatter when you get close','They drop String (craft into wool) and rare Steam Silk \u2014 weave it into a Saddle to tame & ride a horse instantly','\uD83D\uDC31 Cats now roam near villages \u2014 tame them with fish, cooked fish, or crab meat'] },
+  { v:'Update 51', t:'Tools, Faces & Light', items:['\u26cf\ufe0f Each tool now has its own shape in hand \u2014 pickaxe, axe, shovel, hoe & sword, held more upright','\uD83D\uDE42 Your character has a face now, matching in the inventory and in third-person','\uD83D\uDCA1 Torches & held light reach noticeably further with a softer glow'] },
+  { v:'Update 50', t:'Logs, Leaves & Polish', items:['\uD83E\uDEB5 Place logs sideways \u2014 they orient to the face you click','\uD83C\uDF42 Leaves now decay after you chop a tree down','\uD83D\uDEAA Door, gate & trapdoor sounds (plus eating & menu sounds)','Stairs/slabs/doors show their real shape in your hand','Title screen fits landscape; fixed the solar panel close button'] },
   { v:'Update 49', t:'Solar Power & What\u2019s New', items:['\u2600\ufe0f Solar Panels \u2014 free power in daylight, no fuel; wire them into your cable network','\uD83D\uDCF0 This What\u2019s New screen so you can see each update'] },
   { v:'Update 48', t:'Energy Network', items:['\uD83D\uDD0c Energy Cables \u2014 route power across your base','\u26a1 Powered Furnace \u2014 3\u00d7 smelting with no coal','Machines pull power through connected cables'] },
   { v:'Update 47', t:'Machines & Energy', items:['\u2699\ufe0f Generator \u2014 burns fuel into stored power','A Macerator next to power grinds ~3.5\u00d7 faster'] },
