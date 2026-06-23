@@ -416,6 +416,7 @@ defBlock({key:'BIRCH_LOG', name:'Birch Log', col:[206,202,186], top:[170,166,150
 defBlock({key:'BIRCH_LEAVES', name:'Birch Leaves', col:[118,168,86], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'CHERRY_LOG', name:'Cherry Log', col:[120,80,80], top:[150,108,108], solid:true, tool:'axe', hard:1.2 , log:true });
 defBlock({key:'CHERRY_LEAVES', name:'Cherry Blossom', col:[240,168,208], solid:true, leaf:true, hard:0.3 });
+defBlock({key:'MAPLE_LEAVES', name:'Maple Leaves', col:[214,116,42], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'SPRUCE_PLANKS', name:'Spruce Planks', col:[114,84,50], top:[124,92,56], solid:true, tool:'axe', hard:1.0 });
 defBlock({key:'BIRCH_PLANKS', name:'Birch Planks', col:[200,180,132], top:[208,188,140], solid:true, tool:'axe', hard:1.0 });
 defBlock({key:'CHERRY_PLANKS', name:'Cherry Planks', col:[214,150,150], top:[222,160,160], solid:true, tool:'axe', hard:1.0 });
@@ -881,6 +882,8 @@ var World = {
     var sSavanna= this.bnoise.fbm(wx*f+1300, wz*f+700, 2) - 0.04;
     var sSnowy  = this.bnoise.fbm(wx*f-980, wz*f-1240, 2) - 0.03;
     var sJungle = this.bnoise.fbm(wx*f+450, wz*f+1500, 2) - 0.06;
+    var sMaple  = this.bnoise.fbm(wx*f-1500,wz*f+260, 2) - 0.05;
+    var sWet    = this.bnoise.fbm(wx*f+1850,wz*f-1320,2) - 0.05;
     var best=sPlains, bi=0;
     if(sOak>best){best=sOak;bi=1;}
     if(sMtn>best){best=sMtn;bi=2;}
@@ -891,6 +894,8 @@ var World = {
     if(sSavanna>best){best=sSavanna;bi=8;}
     if(sSnowy>best){best=sSnowy;bi=9;}
     if(sJungle>best){best=sJungle;bi=10;}
+    if(sMaple>best){best=sMaple;bi=11;}
+    if(sWet>best){best=sWet;bi=12;}
     return bi;
   },
   heightAt: function(wx,wz){
@@ -909,6 +914,8 @@ var World = {
       h = SEA + 7 + Math.pow(Math.max(0,(m+0.2)),1.4)*58 + base*7;
     } else if(biome===3){ // desert
       h = SEA + 1 + base*6 + this.noise.fbm(wx*0.05,wz*0.05,2)*2;
+    } else if(biome===12){ // wetland — low, marshy, dips below sea for pools
+      h = SEA + Math.floor(base*2.4) + (this.noise.fbm(wx*0.06+3,wz*0.06-3,2))*1.2;
     } else {
       h = SEA + 1 + base*10;
     }
@@ -1023,6 +1030,8 @@ var World = {
       else if(biome===8){ dens=0.008; }                                           // savanna: sparse oak
       else if(biome===9){ logT=B.SPRUCE_LOG; leafT=B.SPRUCE_LEAVES; dens=0.02; spruce=true; } // snowy
       else if(biome===10){ leafT=B.JUNGLE_LEAVES; dens=0.05; jungle=true; }        // jungle: dense, tall
+      else if(biome===11){ logT=B.LOG; leafT=B.MAPLE_LEAVES; dens=0.03; }            // maple woods: dense autumn oaks
+      else if(biome===12){ dens=0.01; }                                             // wetland: sparse oak on the islands
       if(hash3(wx,1,wz,this.seed^777) < dens){
         var th = (jungle?8:(spruce?6:4)) + Math.floor(hash3(wx,2,wz,this.seed)*(jungle?6:(spruce?4:5)));
         for(var t=1;t<=th && h+t<WORLD_H;t++) setLocal(blocks,lx,h+t,lz,logT);
@@ -1942,7 +1951,7 @@ function tickUnderwater(dt){
 /* ----------------------------- FIRE ----------------------------- */
 var fires={}, fireTimer=0, FIRE_MAX=48, fireSprites=[], fireDmgCd=0;
 var FLAMMABLE={};
-(function(){ ['LOG','SPRUCE_LOG','BIRCH_LOG','CHERRY_LOG','PLANKS','SPRUCE_PLANKS','BIRCH_PLANKS','CHERRY_PLANKS','LEAVES','SPRUCE_LEAVES','BIRCH_LEAVES','CHERRY_LEAVES','WOOL','GRASS','TALLGRASS','BOOKSHELF']
+(function(){ ['LOG','SPRUCE_LOG','BIRCH_LOG','CHERRY_LOG','PLANKS','SPRUCE_PLANKS','BIRCH_PLANKS','CHERRY_PLANKS','LEAVES','SPRUCE_LEAVES','BIRCH_LEAVES','CHERRY_LEAVES','WOOL','GRASS','TALLGRASS','BOOKSHELF','MAPLE_LEAVES']
   .forEach(function(k){ if(B[k]!==undefined) FLAMMABLE[B[k]]=true; }); })();
 function isFlammable(id){ return !!FLAMMABLE[id]; }
 function flammableAround(x,y,z){ var n=0; var d=[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1],[0,1,0],[0,-1,0]];
@@ -3320,6 +3329,7 @@ function selectHotbar(i){ hotbarSel=i; renderHotbar(); }
 function makeGridSlot(arr, i, onClick){
   var d=document.createElement('div'); d.className='gslot';
   d.innerHTML=slotHTML(arr[i]);
+  liveSlots.push({el:d, arr:arr, i:i});
   function showName(){ var it=arr[i]; if(it&&ITEMS[it.key]) lastSlotName=ITEMS[it.key].name; if(invNameEl) invNameEl.textContent=lastSlotName; }
   d.addEventListener('mousedown', function(e){ e.preventDefault(); showName(); onClick(i, e.button); });
   var pressT=null, didLong=false;
@@ -3384,7 +3394,7 @@ function clickArmorSlot(i){
   setHeld(); rerenderScreen(); updateStats();
 }
 
-function openScreen(){ uiOpen=true; sfxOpenUI(); screenEl.classList.remove('hidden'); document.getElementById('hint').classList.add('hidden');
+function openScreen(){ uiOpen=true; liveSlots=[]; sfxOpenUI(); screenEl.classList.remove('hidden'); document.getElementById('hint').classList.add('hidden');
   if(pointerLocked && document.exitPointerLock) document.exitPointerLock(); }
 function closeScreen(){
   // return cursor item to inventory
@@ -3422,6 +3432,8 @@ function renderCrafting(panel, width){
   updateCraftOutput(width);
 }
 var pendingCraft=null;
+var liveSlots=[]; // {el,arr,i} of every rendered grid slot, refreshed in place without DOM teardown
+function refreshLiveSlots(){ for(var k=0;k<liveSlots.length;k++){ var b=liveSlots[k]; if(b.el && b.el.parentNode) b.el.innerHTML=slotHTML(b.arr[b.i]); } }
 function updateCraftOutput(width){
   var size=width*width;
   var rec=craftMatch(craftCells(size), width);
@@ -3444,7 +3456,7 @@ function takeCraftOutput(width){
   // hand the result straight to the inventory (Minecraft-style: tap again to make more)
   giveItem(pendingCraft.out, pendingCraft.qty);
   sfxClick();
-  rerenderScreen();
+  refreshLiveSlots(); updateCraftOutput(width);   // in-place refresh — no DOM teardown (keeps the grid stable so you can keep crafting)
 }
 
 function renderInvAndHotbar(panel){
@@ -3528,31 +3540,37 @@ function openInventory(keep){
     renderPalette('');
   } else {
     var L=document.createElement('div'); L.className='invlayout';
-    L.style.cssText='display:flex; flex-direction:column; gap:7px; align-items:center;';
-    // TOP: crafting (always visible, right above the inventory)
-    var cw=document.createElement('div'); cw.style.cssText='display:flex;flex-direction:column;align-items:center;'; cw.appendChild(label('Crafting')); renderCrafting(cw,2); L.appendChild(cw);
-    // inventory grid
-    L.appendChild(label('Inventory'));
-    var mg=gridContainer(9);
-    for(var i=0;i<27;i++){ (function(i){ mg.appendChild(makeGridSlot(inv.main,i,function(idx,btn){ clickSlot(inv.main,idx,btn); })); })(i); }
-    L.appendChild(mg);
-    // hotbar
-    L.appendChild(label('Hotbar'));
-    var hg=gridContainer(9);
-    for(var j=0;j<9;j++){ (function(j){ hg.appendChild(makeGridSlot(inv.hotbar,j,function(idx,btn){ clickSlot(inv.hotbar,idx,btn); })); })(j); }
-    L.appendChild(hg);
-    invNameEl=document.createElement('div'); invNameEl.style.cssText='min-height:15px;font-size:12px;color:#cfe;opacity:0.85;'; invNameEl.textContent=lastSlotName;
-    L.appendChild(invNameEl);
-    // BOTTOM: armor + off-hand + character (less-used, ok to sit below)
-    var arow=document.createElement('div'); arow.style.cssText='display:flex; gap:14px; align-items:center; justify-content:center; margin-top:2px; flex-wrap:wrap;';
-    var acol=document.createElement('div'); acol.style.cssText='display:flex; flex-direction:column; align-items:center; gap:3px;'; acol.appendChild(label('Armor'));
-    var ag=gridContainer(4);
+    L.style.cssText='display:flex; gap:16px; align-items:flex-start; justify-content:center; flex-wrap:wrap;';
+    // LEFT: armor column + character + off-hand (Minecraft-style)
+    var left=document.createElement('div'); left.style.cssText='display:flex; flex-direction:column; align-items:center; gap:6px;';
+    left.appendChild(label('Equipment'));
+    var prow=document.createElement('div'); prow.style.cssText='display:flex; gap:10px; align-items:center; justify-content:center;';
+    var acol=document.createElement('div'); acol.style.cssText='display:flex; flex-direction:column; align-items:center; gap:4px;';
+    var ag=gridContainer(1);
     for(var ai=0;ai<4;ai++){ (function(ai){ ag.appendChild(makeGridSlot(inv.armor,ai,function(idx,btn){ clickArmorSlot(idx); })); })(ai); }
     acol.appendChild(ag);
-    var ocol=document.createElement('div'); ocol.style.cssText='display:flex; flex-direction:column; align-items:center; gap:3px;'; ocol.appendChild(label('Off-Hand'));
-    var og=gridContainer(1); og.appendChild(makeGridSlot(inv.offhand,0,function(idx,btn){ clickOffhand(); })); ocol.appendChild(og);
-    arow.appendChild(makeAvatarPreview()); arow.appendChild(acol); arow.appendChild(ocol);
-    L.appendChild(arow);
+    prow.appendChild(acol);
+    prow.appendChild(makeAvatarPreview());
+    var ocol=document.createElement('div'); ocol.style.cssText='display:flex; flex-direction:column; align-items:center; gap:4px; justify-content:flex-end;';
+    var og=gridContainer(1); og.appendChild(makeGridSlot(inv.offhand,0,function(idx,btn){ clickOffhand(); }));
+    var olbl=document.createElement('div'); olbl.className='lbl'; olbl.textContent='Off'; olbl.style.cssText='font-size:10px;margin:0;opacity:.8';
+    ocol.appendChild(og); ocol.appendChild(olbl);
+    prow.appendChild(ocol);
+    left.appendChild(prow);
+    // RIGHT: crafting + inventory + hotbar
+    var right=document.createElement('div'); right.style.cssText='display:flex; flex-direction:column; align-items:center; gap:5px;';
+    var cw=document.createElement('div'); cw.style.cssText='display:flex;flex-direction:column;align-items:center;'; cw.appendChild(label('Crafting')); renderCrafting(cw,2); right.appendChild(cw);
+    right.appendChild(label('Inventory'));
+    var mg=gridContainer(9);
+    for(var i=0;i<27;i++){ (function(i){ mg.appendChild(makeGridSlot(inv.main,i,function(idx,btn){ clickSlot(inv.main,idx,btn); })); })(i); }
+    right.appendChild(mg);
+    right.appendChild(label('Hotbar'));
+    var hg=gridContainer(9);
+    for(var j=0;j<9;j++){ (function(j){ hg.appendChild(makeGridSlot(inv.hotbar,j,function(idx,btn){ clickSlot(inv.hotbar,idx,btn); })); })(j); }
+    right.appendChild(hg);
+    invNameEl=document.createElement('div'); invNameEl.style.cssText='min-height:15px;font-size:12px;color:#cfe;opacity:0.85;text-align:center;'; invNameEl.textContent=lastSlotName;
+    right.appendChild(invNameEl);
+    L.appendChild(left); L.appendChild(right);
     p.appendChild(L);
   }
   if(gameMode==='creative'){ renderInvAndHotbar(p); p.appendChild(recipeBookBtn()); p.appendChild(closeBtn(2)); }
@@ -4178,26 +4196,35 @@ function makeHorse(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x
   var coats=[0x4a3120,0x8a5a2e,0x2a2018,0xc8a060,0xe8e0d4,0x7a7068,0x5c3a1e,0xa9805a];
   var manes=[0x2a1c10,0x3a2a18,0x14100a,0xe8e0d4,0x5a4632,0x1a1410];
   var C=coats[Math.random()*coats.length|0], M=manes[Math.random()*manes.length|0];
-  p(0.6,0.62,1.1,C,0,1.0,0);                   // body
-  p(0.34,0.4,0.42,C,0,1.36,0.66);              // head
-  p(0.28,0.3,0.3,C,0,1.56,0.52);               // upper head
-  p(0.3,0.14,0.06,M,0,1.72,0.18);              // mane
-  p(0.09,0.18,0.04,C,-0.11,1.74,0.56); p(0.09,0.18,0.04,C,0.11,1.74,0.56); // ears
-  p(0.06,0.06,0.02,0x100a06,-0.12,1.4,0.86); p(0.06,0.06,0.02,0x100a06,0.12,1.4,0.86); // eyes
-  var l1=p(0.16,0.95,0.16,C,-0.2,0.47,0.36), l2=p(0.16,0.95,0.16,C,0.2,0.47,0.36);
-  var l3=p(0.16,0.95,0.16,C,-0.2,0.47,-0.36), l4=p(0.16,0.95,0.16,C,0.2,0.47,-0.36);
-  p(0.1,0.55,0.1,M,0,0.95,-0.6);               // tail
+  var HOOF=0x1c1712, MUZZLE=mixHex(C,0x000000,0.42), BELLY=mixHex(C,0xffffff,0.16);
+  p(0.62,0.64,1.12,C,0,1.0,0);                 // body
+  p(0.5,0.22,1.0,BELLY,0,0.84,0);              // belly shading
+  p(0.36,0.3,0.6,C,0,1.16,0.5);                // neck base
+  p(0.34,0.4,0.42,C,0,1.4,0.68);               // head
+  p(0.27,0.22,0.22,MUZZLE,0,1.3,0.86);         // muzzle
+  p(0.05,0.04,0.04,0x000000,-0.08,1.28,0.97); p(0.05,0.04,0.04,0x000000,0.08,1.28,0.97); // nostrils
+  p(0.28,0.3,0.3,C,0,1.58,0.54);               // upper head
+  p(0.32,0.18,0.08,M,0,1.74,0.22);             // mane
+  p(0.1,0.12,0.05,M,0,1.56,0.78);              // forelock
+  p(0.09,0.2,0.05,C,-0.11,1.78,0.56); p(0.09,0.2,0.05,C,0.11,1.78,0.56); // ears
+  eyePair(g,1.44,0.86,0.13,0.075,0.045);       // eyes
+  var l1=mobLeg(g,-0.2,0.96,0.36,0.17,0.96,C,HOOF), l2=mobLeg(g,0.2,0.96,0.36,0.17,0.96,C,HOOF);
+  var l3=mobLeg(g,-0.2,0.96,-0.36,0.17,0.96,C,HOOF), l4=mobLeg(g,0.2,0.96,-0.36,0.17,0.96,C,HOOF);
+  var tail=p(0.12,0.6,0.12,M,0,0.95,-0.62); tail.rotation.x=0.25; // tail
   g.userData.legs=[l1,l2,l3,l4]; return g; }
 function makeDog(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   var furs=[0x8a8a8a,0xc8b89a,0x4a3220,0x2a2420,0xe0dcd0,0xb05a30,0x6a5238,0x9a9488], F=furs[Math.random()*furs.length|0];
+  var BELLY=mixHex(F,0xffffff,0.34), PAW=mixHex(F,0x000000,0.4);
   p(0.34,0.34,0.6,F,0,0.5,0);                  // body
-  p(0.3,0.3,0.3,F,0,0.62,0.4);                 // head
-  p(0.13,0.11,0.16,0x2a2018,0,0.56,0.58);      // snout
-  p(0.1,0.15,0.04,F,-0.1,0.82,0.36); p(0.1,0.15,0.04,F,0.1,0.82,0.36); // ears
-  p(0.05,0.05,0.02,0x100a06,-0.08,0.66,0.55); p(0.05,0.05,0.02,0x100a06,0.08,0.66,0.55); // eyes
-  var l1=p(0.1,0.4,0.1,F,-0.1,0.2,0.18), l2=p(0.1,0.4,0.1,F,0.1,0.2,0.18);
-  var l3=p(0.1,0.4,0.1,F,-0.1,0.2,-0.18), l4=p(0.1,0.4,0.1,F,0.1,0.2,-0.18);
-  p(0.08,0.08,0.26,F,0,0.62,-0.4);             // tail
+  p(0.28,0.16,0.5,BELLY,0,0.42,0.02);          // lighter chest/belly
+  p(0.3,0.3,0.3,F,0,0.64,0.4);                 // head
+  p(0.15,0.13,0.18,PAW,0,0.58,0.59);           // muzzle
+  p(0.07,0.05,0.05,0x0a0705,0,0.61,0.69);      // nose
+  p(0.11,0.16,0.05,F,-0.1,0.84,0.36); p(0.11,0.16,0.05,F,0.1,0.84,0.36); // ears
+  eyePair(g,0.68,0.55,0.085,0.06,0.04);        // eyes
+  var l1=mobLeg(g,-0.1,0.42,0.18,0.11,0.42,F,PAW), l2=mobLeg(g,0.1,0.42,0.18,0.11,0.42,F,PAW);
+  var l3=mobLeg(g,-0.1,0.42,-0.18,0.11,0.42,F,PAW), l4=mobLeg(g,0.1,0.42,-0.18,0.11,0.42,F,PAW);
+  var tail=p(0.08,0.08,0.28,F,0,0.66,-0.42); tail.rotation.x=-0.7; // upturned tail
   g.userData.legs=[l1,l2,l3,l4]; return g; }
 function makeFire(){ var g=new THREE.Group();
   function fb(c,s,y){ var m=new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:0.82,depthWrite:false,side:THREE.DoubleSide}); var me=new THREE.Mesh(new THREE.BoxGeometry(s,s*1.7,s),m); me.position.y=y; g.add(me); return me; }
@@ -4260,6 +4287,16 @@ function partMesh(g,w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:h
 function eyePair(g,y,z,spread,w,pupil){ function p(W,H,D,c,x,yy,zz){ return partMesh(g,W,H,D,c,x,yy,zz); }
   p(w,w,0.02,0xf4f4f6,-spread,y,z); p(w,w,0.02,0xf4f4f6,spread,y,z);
   p(pupil,pupil,0.02,0x14110f,-spread,y,z+0.02); p(pupil,pupil,0.02,0x14110f,spread,y,z+0.02); }
+function mixHex(a,b,t){ var ar=(a>>16)&255,ag=(a>>8)&255,ab=a&255, br=(b>>16)&255,bg=(b>>8)&255,bb=b&255;
+  return (Math.round(ar+(br-ar)*t)<<16)|(Math.round(ag+(bg-ag)*t)<<8)|Math.round(ab+(bb-ab)*t); }
+// a jointed leg that pivots from the hip (group origin) so foot swings naturally
+function mobLeg(g, x, hipY, z, w, len, col, footCol){
+  var grp=new THREE.Group(); grp.position.set(x, hipY, z);
+  function pm(W,H,D,c,yy){ var m=new THREE.MeshBasicMaterial({color:c, map:mobNoiseTex, side:THREE.DoubleSide}); m.__base=c; g.__mats.push(m); var me=new THREE.Mesh(new THREE.BoxGeometry(W,H,D),m); me.position.set(0,yy,0); grp.add(me); return me; }
+  pm(w, len*0.72, w, col, -len*0.36);
+  if(footCol!=null) pm(w*1.12, len*0.28, w*1.16, footCol, -len*0.86);
+  g.add(grp); return grp;
+}
 function makeVillager(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   var skins=[0xc8a07a,0xa9805a,0x8d5a3c,0xe0b48c,0xf0c9a0], shirts=[0x4a6fa5,0x8a4a4a,0x3f7d4a,0x6a5a8a,0xb0843a,0x556070,0xa05a8a], hairs=[0x3a2a1a,0x161210,0x6a4a28,0x8a8a8a,0xd8b84a];
   var SKIN=skins[Math.random()*skins.length|0], SHIRT=shirts[Math.random()*shirts.length|0], HAIR=hairs[Math.random()*hairs.length|0], PANTS=[0x37506e,0x3a3f4a,0x5a4632][Math.random()*3|0];
@@ -4781,8 +4818,8 @@ function clearHostiles(){ for(var i=entities.length-1;i>=0;i--){ var k=entities[
 function surfaceY(x,z){ for(var y=WORLD_H-1;y>1;y--){ if(isSolid(World.getBlockLoaded(x,y,z))) return y+1; } return -1; }
 function maybeSpawnAnimals(){
   var ac=0; for(var i=0;i<entities.length;i++) if(entities[i].passive) ac++;
-  if(ac >= (IS_MOBILE?5:9)) return;
-  if(Math.random()>0.02) return;
+  if(ac >= (IS_MOBILE?8:14)) return;
+  if(Math.random()>0.06) return;
   var ang=Math.random()*6.283, dd=12+Math.random()*16;
   var x=Math.floor(Player.pos.x+Math.cos(ang)*dd), z=Math.floor(Player.pos.z+Math.sin(ang)*dd);
   var cy=surfaceY(x,z); if(cy<2) return;
@@ -5491,7 +5528,7 @@ function loop(t){
     if(frame%4===0){ maybeSpawnEnemies(); maybeSpawnVillagers(); }
     if(frame%5===0) maybeSpawnFish();
     if(frame%9===0) maybeSpawnBirds();
-    if(frame%6===0) maybeSpawnAnimals();
+    if(frame%3===0) maybeSpawnAnimals();
     if(frame%7===0) maybeSpawnOcean();
     ambientTick(dt);
     if(frame%9===0) maybeSpawnWisp();
@@ -5605,8 +5642,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 52';
+var VERSION='Update 53';
 var CHANGELOG=[
+  { v:'Update 53', t:'World Pass & Inventory', items:['\uD83C\uDF41 New Maple Woods (autumn oaks) and Wetland (marshy pools) biomes','\uD83D\uDC34 Horses & dogs reworked \u2014 muzzles, hooves/paws, fuller bodies and jointed legs','\uD83C\uDF92 Inventory fits one screen \u2014 character & armor on the left, crafting & items on the right','\uD83D\uDD28 Fixed crafting: ingredients stay put so you can keep making batches without re-placing them','More animals roam the world now'] },
   { v:'Update 52', t:'Spoolers, Cats & Critters', items:['\u2699\ufe0f Spoolers replace spiders \u2014 wind-up clockwork critters with spinning thread reels','They\u2019re harmless until you hit them, and scatter when you get close','They drop String (craft into wool) and rare Steam Silk \u2014 weave it into a Saddle to tame & ride a horse instantly','\uD83D\uDC31 Cats now roam near villages \u2014 tame them with fish, cooked fish, or crab meat'] },
   { v:'Update 51', t:'Tools, Faces & Light', items:['\u26cf\ufe0f Each tool now has its own shape in hand \u2014 pickaxe, axe, shovel, hoe & sword, held more upright','\uD83D\uDE42 Your character has a face now, matching in the inventory and in third-person','\uD83D\uDCA1 Torches & held light reach noticeably further with a softer glow'] },
   { v:'Update 50', t:'Logs, Leaves & Polish', items:['\uD83E\uDEB5 Place logs sideways \u2014 they orient to the face you click','\uD83C\uDF42 Leaves now decay after you chop a tree down','\uD83D\uDEAA Door, gate & trapdoor sounds (plus eating & menu sounds)','Stairs/slabs/doors show their real shape in your hand','Title screen fits landscape; fixed the solar panel close button'] },
