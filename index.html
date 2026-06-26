@@ -17,6 +17,7 @@
     --stone:#c6c6c6; --stone-d:#8b8b8b; --stone-ink:#2b2b22; --slot-well:#8b8b8b;
     --ui: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
   }
+  .gpfocus{ outline:3px solid #ffd84a !important; outline-offset:1px; box-shadow:0 0 10px 2px #ffd84a99 !important; border-radius:4px; }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; height:100%; overflow:hidden; background:#0b0e13; color:var(--ink);
     font-family:var(--ui); user-select:none; -webkit-user-select:none; touch-action:none; }
@@ -372,7 +373,7 @@ window.addEventListener('error', function(ev){
 });
 
 /* ----------------------------- CONFIG ----------------------------------- */
-var CHUNK = 16, WORLD_H = 128, SEA = 60;
+var CHUNK = 16, WORLD_H = 176, SEA = 60;
 var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ('ontouchstart' in window && window.innerWidth < 1000);
 var RENDER_DIST = IS_MOBILE ? 4 : 7;
 var lookSens = 1.0;
@@ -965,9 +966,9 @@ var World = {
     var h;
     if(biome===7){ // ocean basin - varies from shallow shelf to deep trench
       h = SEA - 3 - Math.floor((this.noise.fbm(wx*0.02+5, wz*0.02-5, 3)+1)*6) - Math.floor(Math.max(0,this.noise.fbm(wx*0.009-20, wz*0.009+20, 2))*12);
-    } else if(biome===2){ // mountains
+    } else if(biome===2){ // mountains - tall, rugged peaks
       var m = this.noise.fbm(wx*0.02+9, wz*0.02-9, 5);
-      h = SEA + 7 + Math.pow(Math.max(0,(m+0.2)),1.4)*58 + base*7;
+      h = SEA + 8 + Math.pow(Math.max(0,(m+0.2)),1.4)*82 + base*9;
     } else if(biome===3){ // desert
       h = SEA + 1 + base*6 + this.noise.fbm(wx*0.05,wz*0.05,2)*2;
     } else if(biome===12){ // wetland - low, marshy, dips below sea for pools
@@ -1352,9 +1353,142 @@ var World = {
       loot[13]={key:'GOLD_ORE',qty:2};
     }
   },
+  // ===================== Spread-out villages (deterministic, world-space) =====================
+  genVillage: function(ch){
+    if(this.dim==='ashlands') return;
+    if(this._vseed!==this.seed){ this._vcache={}; this._vseed=this.seed; }
+    var VREGION=96, REACH=42;
+    var r0x=Math.floor((ch.cx*CHUNK-REACH)/VREGION), r1x=Math.floor((ch.cx*CHUNK+CHUNK-1+REACH)/VREGION);
+    var r0z=Math.floor((ch.cz*CHUNK-REACH)/VREGION), r1z=Math.floor((ch.cz*CHUNK+CHUNK-1+REACH)/VREGION);
+    for(var rx=r0x;rx<=r1x;rx++) for(var rz=r0z;rz<=r1z;rz++){
+      var v=this.villageAnchor(rx,rz,VREGION); if(v) this.buildVillage(ch, v);
+    }
+  },
+  villageAnchor: function(rx,rz,VREGION){
+    var key=rx+','+rz, c=this._vcache[key]; if(c!==undefined) return c;
+    var v=null;
+    if(hash3(rx,555,rz,this.seed^0x5EED) < 0.50){
+      var jx=hash3(rx,556,rz,this.seed), jz=hash3(rx,557,rz,this.seed);
+      var cx=rx*VREGION + 34 + Math.floor(jx*(VREGION-68));
+      var cz=rz*VREGION + 34 + Math.floor(jz*(VREGION-68));
+      var biome=this.biomeAt(cx,cz);
+      if(biome!==7 && biome!==2){
+        var gy=this.heightAt(cx,cz);
+        if(gy>SEA && gy<=SEA+22){
+          var lo=999,hi=0,water=0;
+          for(var sx=-24;sx<=24;sx+=8){ for(var sz=-24;sz<=24;sz+=8){ var t=this.heightAt(cx+sx,cz+sz); if(t<=SEA) water++; if(t<lo)lo=t; if(t>hi)hi=t; } }
+          if(water<=2 && hi-lo<=7) v={cx:cx,cz:cz,biome:biome,gy:gy};
+        }
+      }
+    }
+    this._vcache[key]=v; return v;
+  },
+  buildVillage: function(ch, v){
+    var seed=this.seed, pal=this.villagePalette(v.biome);
+    var sk=v.cx+','+v.cz; if(!villageSiteSet[sk]){ villageSiteSet[sk]=1; villageSites.push({x:v.cx+0.5, y:v.gy+1, z:v.cz+0.5}); }
+    function R(n){ return hash3(v.cx, 600+n, v.cz, seed); }
+    var N=5+(R(0)*4|0), i;
+    for(i=0;i<N;i++){
+      var ang=(i/N)*6.2832 + (R(10+i)-0.5)*0.7;
+      var rad=12 + R(20+i)*14;
+      var bx=v.cx + Math.round(Math.cos(ang)*rad), bz=v.cz + Math.round(Math.sin(ang)*rad);
+      var big=R(30+i)<0.42, rr=big?(3+(R(40+i)*1.99|0)):(2+(R(45+i)*1.99|0));
+      this.vPath(ch, v, v.cx, v.cz, bx, bz);
+      this.vHouse(ch, v, bx, bz, rr, big, pal, i);
+    }
+    var F=2+(R(60)*2|0);
+    for(i=0;i<F;i++){
+      var a2=(i/F)*6.2832 + 0.7 + R(70+i)*0.8, r2=16 + R(80+i)*9;
+      var fx=v.cx+Math.round(Math.cos(a2)*r2), fz=v.cz+Math.round(Math.sin(a2)*r2);
+      this.vPath(ch, v, v.cx, v.cz, fx, fz);
+      this.vFarm(ch, v, fx, fz, 3+(R(90+i)*1.99|0), 2+(R(95+i)*1.99|0), pal);
+    }
+    this.vWell(ch, v, pal);   // last, so the central well sits on top of the paths
+  },
+  vPath: function(ch, v, x0, z0, x1, z1){
+    if(!bboxHits(ch, x0, z0, x1, z1)) return;
+    var steps=Math.max(Math.abs(x1-x0), Math.abs(z1-z0)); if(steps<1) return;
+    for(var s=0;s<=steps;s++){ var t=s/steps, px=Math.round(x0+(x1-x0)*t), pz=Math.round(z0+(z1-z0)*t);
+      if(!inCh(ch,px,pz)) continue;
+      var gy=this.heightAt(px,pz);
+      setW(ch,px,gy,pz,B.GRAVEL); setW(ch,px,gy+1,pz,B.AIR);
+    }
+  },
+  vWell: function(ch, v, pal){
+    var wx=v.cx, wz=v.cz, h=v.gy;
+    if(!bboxHits(ch, wx-2, wz-2, wx+2, wz+2)) return;
+    var dx,dz;
+    for(dx=-2;dx<=2;dx++) for(dz=-2;dz<=2;dz++){ for(var fy=h-7;fy<=h;fy++) setW(ch,wx+dx,fy,wz+dz,pal.base); setW(ch,wx+dx,h+1,wz+dz,B.AIR); }
+    for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++){ if(Math.abs(dx)===1||Math.abs(dz)===1) setW(ch,wx+dx,h+1,wz+dz,B.COBBLE); }
+    setW(ch,wx,h,wz,B.WATER); setW(ch,wx,h+1,wz,B.WATER);
+    setW(ch,wx-1,h+2,wz-1,pal.post); setW(ch,wx+1,h+2,wz-1,pal.post); setW(ch,wx-1,h+2,wz+1,pal.post); setW(ch,wx+1,h+2,wz+1,pal.post);
+    setW(ch,wx-1,h+3,wz-1,B.LANTERN); setW(ch,wx+1,h+3,wz+1,B.LANTERN);
+    for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++) setW(ch,wx+dx,h+3,wz+dz,pal.roof);
+  },
+  vHouse: function(ch, v, cx, cz, R, big, pal, idn){
+    var h=v.gy, wt=big?5:4, rf=wt+1;
+    if(!bboxHits(ch, cx-R-1, cz-R-1, cx+R+1, cz+R+2)) return;
+    var doorB=pal.door||B.WOOD_DOOR, dx,dz,cy;
+    for(dx=-R;dx<=R;dx++) for(dz=-R;dz<=R;dz++){
+      for(var fy=h-7; fy<=h; fy++) setW(ch,cx+dx,fy,cz+dz,pal.base);
+      for(cy=1;cy<=rf+2;cy++) setW(ch,cx+dx,h+cy,cz+dz,B.AIR);
+    }
+    for(dx=-R;dx<=R;dx++) for(dz=-R;dz<=R;dz++){
+      if(Math.abs(dx)!==R && Math.abs(dz)!==R) continue;
+      var corner=(Math.abs(dx)===R && Math.abs(dz)===R);
+      for(cy=1;cy<=wt;cy++) setW(ch,cx+dx,h+cy,cz+dz, corner?pal.post:(cy===1?pal.base:pal.wall));
+    }
+    setW(ch,cx+R,h+2,cz,B.GLASS); setW(ch,cx-R,h+2,cz,B.GLASS); setW(ch,cx,h+2,cz-R,B.GLASS);
+    setW(ch,cx+R,h+2,cz-1,B.GLASS); setW(ch,cx-R,h+2,cz+1,B.GLASS);
+    if(big){ setW(ch,cx+R,h+4,cz,B.GLASS); setW(ch,cx-R,h+4,cz,B.GLASS); setW(ch,cx,h+4,cz-R,B.GLASS); }
+    for(dx=-R;dx<=R;dx++) for(dz=-R;dz<=R;dz++) setW(ch,cx+dx,h+rf,cz+dz,pal.roof);
+    for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++) setW(ch,cx+dx,h+rf+1,cz+dz,pal.roof);
+    setW(ch,cx,h+rf+2,cz,pal.roof);
+    // door (+z wall) + step + porch lantern
+    setW(ch,cx,h+1,cz+R,doorB); setW(ch,cx,h+2,cz+R,doorB);
+    setTileW(ch,cx,h+1,cz+R,{type:'door',shape:'door',dir:'south',open:false,hinge:'l'});
+    setTileW(ch,cx,h+2,cz+R,{type:'door',shape:'door',doorTop:true});
+    setW(ch,cx,h,cz+R+1,pal.base);
+    setW(ch,cx+1,h+1,cz+R+1,B.WOOD_FENCE); setW(ch,cx+1,h+2,cz+R+1,B.LANTERN);
+    // interior
+    var bx=cx-(R-1), bz=cz-(R-1);
+    setW(ch,bx,h+1,bz,B.BED); setW(ch,bx,h+1,bz+1,B.BED);
+    setTileW(ch,bx,h+1,bz,{type:'bed', dx:0, dz:1, hx:bx, hy:h+1, hz:bz+1});
+    setTileW(ch,bx,h+1,bz+1,{type:'bedhead', fx:bx, fy:h+1, fz:bz});
+    setW(ch,cx+(R-1),h+1,cz-(R-1),B.CRAFTING);
+    setW(ch,cx+(R-1),h+1,cz-(R-2),B.FURNACE);
+    setTileW(ch,cx+(R-1),h+1,cz-(R-2),{type:'furnace', input:null,fuel:null,output:null,burn:0,burnMax:0,cook:0,front:4});
+    setW(ch,cx+(R-1),h+1,cz+(R-1),B.CHEST);
+    var citems=newArray(27); this.fillLoot(citems, cx, cz);
+    setTileW(ch,cx+(R-1),h+1,cz+(R-1),{type:'chest', items:citems});
+    setW(ch,cx-(R-1),h+wt,cz+(R-1),B.TORCH); setW(ch,cx+(R-1),h+wt,cz-(R-1),B.TORCH);
+  },
+  vFarm: function(ch, v, cx, cz, rw, rd, pal){
+    var h=v.gy;
+    if(!bboxHits(ch, cx-rw-1, cz-rd-1, cx+rw+1, cz+rd+1)) return;
+    var dx,dz;
+    // fenced border + corner posts with lanterns
+    for(dx=-rw-1;dx<=rw+1;dx++) for(dz=-rd-1;dz<=rd+1;dz++){
+      var edge=(Math.abs(dx)===rw+1||Math.abs(dz)===rd+1);
+      for(var fy=h-6;fy<=h;fy++) setW(ch,cx+dx,fy,cz+dz, edge?pal.base:B.DIRT);
+      setW(ch,cx+dx,h+1,cz+dz,B.AIR); setW(ch,cx+dx,h+2,cz+dz,B.AIR);
+      if(edge){ setW(ch,cx+dx,h+1,cz+dz,B.WOOD_FENCE); }
+    }
+    // tilled farmland rows with a central water channel + wheat
+    for(dx=-rw;dx<=rw;dx++) for(dz=-rd;dz<=rd;dz++){
+      if(dz===0){ setW(ch,cx+dx,h,cz+dz,B.WATER); continue; }   // irrigation channel
+      setW(ch,cx+dx,h,cz+dz,B.FARMLAND);
+      if(inCh(ch,cx+dx,cz+dz)) setTileW(ch,cx+dx,h+1,cz+dz,{type:'crop', crop:'wheat', mature:(hash3(cx+dx,4,cz+dz,this.seed)<0.7)});
+    }
+    // doorway gate in the fence + a lantern post
+    setW(ch,cx,h+1,cz+rd+1,B.FENCE_GATE);
+    setW(ch,cx+rw+1,h+1,cz+rd+1,pal.post); setW(ch,cx+rw+1,h+2,cz+rd+1,B.LANTERN);
+    setW(ch,cx-rw-1,h+1,cz-rd-1,pal.post); setW(ch,cx-rw-1,h+2,cz-rd-1,B.LANTERN);
+  },
   genStructures: function(ch){
     var cx=ch.cx, cz=ch.cz;
     if(this.dim==='ashlands'){ this.genAshFortress(ch); return; }
+    this.genVillage(ch);
     if(hash3(cx,101,cz,this.seed^0xB00B) > 0.035) return;
     var lx=5+(hash3(cx,102,cz,this.seed)*6|0), lz=5+(hash3(cx,103,cz,this.seed)*6|0);
     var wx=cx*CHUNK+lx, wz=cz*CHUNK+lz;
@@ -1363,7 +1497,7 @@ var World = {
     var wallMat=(biome===3)?B.SAND:B.COBBLE, dx,dz,cy;
     var roll=hash3(cx,104,cz,this.seed^0x7A11);
     // ~30% of structures are a varied village (no two alike)
-    if(roll < 0.30 && h>SEA && h<WORLD_H-8 && biome!==2 && biome!==7){
+    if(false && roll < 0.30 && h>SEA && h<WORLD_H-8 && biome!==2 && biome!==7){
       var pal=this.villagePalette(biome);
       // centre the village so 7x7 houses fit inside the chunk
       var vlx=7+(hash3(cx,110,cz,this.seed)*2|0), vlz=7+(hash3(cx,111,cz,this.seed)*2|0);
@@ -1631,6 +1765,11 @@ var World = {
 
 function idx(lx,ly,lz){ return (ly*CHUNK + lz)*CHUNK + lx; }
 function setLocal(blocks,lx,ly,lz,id){ if(lx<0||lx>=CHUNK||lz<0||lz>=CHUNK||ly<0||ly>=WORLD_H) return; blocks[idx(lx,ly,lz)]=id; }
+// world-coordinate setters: write only the cells that fall inside ch (other chunks fill their own slice -> structures span chunks with no clipping)
+function setW(ch,wx,wy,wz,id){ var lx=wx-ch.cx*CHUNK, lz=wz-ch.cz*CHUNK; if(lx<0||lx>=CHUNK||lz<0||lz>=CHUNK||wy<0||wy>=WORLD_H) return false; ch.blocks[idx(lx,wy,lz)]=id; return true; }
+function inCh(ch,wx,wz){ var lx=wx-ch.cx*CHUNK, lz=wz-ch.cz*CHUNK; return lx>=0&&lx<CHUNK&&lz>=0&&lz<CHUNK; }
+function setTileW(ch,wx,wy,wz,t){ if(inCh(ch,wx,wz)) World.tiles[World.ck(wx,wy,wz)]=t; }
+function bboxHits(ch,x0,z0,x1,z1){ var cx0=ch.cx*CHUNK,cx1=cx0+CHUNK-1,cz0=ch.cz*CHUNK,cz1=cz0+CHUNK-1; if(x0>x1){var t=x0;x0=x1;x1=t;} if(z0>z1){var s=z0;z0=z1;z1=s;} return !(x1<cx0||x0>cx1||z1<cz0||z0>cz1); }
 function getLocal(blocks,lx,ly,lz){ if(lx<0||lx>=CHUNK||lz<0||lz>=CHUNK||ly<0||ly>=WORLD_H) return B.AIR; return blocks[idx(lx,ly,lz)]; }
 
 /* ----------------------------- MESHER ----------------------------------- */
@@ -2107,7 +2246,7 @@ var cloudMat=new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opa
 var CLOUD_SPAN=340, cloudPieces=[];
 for(var ci=0; ci<20; ci++){ var cw=16+Math.random()*26, cd=12+Math.random()*22;
   var m=new THREE.Mesh(new THREE.BoxGeometry(cw,3,cd), cloudMat);
-  m.userData.bx=(Math.random()-0.5)*CLOUD_SPAN; m.userData.bz=(Math.random()-0.5)*CLOUD_SPAN; m.userData.by=86+Math.random()*10;
+  m.userData.bx=(Math.random()-0.5)*CLOUD_SPAN; m.userData.bz=(Math.random()-0.5)*CLOUD_SPAN; m.userData.by=150+Math.random()*18;
   cloudGroup.add(m); cloudPieces.push(m); }
 // ---- weather: rain (visual streaks + sound + overcast sky) ----
 var RAIN_N=440, rainPos=new Float32Array(RAIN_N*6);
@@ -2324,6 +2463,7 @@ function chunkFrag(alpha, grain){
     ' float h = fract(sin(dot(q, vec3(12.9898,78.233,37.719)))*43758.5453);',
     ' float gn = 0.84 + 0.20*h;',
     ' vec3 dc = vColor*gn;',
+    ' float vDetail = 1.0 - smoothstep(14.0, 34.0, distance(vWorld, uCamPos));',  // fade fine speckle/texture detail with distance to stop sub-pixel shimmer
     // decorated functional blocks
     ' if(vDecor > 0.5){',
     '   float base = floor(vDecor/8.0 + 0.0001);',
@@ -2364,9 +2504,9 @@ function chunkFrag(alpha, grain){
     '     vec2 cl=floor(uv*4.0); vec2 fr=fract(uv*4.0)-0.5;',
     '     float rnd=fract(sin(dot(cl+floor(vWorld.xz), vec2(12.9898,78.233))+floor(vWorld.y)*7.31)*43758.5453);',
     '     float blob=1.0-smoothstep(0.15,0.34,length(fr));',
-    '     dc=mix(dc, ore, blob*step(0.5,rnd)*0.88);',
-    '     dc*=1.0-0.26*(blob*step(0.8,fract(rnd*7.0)));',
-    '   } else if(base>=11.0){ dc = blockTex(base, face, uv, vWorld, dc); }',
+    '     dc=mix(dc, ore, blob*step(0.5,rnd)*0.88*vDetail);',
+    '     dc*=1.0-0.26*(blob*step(0.8,fract(rnd*7.0)))*vDetail;',
+    '   } else if(base>=11.0){ dc = mix(dc, blockTex(base, face, uv, vWorld, dc), vDetail); }',
     ' }',
     ' dc = torchLit(dc, vWorld);',
     ' vec3 c = mix(uFogColor, dc, vFog);'
@@ -2402,7 +2542,7 @@ function chunkFrag(alpha, grain){
   ] : [];
   return ['precision highp float;',
     'varying vec3 vColor; varying float vFog; varying vec3 vWorld; varying vec2 vUV; varying float vDecor;',
-    'uniform vec3 uFogColor; uniform vec4 uTorch[16]; uniform int uTorchN; uniform float uTorchFlk;'].concat(grain?[]:['uniform float uTime;']).concat([
+    'uniform vec3 uFogColor; uniform vec4 uTorch[16]; uniform int uTorchN; uniform float uTorchFlk;'].concat(grain?['uniform vec3 uCamPos;']:['uniform float uTime;']).concat([
     'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.012,0.0,1.0); f=f*f; tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.4); vec3 warm=vec3(0.95,0.58,0.26); return col*(1.0+warm*tl*0.5)+warm*tl*0.22; }'
     ]).concat(helpers).concat([
     'void main(){']).concat(body).concat([' gl_FragColor=vec4(c,'+alpha+');','}']).join('\n');
@@ -2410,7 +2550,7 @@ function chunkFrag(alpha, grain){
 var torchUVals=[]; for(var _ti=0;_ti<16;_ti++) torchUVals.push(new THREE.Vector4(0,0,0,0));
 var torchU={value:torchUVals}, torchNU={value:0}, torchFlkU={value:1.0};
 var chunkMat=new THREE.ShaderMaterial({
-  uniforms:{ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTorch:torchU, uTorchN:torchNU, uTorchFlk:torchFlkU },
+  uniforms:{ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTorch:torchU, uTorchN:torchNU, uTorchFlk:torchFlkU, uCamPos:{value:new THREE.Vector3()} },
   vertexShader: chunkVert,
   fragmentShader: chunkFrag('1.0', true)
 });
@@ -3129,6 +3269,9 @@ function doPlace(){
     }
     if(rideT && rideT.kind==='horse' && rideT.tamed){ Player.riding=rideT; rideT.ridden=true; sfxClick(); toast('Riding \u2014 tap SNEAK to dismount'); return; }
   }
+  // trade with a villager or dwarf (interact / LT)
+  var trader=mobInFront(3.4);
+  if(trader && (trader.kind==='villager'||trader.kind==='dwarf')){ if(!uiOpen) openTrade(); return; }
   // shear a sheep
   var heldS=inv.hotbar[hotbarSel];
   if(heldS && ITEMS[heldS.key] && ITEMS[heldS.key].shears){
@@ -4594,19 +4737,32 @@ function makeCat(){
   var g=new THREE.Group(); g.__mats=[];
   function part(w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex, side:THREE.DoubleSide}); var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
     mesh.position.set(x,y,z); m.__base=hex; g.__mats.push(m); g.add(mesh); return mesh; }
-  var FUR=([0xd9a05b,0x4a4a4a,0xe8e8e8,0xc97b3a,0x2a2420,0x9a8a72,0xb8b0a4,0xe0c060,0x6a5236])[(Math.random()*9)|0];   // tabby/grey/white/ginger/black/brown/silver/cream/choc
+  function plain(w,h,d,hex,x,y,z,rx){ var m=new THREE.MeshBasicMaterial({color:hex,side:THREE.DoubleSide}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); if(rx)me.rotation.x=rx; g.add(me); return me; }
+  var FUR=([0xd9a05b,0x4a4a4a,0xe8e8e8,0xc97b3a,0x2a2420,0x9a8a72,0xb8b0a4,0xe0c060,0x6a5236])[(Math.random()*9)|0];
   var EYE=([0x6fe07a,0x7ac0ff,0xe8c040])[(Math.random()*3)|0];
-  var bib=(Math.random()<0.5);
-  part(0.26,0.24,0.5, FUR, 0,0.34,0.04);        // body
-  if(bib){ part(0.16,0.14,0.18,0xefe9dc,0,0.3,0.26); }  // white chest/bib
-  var head=part(0.26,0.24,0.24, FUR, 0,0.42,-0.3); // head
-  part(0.06,0.1,0.04, FUR, -0.08,0.56,-0.34); part(0.06,0.1,0.04, FUR, 0.08,0.56,-0.34); // ears
+  var bib=(Math.random()<0.5), paws=(Math.random()<0.5);
+  // body runs along z, head toward +z (forward), tail toward -z
+  part(0.26,0.24,0.5, FUR, 0,0.32,-0.02);             // body
+  part(0.22,0.22,0.16, FUR, 0,0.32,0.2);              // shoulders
+  if(bib) plain(0.16,0.18,0.12,0xefe9dc,0,0.27,0.27); // chest bib
+  part(0.26,0.24,0.24, FUR, 0,0.42,0.3);              // head
+  plain(0.16,0.12,0.1, FUR, 0,0.36,0.44);             // muzzle
+  plain(0.05,0.04,0.03,0xd98a8a, 0,0.38,0.5);         // pink nose
+  // ears with pink inner
+  plain(0.08,0.11,0.05, FUR, -0.09,0.56,0.3); plain(0.08,0.11,0.05, FUR, 0.09,0.56,0.3);
+  plain(0.04,0.06,0.03, 0xe7a6a6, -0.09,0.55,0.32); plain(0.04,0.06,0.03, 0xe7a6a6, 0.09,0.55,0.32);
   var eyeM=new THREE.MeshBasicMaterial({color:EYE});
-  var e1=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.02),eyeM); e1.position.set(-0.06,0.44,-0.42); g.add(e1);
-  var e2=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.02),eyeM); e2.position.set(0.06,0.44,-0.42); g.add(e2);
-  var tail=part(0.06,0.06,0.3, FUR, 0,0.4,0.32); tail.rotation.x=-0.5;  // tail
-  var l1=part(0.07,0.26,0.07,FUR,-0.08,0.13,-0.14), l2=part(0.07,0.26,0.07,FUR,0.08,0.13,-0.14);
-  var l3=part(0.07,0.26,0.07,FUR,-0.08,0.13,0.18), l4=part(0.07,0.26,0.07,FUR,0.08,0.13,0.18);
+  var e1=new THREE.Mesh(new THREE.BoxGeometry(0.055,0.06,0.02),eyeM); e1.position.set(-0.07,0.45,0.43); g.add(e1);
+  var e2=new THREE.Mesh(new THREE.BoxGeometry(0.055,0.06,0.02),eyeM); e2.position.set(0.07,0.45,0.43); g.add(e2);
+  // whiskers
+  plain(0.24,0.008,0.008,0xeeeeee,0,0.37,0.46); plain(0.008,0.008,0.14,0xeeeeee,-0.13,0.37,0.42); plain(0.008,0.008,0.14,0xeeeeee,0.13,0.37,0.42);
+  var tail=part(0.07,0.07,0.34, FUR, 0,0.42,-0.32); tail.rotation.x=0.7; g.userData.tail=tail;  // curved-up tail at back
+  // legs: front pair toward +z, back pair toward -z
+  var pawC=paws?0xefe9dc:FUR;
+  var l1=part(0.07,0.26,0.07,FUR,-0.08,0.13,0.16), l2=part(0.07,0.26,0.07,FUR,0.08,0.13,0.16);
+  var l3=part(0.07,0.26,0.07,FUR,-0.08,0.13,-0.18), l4=part(0.07,0.26,0.07,FUR,0.08,0.13,-0.18);
+  plain(0.08,0.05,0.08,pawC,-0.08,0.02,0.16); plain(0.08,0.05,0.08,pawC,0.08,0.02,0.16);
+  plain(0.08,0.05,0.08,pawC,-0.08,0.02,-0.18); plain(0.08,0.05,0.08,pawC,0.08,0.02,-0.18);
   g.userData.legs=[l1,l2,l3,l4];
   return g;
 }
@@ -5439,7 +5595,7 @@ function hitEntity(e){
 }
 var playerAtkCd=0;
 function attackEntities(){ var e=mobInFront(); if(!e) return false;
-  if(e.kind==='villager'||e.kind==='dwarf'){ if(!uiOpen) openTrade(); return true; }
+  if(e.kind==='villager'||e.kind==='dwarf'){ return true; }   // don't attack townsfolk; trade is on the use/interact button
   if(playerAtkCd<=0){ hitEntity(e); playerAtkCd=0.42; triggerHandSwing(); }
   return true;
 }
@@ -6315,6 +6471,83 @@ var gamepadActive=false, gpIndex=-1, gpPrev={}, gpPlaceCd=0;
 window.addEventListener('gamepadconnected', function(e){ gpIndex=e.gamepad.index; gamepadActive=true; try{ toast('Controller connected'); }catch(_){} });
 window.addEventListener('gamepaddisconnected', function(e){ if(e.gamepad.index===gpIndex){ gpIndex=-1; gamepadActive=false; input.fwd=0; input.strafe=0; input.mine=false; input.jump=false; input.crouch=false; } });
 function gpBtn(b){ return !!(b && (b.pressed || b.value>0.5)); }
+var gpLast=0, gpFocusEl=null, gpNavCd=0;
+function gpVisible(el){ return !!(el && !el.classList.contains('hidden') && el.getClientRects().length>0); }
+function gpUIContainer(){
+  var ids=['settings','achscreen','guidescreen','death','pause'];
+  for(var i=0;i<ids.length;i++){ var el=document.getElementById(ids[i]); if(gpVisible(el)) return el; }
+  var se=document.getElementById('screen'); if(uiOpen && gpVisible(se) && se.children.length) return se;
+  var cw=document.getElementById('createworld'); if(gpVisible(cw)) return cw;
+  var ws=document.getElementById('worldsel'); if(gpVisible(ws)) return ws;
+  if(!running){ var mn=document.getElementById('menu'); if(gpVisible(mn)) return mn; }
+  return null;
+}
+function gpFocusables(cont){
+  var els=[].slice.call(cont.querySelectorAll('button, input, select, .gslot, .slot, .mbtn, .pill, .tog, .seg button, [role="button"]'));
+  return els.filter(function(e){ return !e.disabled && e.getClientRects().length>0 && e.offsetWidth>0 && e.offsetHeight>0; });
+}
+function gpCenter(el){ var r=el.getBoundingClientRect(); return {x:r.left+r.width/2, y:r.top+r.height/2}; }
+function gpSetFocus(el){
+  if(gpFocusEl===el) return;
+  if(gpFocusEl) gpFocusEl.classList.remove('gpfocus');
+  gpFocusEl=el;
+  if(el){ el.classList.add('gpfocus'); try{ el.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){ } }
+}
+function gpEnsureFocus(cont){
+  if(gpFocusEl && cont.contains(gpFocusEl) && gpVisible(gpFocusEl)) return true;
+  var els=gpFocusables(cont); if(!els.length){ gpSetFocus(null); return false; }
+  var prim=null; for(var i=0;i<els.length;i++){ var t=(els[i].textContent||'').toLowerCase(); if(els[i].classList.contains('primary')||/play|create|start|continue|resume/.test(t)){ prim=els[i]; break; } }
+  gpSetFocus(prim||els[0]); return true;
+}
+function gpMoveFocus(dx,dy,cont){
+  if(!gpEnsureFocus(cont)) return;
+  var els=gpFocusables(cont), cur=gpCenter(gpFocusEl), best=null, bestScore=1e9;
+  for(var i=0;i<els.length;i++){ if(els[i]===gpFocusEl) continue; var c=gpCenter(els[i]);
+    var ddx=c.x-cur.x, ddy=c.y-cur.y;
+    if(dx>0 && ddx<6) continue; if(dx<0 && ddx>-6) continue;
+    if(dy>0 && ddy<6) continue; if(dy<0 && ddy>-6) continue;
+    var along = dx!==0 ? Math.abs(ddx) : Math.abs(ddy);
+    var off   = dx!==0 ? Math.abs(ddy) : Math.abs(ddx);
+    var score = along + off*2.4;
+    if(score<bestScore){ bestScore=score; best=els[i]; }
+  }
+  if(best) gpSetFocus(best);
+}
+function gpActivate(){
+  var el=gpFocusEl; if(!el) return;
+  if(el.tagName==='INPUT' && el.type==='range') return;
+  if(el.tagName==='INPUT' && (el.type==='text'||el.type==='search')){ try{ el.focus(); }catch(_){ } return; }
+  el.click();
+}
+function gpBack(cont){
+  var els=gpFocusables(cont);
+  for(var i=0;i<els.length;i++){ var t=(els[i].textContent||'').trim().toLowerCase(); if(/^(close|back|resume|cancel|done|x|\u2715|\u2716|\u00d7)$/.test(t) || /resume|back to|close/.test(t)){ els[i].click(); return; } }
+  var se=document.getElementById('screen');
+  if(uiOpen && gpVisible(se) && typeof closeScreen==='function'){ closeScreen(); return; }
+  var pa=document.getElementById('pause'); if(gpVisible(pa) && typeof closePause==='function'){ closePause(); }
+}
+function gpUITick(bt, ax, pressed, dt){
+  var cont=gpUIContainer();
+  if(!cont){ if(gpFocusEl){ gpFocusEl.classList.remove('gpfocus'); gpFocusEl=null; } return false; }
+  gpEnsureFocus(cont);
+  var navx=0, navy=0;
+  if(pressed(12)) navy=-1; else if(pressed(13)) navy=1; else if(pressed(14)) navx=-1; else if(pressed(15)) navx=1;
+  gpNavCd-=dt;
+  if(!navx && !navy){ var lx=ax[0]||0, ly=ax[1]||0;
+    if(Math.abs(lx)>0.5||Math.abs(ly)>0.5){ if(gpNavCd<=0){ if(Math.abs(lx)>Math.abs(ly)) navx=(lx>0?1:-1); else navy=(ly>0?1:-1); gpNavCd=0.16; } }
+    else gpNavCd=0; }
+  if(navx||navy){
+    if(navx && gpFocusEl && gpFocusEl.tagName==='INPUT' && gpFocusEl.type==='range'){
+      var st=parseFloat(gpFocusEl.step)||1, mn=parseFloat(gpFocusEl.min)||0, mx=parseFloat(gpFocusEl.max)||100;
+      gpFocusEl.value=Math.max(mn,Math.min(mx,(parseFloat(gpFocusEl.value)||0)+navx*st));
+      try{ gpFocusEl.dispatchEvent(new Event('input',{bubbles:true})); gpFocusEl.dispatchEvent(new Event('change',{bubbles:true})); }catch(_){ }
+    } else gpMoveFocus(navx,navy,cont);
+  }
+  if(pressed(0)) gpActivate();
+  if(pressed(1)) gpBack(cont);
+  for(var i=0;i<16;i++) gpPrev[i]=gpBtn(bt[i]);   // consume all edges so nothing leaks into gameplay
+  return true;
+}
 function pollGamepad(dt){
   if(typeof navigator==='undefined' || !navigator.getGamepads) return;
   var pads=navigator.getGamepads(), gp=(gpIndex>=0)?pads[gpIndex]:null;
@@ -6324,16 +6557,11 @@ function pollGamepad(dt){
   var ax=gp.axes, bt=gp.buttons;
   function dz(v){ v=v||0; return Math.abs(v)<0.18?0:v; }
   function pressed(idx){ var d=gpBtn(bt[idx]), was=gpPrev[idx]; gpPrev[idx]=d; return d&&!was; }
-  // look - right stick
+  // menu / inventory cursor takes priority over in-game controls
+  if(gpUITick(bt, ax, pressed, dt)){ input.fwd=0; input.strafe=0; input.mine=false; input.jump=false; input.crouch=false; return; }
+  // look - right stick (in-game only)
   var rx=dz(ax[2]), ry=dz(ax[3]);
   if(rx||ry){ var sens=2.7*lookSens; Player.yaw -= rx*sens*dt; Player.pitch -= ry*sens*dt; clampPitch(); }
-  if(uiOpen){
-    if(pressed(1)||pressed(9)||pressed(8)) closeScreen();
-    input.fwd=0; input.strafe=0; input.mine=false; input.jump=false; input.crouch=false;
-    // still advance edge state for the rest so a held button doesn't fire on close
-    [0,2,3,4,5,6,7,14,15].forEach(function(i){ gpPrev[i]=gpBtn(bt[i]); });
-    return;
-  }
   // move - left stick
   input.fwd = -dz(ax[1]);
   input.strafe = dz(ax[0]);
@@ -6354,10 +6582,12 @@ function pollGamepad(dt){
 }
 function loop(t){
   requestAnimationFrame(loop);
+  var gdt=(t-(gpLast||t))/1000; gpLast=t; if(gdt>0.1)gdt=0.1; if(gdt<0)gdt=0;
+  pollGamepad(gdt);
   if(!running) return;
   now=t; var dt=(t-last)/1000; last=t; if(dt>0.1)dt=0.1; frame++;
-  pollGamepad(dt);
   if(chunkMatT.uniforms.uTime) chunkMatT.uniforms.uTime.value = t*0.001;
+  if(chunkMat.uniforms.uCamPos) chunkMat.uniforms.uCamPos.value.copy(camera.position);
   if(!uiOpen){
     physics(dt);
     tickMining(dt);
@@ -6484,10 +6714,11 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 74';
+var VERSION='Update 77';
 var CHANGELOG=[
-  { v:'Update 74', t:'Controller Support', items:['\uD83C\uDFAE Game controllers now work! Pair an Xbox / PlayStation / MFi controller and it is detected automatically','\uD83D\uDD79\ufe0f Left stick moves, right stick looks; A = jump (double-tap = creative fly), B = sneak/dismount, RT = mine/attack, LT = place/use (hold to repeat), LB/RB or D-pad = switch hotbar, X = inventory, Y = camera, Start = pause'] },
-  { v:'Update 73', t:'Collision & Terrain Fixes', items:['\u26F0\ufe0f Solid 4-block surface cap (no more rocky-surface holes)','\uD83D\uDEE1\ufe0f Anti-tunneling through thin floors','\uD83E\uDDCD Un-stick recovery works in flight too'] },
+  { v:'Update 77', t:'Bigger, Spread-Out Villages', items:['\uD83C\uDFD8\ufe0f Villages are completely rebuilt - houses are bigger and properly spread out around a central well, like Minecraft, instead of cramped together','\uD83C\uDF3E Real farms! Fenced fields with tilled rows, water irrigation channels and growing wheat','\uD83D\uDEE4\ufe0f Gravel paths connect every building to the well, with lantern posts, porch lanterns and fences for decoration','\u2702\ufe0f Structures now build correctly across chunk borders - no more buildings cut in half or floating on slopes','\uD83E\uDDD1\u200D\uD83C\uDF3E Villages match their biome\u2019s wood, and villagers populate them'] },
+  { v:'Update 76', t:'Controller Menus', items:['\uD83C\uDFAE Controllers navigate every menu (gold highlight, A select, B back)'] },
+  { v:'Update 75', t:'Tall Mountains, Flicker Fix & More', items:['\u26F0\ufe0f High peaks','\u2728 Flicker fix','\uD83D\uDC08 Cat fixed'] },
   { v:'Update 73', t:'Collision & Terrain Fixes', items:['\u26F0\ufe0f Fixed holes/floating plates on rocky & mountain surfaces \u2014 caves now keep a solid 4-block cap, so stone surfaces never get punched through','\uD83D\uDEE1\ufe0f Anti-tunneling: fast falls or movement can no longer slip through thin floors','\uD83E\uDDCD Auto-recovery if you get stuck partway inside a block now works in creative flight too'] },
   { v:'Update 72', t:'Wooden Plane & Fixes', items:['\u2708\ufe0f Craftable, flyable Wooden Plane','\uD83E\uDE9C Fixed dwarven-ladder death','\uD83C\uDF57 Slower hunger on Normal/Easy'] },
   { v:'Update 71', t:'Bedrock-Style UI', items:['\uD83E\uDDF1 Light stone inventory/crafting','\uD83D\uDDC2\ufe0f Creative category tabs'] },
