@@ -483,6 +483,7 @@ defBlock({key:'GENERATOR', name:'Generator', col:[92,96,104], top:[150,120,60], 
 defBlock({key:'CABLE', name:'Energy Cable', col:[202,128,52], solid:true, tool:'pickaxe', hard:0.4, shape:'cable' });
 defBlock({key:'SOLAR_PANEL', name:'Solar Panel', col:[40,52,110], top:[26,38,98], side:[92,96,104], solid:true, tool:'pickaxe', tier:1, hard:2.2 });
 defBlock({key:'ENERGY_CELL', name:'Energy Cell', col:[58,64,80], top:[86,150,214], side:[52,58,74], solid:true, tool:'pickaxe', tier:1, hard:3.0 });
+defBlock({key:'QUARRY', name:'Quarry', col:[210,176,44], top:[44,46,52], side:[210,176,44], solid:true, tool:'pickaxe', tier:2, hard:3.4 });
 defBlock({key:'HOPPER', name:'Hopper', col:[64,66,74], top:[40,42,48], side:[72,74,82], solid:true, tool:'pickaxe', tier:1, hard:2.6 });
 
 function blk(id){ return BLOCKS[id] || BLOCKS[0]; }
@@ -788,6 +789,21 @@ function iconFor(key){
     else if(K==='CRAB_MEAT'||K==='COOKED_CRAB'){ var crc=(K==='COOKED_CRAB')?[226,96,52]:[226,120,88]; C(16,18,7,crc); R(7,12,5,4,crc); R(20,12,5,4,crc); R(13,15,2,2,[255,220,200]); }
     else if(/^RAW_/.test(K)){ x.fillStyle=css(col); roundRect(x,8,12,14,12,5); x.fill(); C(11,15,2.4,[250,240,240]); R(14,16,5,4,[230,160,160]); }
     else if(/^COOKED_/.test(K)){ x.fillStyle=css(col); roundRect(x,8,12,14,12,5); x.fill(); R(11,14,3,2,[90,55,30]); R(17,17,3,2,[90,55,30]); C(10,15,2,[245,240,235]); }
+    else if(K==='WOODEN_PLANE'){
+      R(3,14,26,4,[199,163,106]);                 // main wings (horizontal)
+      R(9,22,14,3,[199,163,106]);                 // tailplane
+      x.fillStyle=css([176,140,86]); roundRect(x,12,5,8,22,3); x.fill();  // fuselage (nose up)
+      R(13,24,6,4,[107,74,38]);                    // tail fin
+      R(13,10,6,5,[34,48,68]);                     // cockpit window
+      C(16,6,3.2,[107,74,38]);                     // engine cowl / nose
+      x.fillStyle=css([201,204,216]); R(7,4,18,1.8,[201,204,216]); R(15.1,1,1.8,9,[201,204,216]);  // spinning prop (cross)
+      x.globalAlpha=0.15; R(15,5,1.5,22,[0,0,0]); x.globalAlpha=1;        // centre shade
+    }
+    else if(K==='PROPELLER'){
+      R(15,3,2,11,[201,204,216]); R(15,18,2,11,[201,204,216]);           // vertical blades
+      R(3,15,11,2,[201,204,216]); R(18,15,11,2,[201,204,216]);           // horizontal blades
+      C(16,16,3.4,[58,58,64]); C(16,16,1.6,[150,154,164]);               // hub
+    }
     else drew=false;
     if(!drew){ x.fillStyle=css(col); roundRect(x,7,7,18,18,4); x.fill(); x.fillStyle=css([255,255,255],0.18); roundRect(x,9,9,8,6,3); x.fill(); }
   }
@@ -955,27 +971,48 @@ var World = {
     if(sWet>best){best=sWet;bi=12;}
     return bi;
   },
+  _biomeH: function(bi, wx, wz, base){
+    if(bi===7){ return SEA - 3 - Math.floor((this.noise.fbm(wx*0.02+5, wz*0.02-5, 3)+1)*6) - Math.floor(Math.max(0,this.noise.fbm(wx*0.009-20, wz*0.009+20, 2))*12); }
+    if(bi===2){ var m = this.noise.fbm(wx*0.02+9, wz*0.02-9, 5); return SEA + 8 + Math.pow(Math.max(0,(m+0.2)),1.4)*82 + base*9; }
+    if(bi===3){ return SEA + 1 + base*6 + this.noise.fbm(wx*0.05,wz*0.05,2)*2; }
+    if(bi===12){ return SEA + Math.floor(base*2.4) + (this.noise.fbm(wx*0.06+3,wz*0.06-3,2))*1.2; }
+    return SEA + 1 + base*10;
+  },
   heightAt: function(wx,wz){
     if(this.dim==='ashlands'){
-      var b=this.biomeAt(wx,wz), base=this.noise.fbm(wx*0.02, wz*0.02, 3);
-      var hh = (b===101) ? SEA+2 + base*9 + Math.pow(Math.max(0,base),1.3)*14 : SEA-2 + base*4;
+      var b=this.biomeAt(wx,wz), abase=this.noise.fbm(wx*0.02, wz*0.02, 3);
+      var hh = (b===101) ? SEA+2 + abase*9 + Math.pow(Math.max(0,abase),1.3)*14 : SEA-2 + abase*4;
       return Math.max(3, Math.min(WORLD_H-10, Math.floor(hh)));
     }
-    var biome = this.biomeAt(wx,wz);
     var base = this.noise.fbm(wx*0.012, wz*0.012, 4);
-    var h;
-    if(biome===7){ // ocean basin - varies from shallow shelf to deep trench
-      h = SEA - 3 - Math.floor((this.noise.fbm(wx*0.02+5, wz*0.02-5, 3)+1)*6) - Math.floor(Math.max(0,this.noise.fbm(wx*0.009-20, wz*0.009+20, 2))*12);
-    } else if(biome===2){ // mountains - tall, rugged peaks
-      var m = this.noise.fbm(wx*0.02+9, wz*0.02-9, 5);
-      h = SEA + 8 + Math.pow(Math.max(0,(m+0.2)),1.4)*82 + base*9;
-    } else if(biome===3){ // desert
-      h = SEA + 1 + base*6 + this.noise.fbm(wx*0.05,wz*0.05,2)*2;
-    } else if(biome===12){ // wetland - low, marshy, dips below sea for pools
-      h = SEA + Math.floor(base*2.4) + (this.noise.fbm(wx*0.06+3,wz*0.06-3,2))*1.2;
-    } else {
-      h = SEA + 1 + base*10;
-    }
+    var cont = this.bnoise.fbm(wx*0.0011+11, wz*0.0011-7, 3);
+    // biome scores (same fields as biomeAt) so we can blend the two strongest -> smooth slopes, not cliffs
+    var f=0.0032;
+    var sc=[
+      [0, this.bnoise.fbm(wx*f+10,  wz*f+10,  2)+0.18],
+      [1, this.bnoise.fbm(wx*f+200, wz*f-90,  2)+0.02],
+      [2, this.bnoise.fbm(wx*f-50,  wz*f+505, 2)+0.04],
+      [3, this.bnoise.fbm(wx*f-220, wz*f-700, 2)-0.02],
+      [4, this.bnoise.fbm(wx*f+620, wz*f+120, 2)-0.02],
+      [5, this.bnoise.fbm(wx*f-400, wz*f+330, 2)-0.04],
+      [6, this.bnoise.fbm(wx*f+900, wz*f-250, 2)-0.22],
+      [8, this.bnoise.fbm(wx*f+1300,wz*f+700, 2)-0.04],
+      [9, this.bnoise.fbm(wx*f-980, wz*f-1240,2)-0.03],
+      [10,this.bnoise.fbm(wx*f+450, wz*f+1500,2)-0.06],
+      [11,this.bnoise.fbm(wx*f-1500,wz*f+260, 2)-0.05],
+      [12,this.bnoise.fbm(wx*f+1850,wz*f-1320,2)-0.05]
+    ];
+    var bi1=0,s1=-9, bi2=0,s2=-9, i;
+    for(i=0;i<sc.length;i++){ var s=sc[i][1]; if(s>s1){ s2=s1;bi2=bi1; s1=s;bi1=sc[i][0]; } else if(s>s2){ s2=s;bi2=sc[i][0]; } }
+    function sstep(a,b,x){ var t=(x-a)/(b-a); if(t<0)t=0; if(t>1)t=1; return t*t*(3-2*t); }
+    // blend the two strongest land biomes by how close their scores are (close => mid-slope)
+    var h1=this._biomeH(bi1,wx,wz,base), h2=this._biomeH(bi2,wx,wz,base);
+    var w2 = 0.5*(1 - sstep(0, 0.16, s1-s2));
+    var landH = h1*(1-w2) + h2*w2;
+    // blend land<->ocean across the coastline so beaches slope instead of cliff
+    var oceanH = this._biomeH(7,wx,wz,base);
+    var ow = 1 - sstep(-0.30, -0.06, cont);
+    var h = landH*(1-ow) + oceanH*ow;
     return Math.max(2, Math.min(WORLD_H-6, Math.floor(h)));
   },
   genColumn: function(blocks, lx,lz, wx,wz, hmap){
@@ -1831,6 +1868,7 @@ function decorFor(id, f, frontF){
   if(id===B.CINDER) return 24*8+face;
   if(id===B.BED) return 25*8+face;
   if(id===B.WOOD_DOOR||id===B.SPRUCE_DOOR||id===B.BIRCH_DOOR||id===B.CHERRY_DOOR) return 26*8+face;
+  if(id===B.CACTUS) return 27*8+face;
   return 0;
 }
 function buildChunkGeometry(chunk){
@@ -2538,6 +2576,7 @@ function chunkFrag(alpha, grain){
     '  else if(id==24.0){ col*=0.78+0.3*n2(uv*6.0); float em=step(0.9,n2(uv*5.0+2.0)); col=mix(col, vec3(0.95,0.42,0.13), em*0.5); }',   // cinder + embers
     '  else if(id==25.0){ if(face<0.5){ if(uv.y<0.30){ col=mix(col, vec3(0.95,0.95,0.92), 0.85); col*=1.0-0.12*lineAt(uv.x,0.5,0.04); } else { col*=0.93+0.08*n2(uv*5.0); col*=1.0-0.34*lineAt(uv.y,0.30,0.02); } col*=1.0-0.14*lineAt(uv.x,0.5,0.02); } else if(face>1.5){ if(uv.y<0.40){ col=mix(col, vec3(0.46,0.31,0.17), 0.92); float leg=step(uv.x,0.14)+step(0.86,uv.x); col=mix(col, vec3(0.30,0.20,0.10), clamp(leg,0.0,1.0)); } else { col*=0.95+0.08*n2(uv*6.0); col*=1.0-0.18*lineAt(uv.y,0.40,0.02); if(uv.x<0.34 && uv.y>0.6) col=mix(col, vec3(0.95,0.95,0.92), 0.55); } } }',   // bed
     '  else if(id==26.0){ col*=0.86+0.2*n2(vec2(floor(uv.x*4.0),floor(uv.y*8.0))); col*=1.0-0.5*lineAt(uv.x,0.5,0.035); float pan=boxAt(uv,vec2(0.12,0.06),vec2(0.88,0.46))+boxAt(uv,vec2(0.12,0.54),vec2(0.88,0.94)); col*=1.0-0.16*pan; float frp=boxAt(uv,vec2(0.18,0.1),vec2(0.82,0.42))+boxAt(uv,vec2(0.18,0.58),vec2(0.82,0.9)); col*=0.9+0.16*frp; float hl=boxAt(uv,vec2(0.76,0.46),vec2(0.88,0.56)); col=mix(col, vec3(0.2,0.17,0.1), hl); col*=1.0-0.2*lineAt(uv.y,0.5,0.03); }',   // door panels
+    '  else if(id==27.0){ if(face>1.5){ col*=0.80+0.22*abs(sin(uv.x*18.85)); col*=1.0-0.22*lineAt(fract(uv.x*4.0),0.0,0.05); col*=1.0-0.24*step(0.86,n2(vec2(floor(uv.x*5.0),floor(uv.y*9.0)))); if(uv.y>0.93) col*=1.08; } else { col*=0.9+0.12*n2(uv*5.0); col*=1.0-0.16*step(0.8,n2(uv*6.0)); } }',
     '  return col; }'
   ] : [];
   return ['precision highp float;',
@@ -3258,15 +3297,16 @@ function doPlace(){
   if(heldBpk && heldBpk.key==='BACKPACK'){ openBackpack(heldBpk); return; }
   // mount a tamed horse (takes priority; aiming at a mob has no block hit)
   if(!Player.riding){
+    var veh=vehicleInFront(4.4);
+    if(veh && veh.kind==='boat'){
+      if(Player.sneaking){ scene.remove(veh.mesh); var ix=entities.indexOf(veh); if(ix>=0) entities.splice(ix,1); giveItem('BOAT',1); sfxClick(); toast('Picked up boat'); return; }
+      Player.riding=veh; veh.ridden=true; sfxClick(); toast('Sailing \u2014 tap SNEAK to exit'); return;
+    }
+    if(veh && veh.kind==='plane'){
+      if(Player.sneaking){ scene.remove(veh.mesh); var ixp=entities.indexOf(veh); if(ixp>=0) entities.splice(ixp,1); giveItem('WOODEN_PLANE',1); sfxClick(); toast('Picked up plane'); return; }
+      Player.riding=veh; veh.ridden=true; veh.throttle=0.45; sfxClick(); toast('Flying \u2014 look to steer, JUMP to climb, SNEAK to land'); return;
+    }
     var rideT=mobInFront(3.6);
-    if(rideT && rideT.kind==='boat'){
-      if(Player.sneaking){ scene.remove(rideT.mesh); var ix=entities.indexOf(rideT); if(ix>=0) entities.splice(ix,1); giveItem('BOAT',1); sfxClick(); toast('Picked up boat'); return; }
-      Player.riding=rideT; rideT.ridden=true; sfxClick(); toast('Sailing \u2014 tap SNEAK to exit'); return;
-    }
-    if(rideT && rideT.kind==='plane'){
-      if(Player.sneaking){ scene.remove(rideT.mesh); var ixp=entities.indexOf(rideT); if(ixp>=0) entities.splice(ixp,1); giveItem('WOODEN_PLANE',1); sfxClick(); toast('Picked up plane'); return; }
-      Player.riding=rideT; rideT.ridden=true; rideT.throttle=0.45; sfxClick(); toast('Flying \u2014 look to steer, JUMP to climb, SNEAK to land'); return;
-    }
     if(rideT && rideT.kind==='horse' && rideT.tamed){ Player.riding=rideT; rideT.ridden=true; sfxClick(); toast('Riding \u2014 tap SNEAK to dismount'); return; }
   }
   // trade with a villager or dwarf (interact / LT)
@@ -3284,6 +3324,9 @@ function doPlace(){
   if(isCrafting(hit.id)){ openCrafting(true); return; }
   if(hit.id===B.FURNACE){ openFurnace(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.MACERATOR){ openMacerator(World.ck(hit.x,hit.y,hit.z)); return; }
+  if(hit.id===B.QUARRY){ var qt=World.tiles[World.ck(hit.x,hit.y,hit.z)];
+    if(qt){ if(qt.done) toast('\u26CF\uFE0F Quarry: finished (hit bedrock)'); else { var dep=(qt.cy==null)?0:Math.max(0,(hit.y-1)-qt.cy); toast('\u26CF\uFE0F Quarry mining \u2014 depth '+dep+(drawPower(hit.x,hit.y,hit.z,0)?'':' (no power: connect a generator by cable)')); } }
+    return; }
   if(hit.id===B.GENERATOR){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.SOLAR_PANEL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.ENERGY_CELL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
@@ -3455,6 +3498,7 @@ function doPlace(){
   if(pid===B.GENERATOR) World.tiles[World.ck(nx,ny,nz)]={type:'generator', slot:null, burn:0, burnMax:0, energy:0};
   if(pid===B.SOLAR_PANEL) World.tiles[World.ck(nx,ny,nz)]={type:'generator', solar:true, energy:0};
   if(pid===B.ENERGY_CELL) World.tiles[World.ck(nx,ny,nz)]={type:'generator', cell:true, energy:0};
+  if(pid===B.QUARRY){ World.tiles[World.ck(nx,ny,nz)]={type:'quarry', cd:0, qx:null, qz:null, cy:null, done:false}; toast('\u26CF\uFE0F Quarry placed \u2014 wire it to a generator with cable to start mining'); }
   if(pid===B.HOPPER){ var hdir = (hit.ny!==0) ? [0,-1,0] : [-hit.nx,0,-hit.nz]; World.tiles[World.ck(nx,ny,nz)]={type:'hopper', buf:newArray(5), dir:hdir, cd:0}; }
   if(isChest(pid)) World.tiles[World.ck(nx,ny,nz)]={type:'chest', items:newArray(27), front:placeFrontFace()};
   if(gameMode!=='creative') consumeSlot(slot,1);
@@ -3627,6 +3671,7 @@ shaped([['GLASS','GLASS','GLASS'],['COAL','REDSTONE','COAL'],['IRON_INGOT','IRON
 shaped([['STRING','STRING'],['STRING','STRING']], 'WOOL', 1);
 shaped([['STEAM_SILK','STEAM_SILK','STEAM_SILK'],['LEATHER',null,'LEATHER']], 'SADDLE', 1);
 shaped([['IRON_INGOT','REDSTONE','IRON_INGOT'],['REDSTONE','COPPER_INGOT','REDSTONE'],['IRON_INGOT','REDSTONE','IRON_INGOT']], 'ENERGY_CELL', 1);
+shaped([['IRON_INGOT','DIAMOND','IRON_INGOT'],['DIAMOND','IRON_INGOT','DIAMOND'],['IRON_INGOT','REDSTONE','IRON_INGOT']], 'QUARRY', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],['IRON_INGOT','CHEST','IRON_INGOT'],[null,'IRON_INGOT',null]], 'HOPPER', 1);
 shaped([['LEATHER','LEATHER','LEATHER'],['LEATHER','CHEST','LEATHER'],['LEATHER','LEATHER','LEATHER']], 'BACKPACK', 1);
 shaped([[null,'IRON_INGOT',null],['IRON_INGOT','TORCH','IRON_INGOT'],[null,'IRON_INGOT',null]], 'LANTERN', 1);
@@ -4647,6 +4692,36 @@ function tickMacerators(dt){
   }
   if(currentScreen==='macerator' && (frame%6===0)) rerenderScreen();
 }
+var QUARRY_R=2;   // mines a (2R+1)x(2R+1) column straight down
+function quarryOutput(ox,oy,oz,key){
+  for(var i=0;i<6;i++){ var d=PDIRS[i]; var nt=World.tiles[World.ck(ox+d[0],oy+d[1],oz+d[2])];
+    if(nt && (nt.type==='chest'||nt.type==='hopper'||nt.type==='macerator'||nt.type==='furnace') && containerInsert(nt,key)) return; }
+  spawnDrop(ox,oy+1,oz,key,1);
+}
+function tickQuarries(dt){
+  for(var tk in World.tiles){ var t=World.tiles[tk]; if(!t || t.type!=='quarry' || t.done) continue;
+    t.cd=(t.cd||0)-dt; if(t.cd>0) continue;
+    var pa=tk.split(','), ox=+pa[0], oy=+pa[1], oz=+pa[2];
+    if(!drawPower(ox,oy,oz, 7)){ t.cd=0.7; continue; }   // idle until wired to a powered generator
+    t.cd=0.4;
+    var R=QUARRY_R;
+    if(t.qx==null){ t.qx=-R; t.qz=-R; t.cy=oy-1; }
+    var guard=0, lim=(2*R+1)*(2*R+1)*40;
+    while(guard++ < lim){
+      if(t.cy<=1){ t.done=true; toast('\u26CF\uFE0F Quarry reached bedrock \u2014 done'); break; }
+      var bx=ox+t.qx, bz=oz+t.qz, by=t.cy;
+      var id=World.getBlock(bx,by,bz), b=blk(id);
+      var skip = (id===B.AIR) || b.liquid || (id===B.BEDROCK) || (b.hard!=null && b.hard>=999) || !!World.tiles[World.ck(bx,by,bz)];
+      // advance pointer (column-major sweep, then descend)
+      t.qx++; if(t.qx>R){ t.qx=-R; t.qz++; if(t.qz>R){ t.qz=-R; t.cy--; } }
+      if(skip) continue;
+      var dropKey = b.drop ? b.drop : (BLOCKS[id] && BLOCKS[id].key);
+      World.setBlock(bx,by,bz,B.AIR,true);
+      if(dropKey && ITEMS[dropKey]) quarryOutput(ox,oy,oz,dropKey);
+      break;   // one block per cooldown tick
+    }
+  }
+}
 
 /* ----------------------------- ENTITIES --------------------------------- */
 var entities=[];
@@ -4909,6 +4984,7 @@ function makePlane(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x
   g.add(prop); g.userData.prop=prop;
   // a simple seat plank
   p(0.4,0.08,0.4, TRIM, 0,0.26,0.05);
+  g.scale.setScalar(1.3);                            // a little bigger
   return g;
 }
 function makeBoat(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
@@ -4919,12 +4995,13 @@ function makeBoat(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,
   p(0.5,0.08,0.12,D,0,0.34,0);                                  // seat plank
   return g; }
 function planeTick(e,dt){
-  // un-ridden: settle onto the ground, idle prop spin
-  e.vel.y-=16*dt; if(e.vel.y<-30)e.vel.y=-30;
-  var ny=e.pos.y+e.vel.y*dt, gy=Math.floor(ny-0.05);
-  if(e.vel.y<0 && isSolid(World.getBlock(Math.floor(e.pos.x),gy,Math.floor(e.pos.z)))){ e.pos.y=gy+1; e.vel.y=0; } else e.pos.y=ny;
+  // un-ridden: settle onto the ground (prop is still when parked)
+  if(e.vel.y>-30) e.vel.y-=16*dt;
+  var ny=e.pos.y+e.vel.y*dt;
+  var gy=Math.floor(ny-0.4);   // the ground block sits ~0.4 below the resting fuselage centre
+  if(e.vel.y<=0 && isSolid(World.getBlock(Math.floor(e.pos.x),gy,Math.floor(e.pos.z)))){ e.pos.y=gy+1.34; e.vel.y=0; }
+  else e.pos.y=ny;
   e.mesh.position.set(e.pos.x, e.pos.y, e.pos.z);
-  if(e.mesh.userData.prop) e.mesh.userData.prop.rotation.z += dt*2;
 }
 function boatTick(e,dt){
   var feetW=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z))).liquid;
@@ -5149,6 +5226,48 @@ function makeDuck(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,
   p(0.18,0.16,0.18,BD,0,0.34,-0.26);           // tail
   var l1=p(0.06,0.18,0.06,BK,-0.08,0.09,0.04), l2=p(0.06,0.18,0.06,BK,0.08,0.09,0.04);
   g.userData.legs=[l1,l2]; return g; }
+function makeFox(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
+  var OR=0xc8702a, WH=0xeae3d6, DK=0x39261a;   // nose toward +Z
+  p(0.34,0.3,0.62, OR, 0,0.34,0);                 // body
+  p(0.3,0.14,0.5, WH, 0,0.23,0.02);               // white underside
+  p(0.3,0.28,0.28, OR, 0,0.46,0.34);              // head
+  p(0.16,0.14,0.18, WH, 0,0.4,0.5);               // snout
+  p(0.1,0.09,0.1, DK, 0,0.4,0.6);                 // black nose
+  p(0.1,0.18,0.05, OR, -0.1,0.64,0.32); p(0.1,0.18,0.05, OR, 0.1,0.64,0.32);   // tall ears
+  p(0.07,0.08,0.04, DK, -0.1,0.7,0.33); p(0.07,0.08,0.04, DK, 0.1,0.7,0.33);   // ear tips
+  p(0.06,0.06,0.02, 0x140d08, -0.08,0.48,0.47); p(0.06,0.06,0.02, 0x140d08, 0.08,0.48,0.47);  // eyes
+  var tail=p(0.17,0.17,0.34, OR, 0,0.4,-0.4); tail.rotation.x=-0.5;             // bushy tail
+  p(0.15,0.15,0.13, WH, 0,0.32,-0.56);            // white tail tip
+  var l1=p(0.08,0.26,0.08,DK,-0.1,0.13,0.18), l2=p(0.08,0.26,0.08,DK,0.1,0.13,0.18);
+  var l3=p(0.08,0.26,0.08,DK,-0.1,0.13,-0.18), l4=p(0.08,0.26,0.08,DK,0.1,0.13,-0.18);
+  g.userData.legs=[l1,l2,l3,l4]; return g; }
+function makeBoar(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
+  var BR=0x4a3526, DK=0x2e2018, TU=0xe8e2cc;       // nose toward +Z
+  p(0.6,0.56,0.92, BR, 0,0.46,-0.05);             // bulky body
+  p(0.4,0.34,0.32, BR, 0,0.62,0.18);              // shoulder hump
+  p(0.42,0.4,0.4, BR, 0,0.42,0.44);               // head
+  p(0.26,0.22,0.22, DK, 0,0.36,0.68);             // snout
+  p(0.09,0.07,0.06, 0x150f0a, -0.07,0.34,0.8); p(0.09,0.07,0.06, 0x150f0a, 0.07,0.34,0.8); // nostrils
+  p(0.05,0.11,0.05, TU, -0.12,0.34,0.7); p(0.05,0.11,0.05, TU, 0.12,0.34,0.7);  // tusks
+  p(0.1,0.15,0.06, BR, -0.15,0.64,0.36); p(0.1,0.15,0.06, BR, 0.15,0.64,0.36);  // ears
+  p(0.07,0.07,0.02, 0x120c08, -0.12,0.46,0.62); p(0.07,0.07,0.02, 0x120c08, 0.12,0.46,0.62); // eyes
+  p(0.06,0.06,0.14, DK, 0,0.5,-0.54);             // tail
+  var l1=p(0.13,0.34,0.13,DK,-0.17,0.17,0.22), l2=p(0.13,0.34,0.13,DK,0.17,0.17,0.22);
+  var l3=p(0.13,0.34,0.13,DK,-0.17,0.17,-0.32), l4=p(0.13,0.34,0.13,DK,0.17,0.17,-0.32);
+  g.userData.legs=[l1,l2,l3,l4]; return g; }
+function makeRabbit(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
+  var FUR=([0xd8cbb0,0x9a8a72,0x6a5236,0xeceae4,0x4a4038,0xc9a06a])[(Math.random()*6)|0], WH=0xefe9dc;   // nose toward +Z
+  p(0.24,0.22,0.36, FUR, 0,0.2,0);                 // body
+  p(0.2,0.18,0.18, FUR, 0,0.3,0.2);                // head
+  p(0.12,0.1,0.1, WH, 0,0.26,0.31);                // cheeks/snout
+  p(0.05,0.04,0.03, 0x2a1a14, 0,0.28,0.37);        // nose
+  p(0.06,0.22,0.04, FUR, -0.06,0.5,0.16); p(0.06,0.22,0.04, FUR, 0.06,0.5,0.16);   // long ears
+  p(0.03,0.15,0.02, 0xe7a6a6, -0.06,0.5,0.18); p(0.03,0.15,0.02, 0xe7a6a6, 0.06,0.5,0.18); // inner ear
+  p(0.05,0.05,0.02, 0x140d08, -0.07,0.32,0.28); p(0.05,0.05,0.02, 0x140d08, 0.07,0.32,0.28); // eyes
+  p(0.11,0.11,0.1, WH, 0,0.18,-0.2);               // fluffy tail
+  var l1=p(0.06,0.13,0.06,FUR,-0.07,0.065,0.11), l2=p(0.06,0.13,0.06,FUR,0.07,0.065,0.11);
+  var l3=p(0.08,0.15,0.13,FUR,-0.07,0.075,-0.1), l4=p(0.08,0.15,0.13,FUR,0.07,0.075,-0.1);     // bigger hind legs
+  g.userData.legs=[l1,l2,l3,l4]; return g; }
 var MOBDEF={
   zombie:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:3}, skeleton:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:2},
   spooler:{hp:8,w:0.8,h:0.6,sp:4.0,dmg:0}, creeper:{hp:12,w:0.55,h:1.9,sp:2.6,dmg:2},
@@ -5164,6 +5283,9 @@ var MOBDEF={
   dog:{hp:8,w:0.5,h:0.7,sp:3.4,dmg:0,passive:true},
   cat:{hp:8,w:0.4,h:0.6,sp:3.4,dmg:0,passive:true},
   bear:{hp:30,w:1.0,h:1.4,sp:2.7,dmg:5,passive:true,neutral:true},
+  fox:{hp:8,w:0.5,h:0.7,sp:3.2,dmg:0,passive:true},
+  boar:{hp:16,w:0.8,h:1.0,sp:2.5,dmg:4,passive:true,neutral:true},
+  rabbit:{hp:4,w:0.4,h:0.5,sp:3.1,dmg:0,passive:true},
   bee:{hp:2,w:0.3,h:0.3,sp:2.4,dmg:0,passive:true,bee:true},
   boat:{hp:8,w:0.8,h:0.5,sp:0,dmg:0,passive:true},
   plane:{hp:80,w:1.6,h:1.0,sp:0,dmg:0,passive:true},
@@ -5178,6 +5300,7 @@ function meshFor(kind){ switch(kind){
   case 'deer':return makeDeer(); case 'duck':return makeDuck(); case 'bird':return makeBird();
   case 'horse':return makeHorse(); case 'dog':return makeDog(); case 'cat':return makeCat();
   case 'bear':return makeBear();
+  case 'fox':return makeFox(); case 'boar':return makeBoar(); case 'rabbit':return makeRabbit();
   case 'bee':return makeBee();
   case 'boat':return makeBoat();
   case 'plane':return makePlane();
@@ -5203,7 +5326,7 @@ function findPrey(pred, kinds, range){
 }
 function animalTick(e,dt){
   if(e.kind==='sheep' && e.sheared){ e.woolTimer-=dt; if(e.woolTimer<=0){ e.sheared=false; setSheepSheared(e,false); } }
-  if(e.kind==='bear' && e.provoked && !e.tamed && gameMode!=='creative'){
+  if((e.kind==='bear'||e.kind==='boar') && e.provoked && !e.tamed && gameMode!=='creative'){
     var bdx=Player.pos.x-e.pos.x, bdz=Player.pos.z-e.pos.z, bd=Math.hypot(bdx,bdz);
     e.aggroT=(e.aggroT||0)-dt;
     if(bd>28 || e.aggroT<=0){ e.provoked=false; }
@@ -5220,10 +5343,11 @@ function animalTick(e,dt){
     if(td>4 && td<34){ e.wdir=Math.atan2(tdz,tdx); e.moving=true; e.wcd=Math.max(e.wcd,0.4); } else if(td<=4){ e.moving=false; } }
   // flee when attacked, or run from a predator
   e.fleeT=(e.fleeT>0)?e.fleeT-dt:0;
-  if(e.hurt>0 && e.kind!=='bear') e.fleeT=3.0;
+  if(e.hurt>0 && e.kind!=='bear' && e.kind!=='boar') e.fleeT=3.0;
   var thx=null, thz=null;
   if(e.fleeT>0){ thx=Player.pos.x-e.pos.x; thz=Player.pos.z-e.pos.z; }
   if(e.fleeFrom){ if(entities.indexOf(e.fleeFrom)>=0){ var rfx=e.fleeFrom.pos.x-e.pos.x, rfz=e.fleeFrom.pos.z-e.pos.z; if(rfx*rfx+rfz*rfz<44){ thx=rfx; thz=rfz; } else e.fleeFrom=null; } else e.fleeFrom=null; }
+  if((e.kind==='fox'||e.kind==='rabbit') && !e.tamed && thx===null){ var fxd=Player.pos.x-e.pos.x, fzd=Player.pos.z-e.pos.z; if(fxd*fxd+fzd*fzd<42){ thx=fxd; thz=fzd; } }   // skittish
   e.fleeBoost=false;
   if(thx!==null && !e.tamed){ e.wdir=Math.atan2(-thz,-thx); e.moving=true; e.wcd=Math.max(e.wcd,0.3); e.fleeBoost=true; }
   else if(e.kind==='bear' && !e.tamed && !e.provoked && gameMode!=='creative'){   // wild bears hunt prey
@@ -5234,11 +5358,20 @@ function animalTick(e,dt){
         if(hpd<1.7){ e.prey.hp-=11*dt; e.prey.hurt=0.2; e.prey.noDrop=true; } }
       else e.prey=null; }
   }
+  else if(e.kind==='fox' && !e.tamed && gameMode!=='creative'){   // foxes hunt small birds
+    if(!e.prey || e.prey.hp<=0 || entities.indexOf(e.prey)<0){ e.prey=null; e.huntCd=(e.huntCd>0)?e.huntCd-dt:0;
+      if(e.huntCd<=0){ e.huntCd=3+Math.random()*4; e.prey=findPrey(e,['chicken','duck'],13); } }
+    if(e.prey){ var fpx=e.prey.pos.x-e.pos.x, fpz=e.prey.pos.z-e.pos.z, fpd=Math.hypot(fpx,fpz);
+      if(fpd<15){ e.wdir=Math.atan2(fpz,fpx); e.moving=true; e.wcd=Math.max(e.wcd,0.4); e.fleeBoost=true; e.prey.fleeFrom=e;
+        if(fpd<1.4){ e.prey.hp-=9*dt; e.prey.hurt=0.2; e.prey.noDrop=true; } }
+      else e.prey=null; }
+  }
   var sp=e.moving?(e.fleeBoost?e.speed*1.7:e.speed):0;
   e.vel.x=Math.cos(e.wdir)*sp; e.vel.z=Math.sin(e.wdir)*sp;
   if(sp>0) e.mesh.rotation.y=-e.wdir+Math.PI/2;
   if(e.onGround && sp>0){ var ahx=e.pos.x+Math.cos(e.wdir)*0.5, ahz=e.pos.z+Math.sin(e.wdir)*0.5;
     if(isSolid(World.getBlock(Math.floor(ahx),Math.floor(e.pos.y),Math.floor(ahz)))) e.vel.y=6.0; }
+  if(e.kind==='rabbit' && e.onGround && sp>0){ e.hopCd=(e.hopCd>0)?e.hopCd-dt:0; if(e.hopCd<=0){ e.vel.y=4.6; e.hopCd=0.42; } }   // hop
   var inW=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.2),Math.floor(e.pos.z))).liquid;
   var headW2=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.7),Math.floor(e.pos.z))).liquid;
   if(inW && e.kind!=='duck'){ e.vel.y+=34*dt; if(e.vel.y>2.2)e.vel.y=2.2; e.vel.y*=0.86; if(!headW2&&e.vel.y>0)e.vel.y*=0.4; e.swimming=true; }
@@ -5276,6 +5409,9 @@ function dropAnimal(kind){
   else if(kind==='duck'){ giveItem('RAW_DUCK',1); if(Math.random()<0.6) giveItem('FEATHER',1); }
   else if(kind==='horse'){ giveItem('LEATHER',1+(Math.random()*2|0)); }
   else if(kind==='bear'){ giveItem('RAW_BEEF',2+(Math.random()*3|0)); if(Math.random()<0.8) giveItem('LEATHER',1+(Math.random()*2|0)); }
+  else if(kind==='fox'){ if(Math.random()<0.6) giveItem('LEATHER',1); }
+  else if(kind==='boar'){ giveItem('RAW_PORK',1+(Math.random()*2|0)); if(Math.random()<0.55) giveItem('LEATHER',1); }
+  else if(kind==='rabbit'){ if(Math.random()<0.5) giveItem('LEATHER',1); }
 }
 function beeTick(e,dt){
   if(!e.home) e.home={x:e.pos.x,y:e.pos.y,z:e.pos.z};
@@ -5584,17 +5720,30 @@ function mobInFront(maxd){
   }
   return best;
 }
+// forgiving detection for boarding vehicles: look roughly toward it, OR just stand next to it
+function vehicleInFront(maxd){
+  var dir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
+  var best=null, bestD=1e9;
+  for(var i=0;i<entities.length;i++){ var e=entities[i]; if(e.kind!=='plane' && e.kind!=='boat') continue;
+    var dx=e.pos.x-Player.pos.x, dy=(e.pos.y+0.4)-(Player.pos.y+Player.eye), dz=e.pos.z-Player.pos.z;
+    var d=Math.sqrt(dx*dx+dy*dy+dz*dz); if(d>(maxd||4.4)) continue;
+    var dot=(dx*dir.x+dy*dir.y+dz*dir.z)/(d||1);
+    if(dot>0.2 || d<2.8){ if(d<bestD){ bestD=d; best=e; } }
+  }
+  return best;
+}
 function hitEntity(e){
   var dir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
   var tool=currentTool(); var dmg= (tool && tool.dmg)? tool.dmg : 1;
   e.hp-=dmg; e.hurt=0.2;
-  if(e.kind==='bear' && !e.tamed){ e.provoked=true; e.aggroT=14; }   // bears fight back
+  if((e.kind==='bear'||e.kind==='boar') && !e.tamed){ e.provoked=true; e.aggroT=14; }   // neutral mobs fight back
   e.vel.x+=dir.x*6; e.vel.z+=dir.z*6; e.vel.y=4.4;
   if(tool && (tool.tool==='sword'||tool.tool==='battleaxe')) damageTool();
   sfxHurtMob(e.kind);
 }
 var playerAtkCd=0;
 function attackEntities(){ var e=mobInFront(); if(!e) return false;
+  if((e.kind==='plane'||e.kind==='boat') && !Player.riding){ doPlace(); return true; }   // tap a vehicle to board it, not attack it
   if(e.kind==='villager'||e.kind==='dwarf'){ return true; }   // don't attack townsfolk; trade is on the use/interact button
   if(playerAtkCd<=0){ hitEntity(e); playerAtkCd=0.42; triggerHandSwing(); }
   return true;
@@ -5722,7 +5871,11 @@ function maybeSpawnAnimals(){
   var ground=World.getBlockLoaded(x,cy-1,z);
   if(ground===B.GRASS){ var bbi=World.biomeAt(x,z); var r=Math.random();
     if((bbi===4||bbi===1||bbi===5||bbi===9||bbi===10) && r<0.09){ spawnEnemy('bear', x+0.5,cy,z+0.5); }
+    else if((bbi===4||bbi===1||bbi===5) && r<0.20){ spawnEnemy('boar', x+0.5,cy,z+0.5); }
+    else if(r<0.12){ spawnEnemy('fox', x+0.5,cy,z+0.5); }
+    else if(r<0.20){ spawnEnemy('rabbit', x+0.5,cy,z+0.5); }
     else spawnEnemy(r<0.2?'cow':r<0.36?'sheep':r<0.5?'pig':r<0.64?'chicken':r<0.78?'deer':r<0.9?'horse':'dog', x+0.5,cy,z+0.5); }
+  else if(ground===B.SAND && World.biomeAt(x,z)===3 && Math.random()<0.5){ spawnEnemy('rabbit', x+0.5,cy,z+0.5); }   // desert rabbits
   else if(ground===B.SAND && (blk(World.getBlockLoaded(x+1,cy-1,z)).liquid || blk(World.getBlockLoaded(x-1,cy-1,z)).liquid || blk(World.getBlockLoaded(x,cy-1,z+1)).liquid || blk(World.getBlockLoaded(x,cy-1,z-1)).liquid)){ spawnEnemy(Math.random()<0.55?'crab':'duck', x+0.5,cy,z+0.5); }
 }
 function maybeSpawnOcean(){
@@ -5812,7 +5965,18 @@ function tickSurvival(dt){
   // fall / lava? just fall damage handled in physics
   // cactus / contact damage
   var fb=World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y+0.2),Math.floor(Player.pos.z));
-  if(blk(fb).hurt){ damagePlayer(blk(fb).hurt*dt*2); }
+  if(blk(fb).hurt && !blk(fb).solid){ damagePlayer(blk(fb).hurt*dt*2); }   // fire and other non-solid hazards you stand in
+  // solid hurt blocks (cactus) sting when you walk into / press against their sides
+  Player.cactusCd=(Player.cactusCd>0)?Player.cactusCd-dt:0;
+  if(Player.cactusCd<=0 && gameMode!=='creative'){
+    var pcx=Player.pos.x, pcy=Player.pos.y, pcz=Player.pos.z, rr=0.34, touched=false;
+    for(var cly=0; cly<=1 && !touched; cly++){ var cyy=Math.floor(pcy+0.5+cly*0.9);
+      var nbs=[[pcx+rr,pcz],[pcx-rr,pcz],[pcx,pcz+rr],[pcx,pcz-rr]];
+      for(var ck=0;ck<4;ck++){ var bb=World.getBlock(Math.floor(nbs[ck][0]),cyy,Math.floor(nbs[ck][1]));
+        if(bb!==B.AIR && blk(bb).hurt && blk(bb).solid){ touched=true; break; } }
+    }
+    if(touched){ damagePlayer(1); Player.cactusCd=0.5; }   // half a heart
+  }
   // air / drowning
   var headBlk=World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y+Player.eye),Math.floor(Player.pos.z));
   var submerged=blk(headBlk).liquid && !blk(headBlk).lava;
@@ -6615,6 +6779,7 @@ function loop(t){
   tickDayNight(dt);
   tickFurnaces(dt);
   tickMacerators(dt);
+  tickQuarries(dt);
   tickGenerators(dt);
   tickHoppers(dt);
   tickLeafDecay(dt);
@@ -6714,11 +6879,14 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 77';
+var VERSION='Update 81';
 var CHANGELOG=[
-  { v:'Update 77', t:'Bigger, Spread-Out Villages', items:['\uD83C\uDFD8\ufe0f Villages are completely rebuilt - houses are bigger and properly spread out around a central well, like Minecraft, instead of cramped together','\uD83C\uDF3E Real farms! Fenced fields with tilled rows, water irrigation channels and growing wheat','\uD83D\uDEE4\ufe0f Gravel paths connect every building to the well, with lantern posts, porch lanterns and fences for decoration','\u2702\ufe0f Structures now build correctly across chunk borders - no more buildings cut in half or floating on slopes','\uD83E\uDDD1\u200D\uD83C\uDF3E Villages match their biome\u2019s wood, and villagers populate them'] },
-  { v:'Update 76', t:'Controller Menus', items:['\uD83C\uDFAE Controllers navigate every menu (gold highlight, A select, B back)'] },
-  { v:'Update 75', t:'Tall Mountains, Flicker Fix & More', items:['\u26F0\ufe0f High peaks','\u2728 Flicker fix','\uD83D\uDC08 Cat fixed'] },
+  { v:'Update 81', t:'The Quarry', items:['\u26CF\ufe0f Added the Quarry - the classic Tekkit auto-miner. Wire it to a generator (placed next to it, or connected by cable) and it digs a 5\u00d75 shaft straight down to bedrock on its own','\uD83D\uDCE6 Everything it mines drops into an adjacent chest (or pops out on top if there\u2019s no chest)','\uD83D\uDD27 Craft it from iron ingots, diamonds and redstone. Tap it to check its mining depth and power status'] },
+  { v:'Update 80', t:'Plane, Cactus & Rabbits', items:['\u2708\ufe0f Plane: you can finally board it (just tap it), it no longer bounces when parked, and the propeller only spins while you\u2019re flying','\uD83C\uDF35 Cactus has a proper ribbed, spiny texture and now stings you for half a heart if you press against it','\uD83D\uDC07 Added rabbits - they hop around plains and deserts, are skittish and bolt when you get close'] },
+  { v:'Update 79', t:'Smoother Terrain + Wildlife', items:['\uD83C\uDFD4\ufe0f Fixed the big terrain problem - biomes now blend with smooth slopes instead of sudden vertical cliffs and walls at their borders (mountains still rise tall, coasts ease into beaches)','\uD83E\uDD8A Added foxes - skittish, run from you, and hunt chickens & ducks; drop leather','\uD83D\uDC17 Added boars - roam the forests and fight back if attacked, dropping pork & leather'] },
+  { v:'Update 78', t:'Plane Fixes', items:['\u2708\ufe0f The wooden plane got a proper hand-drawn icon (and so did the propeller)','\uD83D\uDEEC It no longer sinks halfway into the ground when placed - it rests on the surface','\uD83E\uDDD1\u200D\u2708\ufe0f Boarding is much more reliable - look roughly at it or just stand next to it and tap Place','\uD83D\uDD0D Made the plane a bit bigger'] },
+  { v:'Update 77', t:'Bigger, Spread-Out Villages', items:['\uD83C\uDFD8\ufe0f Rebuilt villages - spread-out houses, farms, paths, no chunk-edge clipping'] },
+  { v:'Update 76', t:'Controller Menus', items:['\uD83C\uDFAE Controllers navigate every menu'] },
   { v:'Update 73', t:'Collision & Terrain Fixes', items:['\u26F0\ufe0f Fixed holes/floating plates on rocky & mountain surfaces \u2014 caves now keep a solid 4-block cap, so stone surfaces never get punched through','\uD83D\uDEE1\ufe0f Anti-tunneling: fast falls or movement can no longer slip through thin floors','\uD83E\uDDCD Auto-recovery if you get stuck partway inside a block now works in creative flight too'] },
   { v:'Update 72', t:'Wooden Plane & Fixes', items:['\u2708\ufe0f Craftable, flyable Wooden Plane','\uD83E\uDE9C Fixed dwarven-ladder death','\uD83C\uDF57 Slower hunger on Normal/Easy'] },
   { v:'Update 71', t:'Bedrock-Style UI', items:['\uD83E\uDDF1 Light stone inventory/crafting','\uD83D\uDDC2\ufe0f Creative category tabs'] },
