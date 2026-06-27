@@ -246,6 +246,7 @@
     <div class="prow"><span>Music</span><button class="tog on" id="pMusic">On</button></div>
     <div class="prow"><span>Sound</span><button class="tog on" id="pSound">On</button></div>
     <div class="prow"><span>Difficulty</span><button class="tog" id="pDiff">Normal</button></div>
+    <div class="prow"><span>Mode</span><button class="tog" id="pMode">Survival</button></div>
     <div class="prow"><span>View</span><button class="tog" id="pView">1st Person</button></div>
     <div class="prow"><span>Sensitivity</span><input type="range" id="pSens" min="40" max="200" value="100"></div>
     <div class="prow"><span>View Distance <b id="pDistV"></b></span><input type="range" id="pDist" min="3" max="10" value="7"></div>
@@ -636,6 +637,10 @@ var TIER_COL={1:[150,150,154],2:[214,196,178],3:[120,224,224]};
 tool('IRON_BATTLEAXE','Iron Battle Axe','battleaxe',3,[214,196,178],11,5,220);
 tool('STEEL_BATTLEAXE','Steel Battle Axe','battleaxe',3,[150,156,166],13,6,420);
 tool('DIAMOND_BATTLEAXE','Diamond Battle Axe','battleaxe',4,[120,224,224],17,8,1200);
+mat('FLINT','Flint',[58,56,62]);
+mat('ARROW','Arrow',[120,100,72]);
+defItem({key:'BOW',name:'Bow',color:[150,110,60],durability:240,stack:1,bow:true});
+defItem({key:'FISHING_ROD',name:'Fishing Rod',color:[150,110,60],durability:96,stack:1,rod:true});
 // per-wood colored tool sets (same wooden tier, tinted to the wood)
 [['SPRUCE','Spruce',[114,84,50]],
  ['BIRCH','Birch',[200,180,132]],
@@ -786,9 +791,27 @@ function iconFor(key){
     else if(K==='LEATHER'){ x.fillStyle=css([150,108,66]); x.beginPath(); x.moveTo(9,9); x.lineTo(23,9); x.lineTo(25,20); x.lineTo(16,26); x.lineTo(7,20); x.closePath(); x.fill(); R(13,13,6,6,[120,84,50]); }
     else if(K==='FEATHER'){ x.strokeStyle=css([200,200,210]); x.lineWidth=2; x.beginPath(); x.moveTo(11,27); x.lineTo(22,7); x.stroke(); x.fillStyle=css([242,242,248]); x.beginPath(); x.moveTo(22,7); x.lineTo(26,16); x.lineTo(15,21); x.closePath(); x.fill(); }
     else if(K==='RAW_FISH'||K==='COOKED_FISH'){ var fc=(K.charAt(0)==='C')?[196,150,96]:[150,170,190]; x.fillStyle=css(fc); x.beginPath(); if(x.ellipse) x.ellipse(15,16,9,5,0,0,7); else x.arc(15,16,6,0,7); x.fill(); x.beginPath(); x.moveTo(23,16); x.lineTo(28,11); x.lineTo(28,21); x.closePath(); x.fill(); C(11,14,1.4,[20,20,20]); }
+    else if(K==='ARROW'){ x.save(); x.translate(16,16); x.rotate(-0.62);
+      R(-1.1,-12,2.2,21,[120,100,72]);                                                         // shaft
+      x.fillStyle=css([96,98,104]); x.beginPath(); x.moveTo(-3.6,-12); x.lineTo(3.6,-12); x.lineTo(0,-17.5); x.closePath(); x.fill();   // head
+      x.fillStyle=css([232,232,238]); x.beginPath(); x.moveTo(-1.1,8); x.lineTo(-5,12.5); x.lineTo(-1.1,12.5); x.closePath(); x.fill(); x.beginPath(); x.moveTo(1.1,8); x.lineTo(5,12.5); x.lineTo(1.1,12.5); x.closePath(); x.fill();   // fletching
+      x.restore(); }
+    else if(K==='FLINT'){ x.fillStyle=css([58,56,62]); x.beginPath(); x.moveTo(8,20); x.lineTo(12,9); x.lineTo(22,12); x.lineTo(24,21); x.lineTo(13,24); x.closePath(); x.fill(); R(13,13,4,3,[96,94,102]); }
+    else if(K==='BOW'){ x.strokeStyle=css([150,110,60]); x.lineWidth=2.6; x.beginPath(); x.arc(21,16,12,2.25,4.03); x.stroke();   // wooden arc
+      x.strokeStyle=css([228,228,222]); x.lineWidth=1; x.beginPath(); x.moveTo(13,7.5); x.lineTo(13,24.5); x.stroke();           // string
+      R(7,15,16,1.6,[120,100,72]); x.fillStyle=css([96,98,104]); x.beginPath(); x.moveTo(7,15.8); x.lineTo(11,12.6); x.lineTo(11,19); x.closePath(); x.fill(); }   // nocked arrow
+    else if(K==='FISHING_ROD'){ x.strokeStyle=css([150,110,60]); x.lineWidth=2.4; x.beginPath(); x.moveTo(6,26); x.lineTo(26,6); x.stroke();
+      x.strokeStyle=css([205,205,214]); x.lineWidth=0.8; x.beginPath(); x.moveTo(26,6); x.lineTo(24,16); x.lineTo(22,22); x.stroke();   // line
+      C(22,23,2,[226,59,37]); R(4.5,23,4,2,[112,80,46]); }                                                                              // bobber + handle
     else if(K==='CRAB_MEAT'||K==='COOKED_CRAB'){ var crc=(K==='COOKED_CRAB')?[226,96,52]:[226,120,88]; C(16,18,7,crc); R(7,12,5,4,crc); R(20,12,5,4,crc); R(13,15,2,2,[255,220,200]); }
     else if(/^RAW_/.test(K)){ x.fillStyle=css(col); roundRect(x,8,12,14,12,5); x.fill(); C(11,15,2.4,[250,240,240]); R(14,16,5,4,[230,160,160]); }
     else if(/^COOKED_/.test(K)){ x.fillStyle=css(col); roundRect(x,8,12,14,12,5); x.fill(); R(11,14,3,2,[90,55,30]); R(17,17,3,2,[90,55,30]); C(10,15,2,[245,240,235]); }
+    else if(K==='BOAT'){
+      x.fillStyle=css([107,74,38]); x.beginPath(); x.moveTo(4,12); x.lineTo(28,12); x.lineTo(24,24); x.lineTo(8,24); x.closePath(); x.fill();   // hull trapezoid
+      x.fillStyle=css([169,118,63]); x.beginPath(); x.moveTo(6,13); x.lineTo(26,13); x.lineTo(23,20); x.lineTo(9,20); x.closePath(); x.fill();  // inner
+      R(14,9,4,5,[138,93,49]);                       // raised bow
+      x.strokeStyle=css([122,81,38]); x.lineWidth=1.6; x.beginPath(); x.moveTo(9,11); x.lineTo(5,7); x.moveTo(23,11); x.lineTo(27,7); x.stroke(); // oars
+    }
     else if(K==='WOODEN_PLANE'){
       R(3,14,26,4,[199,163,106]);                 // main wings (horizontal)
       R(9,22,14,3,[199,163,106]);                 // tailplane
@@ -2217,6 +2240,12 @@ function updateAvatarHeld(){
 }
 function cycleView(){ viewMode=(viewMode+1)%3; toast(['First person','Third person (behind)','Third person (front)'][viewMode]); }
 function updateAvatar(){
+  var rk = Player.riding && Player.riding.kind;
+  if(rk==='plane' || rk==='boat'){
+    if(avatarLimbs.armL){ avatarLimbs.legL.rotation.x=-1.35; avatarLimbs.legR.rotation.x=-1.35;   // knees up, seated
+      avatarLimbs.armL.rotation.x=-0.6; avatarLimbs.armR.rotation.x=-0.6; }                        // hands forward on controls
+    updateAvatarHeld(); return;
+  }
   var sp=Math.hypot(Player.vel.x,Player.vel.z);
   var moving = sp>0.15;
   var sw = moving ? Math.sin(now*0.013)*Math.min(1.15, 0.45+sp*0.14) : Math.sin(now*0.002)*0.05;
@@ -2582,7 +2611,7 @@ function chunkFrag(alpha, grain){
   return ['precision highp float;',
     'varying vec3 vColor; varying float vFog; varying vec3 vWorld; varying vec2 vUV; varying float vDecor;',
     'uniform vec3 uFogColor; uniform vec4 uTorch[16]; uniform int uTorchN; uniform float uTorchFlk;'].concat(grain?['uniform vec3 uCamPos;']:['uniform float uTime;']).concat([
-    'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.012,0.0,1.0); f=f*f; tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.4); vec3 warm=vec3(0.95,0.58,0.26); return col*(1.0+warm*tl*0.5)+warm*tl*0.22; }'
+    'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.0075,0.0,1.0); f=f*f; tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.4); vec3 warm=vec3(0.95,0.58,0.26); return col*(1.0+warm*tl*0.5)+warm*tl*0.22; }'
     ]).concat(helpers).concat([
     'void main(){']).concat(body).concat([' gl_FragColor=vec4(c,'+alpha+');','}']).join('\n');
 }
@@ -3179,6 +3208,7 @@ function breakBlock(hit){
     if(id===B.GRASS){ dropKey='DIRT'; var sr=hash3(hit.x,hit.y,hit.z,World.seed^41);
       if(sr<0.5){ spawnDrop(hit.x,hit.y,hit.z, sr<0.22?'SEEDS':sr<0.30?'CARROT':sr<0.38?'POTATO':sr<0.44?'TOMATO_SEEDS':'CORN_SEEDS',1); } }
     if(id===B.COAL_ORE) dropKey='COAL';
+    if(id===B.GRAVEL && hash3(hit.x,hit.y,hit.z,World.seed^57)<0.22) dropKey='FLINT';
     if(dropKey) spawnDrop(hit.x,hit.y,hit.z,dropKey,1);
   } else if(gameMode!=='creative' && blk(id).tier && !canHarvest(id)){
     var need=['','','a Stone','an Iron/Bronze','a Diamond'][blk(id).tier]||'a better';
@@ -3290,6 +3320,19 @@ function damageTool(){
     renderHotbar();
   }
 }
+function damageHeld(){   // wear down a held non-tool item with durability (bow / fishing rod)
+  var s=inv.hotbar[hotbarSel];
+  if(s && ITEMS[s.key] && ITEMS[s.key].durability){
+    var nm=ITEMS[s.key].name; s.dur=(s.dur==null?ITEMS[s.key].durability:s.dur)-1;
+    if(s.dur<=0){ inv.hotbar[hotbarSel]=null; toast(nm+' broke'); }
+    renderHotbar();
+  }
+}
+function takeItem(key,n){   // remove n of an item from anywhere in the inventory
+  var slots=allSlots();
+  for(var i=0;i<slots.length && n>0;i++){ var s=slots[i]; if(s && s.key===key){ var t=Math.min(n,s.qty); s.qty-=t; n-=t; if(s.qty<=0) removeSlotRef(s); } }
+  renderHotbar(); return n<=0;
+}
 function doPlace(){
   if(uiOpen) return;
   triggerHandSwing();
@@ -3318,6 +3361,15 @@ function doPlace(){
     var sh=mobInFront(3.4);
     if(sh && sh.kind==='sheep' && !sh.sheared){ sh.sheared=true; sh.woolTimer=45+Math.random()*45; setSheepSheared(sh,true); var nw=1+(Math.random()*3|0); giveItem('WOOL',nw); sfxClick(); toast('\u2702\uFE0F Sheared '+nw+' wool'); return; }
   }
+  // bow (fire an arrow) and fishing rod (cast / reel) work without aiming at a block
+  var heldU=inv.hotbar[hotbarSel];
+  if(heldU && ITEMS[heldU.key] && ITEMS[heldU.key].bow){
+    if((Player.bowCd||0)>0) return;
+    if(gameMode!=='creative' && countItem('ARROW')<=0){ toast('Out of arrows'); sfxClick(); return; }
+    if(gameMode!=='creative') takeItem('ARROW',1);
+    playerShootArrow(); Player.bowCd=0.55; triggerHandSwing(); sfxBow(); if(gameMode!=='creative') damageHeld(); return;
+  }
+  if(heldU && ITEMS[heldU.key] && ITEMS[heldU.key].rod){ castFishingRod(); triggerHandSwing(); return; }
   var hit=raycast(); if(!hit) return;
   var slot=inv.hotbar[hotbarSel];
   // interact with tile blocks first (right-click open)
@@ -3378,10 +3430,13 @@ function doPlace(){
   }
   if(slot && slot.key==='BOAT'){
     var obx=hit.x+hit.nx, oby=hit.y+hit.ny, obz=hit.z+hit.nz;
+    if(blk(hit.id).liquid){ obx=hit.x; obz=hit.z; oby=hit.y; }                  // aimed straight at water
+    var grd=0; while(oby<WORLD_H-1 && blk(World.getBlock(obx,oby,obz)).liquid && grd++<48) oby++;   // float up to the water surface
     if(oby>=0 && oby<WORLD_H && World.getBlock(obx,oby,obz)===B.AIR){
       spawnEnemy('boat', obx+0.5, oby, obz+0.5);
       if(gameMode!=='creative') consumeSlot(slot,1);
       renderHotbar(); sfxPlace(); }
+    else toast('Aim at water or open ground to set the boat down');
     return;
   }
   if(slot && slot.key==='BUCKET'){
@@ -3662,7 +3717,9 @@ shaped([['SPRUCE_PLANKS','SPRUCE_PLANKS'],['SPRUCE_PLANKS','SPRUCE_PLANKS']], 'S
 shaped([['BIRCH_PLANKS','BIRCH_PLANKS'],['BIRCH_PLANKS','BIRCH_PLANKS']], 'BIRCH_CRAFTING', 1);
 shaped([['CHERRY_PLANKS','CHERRY_PLANKS'],['CHERRY_PLANKS','CHERRY_PLANKS']], 'CHERRY_CRAFTING', 1);
 shaped([['PLANKS',null],['PLANKS',null]], 'STICK', 4);
-shaped([['PLANKS','PLANKS'],['PLANKS','PLANKS']], 'CRAFTING', 1);
+shaped([[null,'STICK','STRING'],['STICK',null,'STRING'],[null,'STICK','STRING']], 'BOW', 1);
+shaped([[null,null,'STICK'],[null,'STICK','STRING'],['STICK',null,'STRING']], 'FISHING_ROD', 1);
+shaped([['FLINT',null,null],['STICK',null,null],['FEATHER',null,null]], 'ARROW', 4);shaped([['PLANKS','PLANKS'],['PLANKS','PLANKS']], 'CRAFTING', 1);
 shaped([['COBBLE','COBBLE','COBBLE'],['COBBLE',null,'COBBLE'],['COBBLE','COBBLE','COBBLE']], 'FURNACE', 1);
 shaped([['COBBLE','COBBLE','COBBLE'],['COBBLE','IRON_INGOT','COBBLE'],['COBBLE','COBBLE','COBBLE']], 'MACERATOR', 1);
 shaped([['IRON_INGOT','IRON_INGOT','IRON_INGOT'],['IRON_INGOT','FURNACE','IRON_INGOT'],['IRON_INGOT','REDSTONE','IRON_INGOT']], 'GENERATOR', 1);
@@ -4988,12 +5045,16 @@ function makePlane(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x
   return g;
 }
 function makeBoat(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
-  var W=0x9a6a3a, D=0x6b4a26;
-  p(1.5,0.16,0.74,W,0,0.16,0);                                  // floor
-  p(1.5,0.3,0.1,D,0,0.32,0.34); p(1.5,0.3,0.1,D,0,0.32,-0.34);  // long sides
-  p(0.1,0.3,0.78,D,0.72,0.32,0); p(0.1,0.3,0.78,D,-0.72,0.32,0);// bow/stern
-  p(0.5,0.08,0.12,D,0,0.34,0);                                  // seat plank
-  return g; }
+  var W=0xa9763f, D=0x6b4a26, T=0x8a5d31, OAR=0x7a5126;
+  p(1.5,0.16,0.78,W,0,0.16,0);                                   // hull floor
+  p(1.5,0.34,0.1,D,0,0.34,0.38); p(1.5,0.34,0.1,D,0,0.34,-0.38); // long sides
+  p(0.16,0.34,0.86,D,0.7,0.34,0); p(0.16,0.34,0.86,D,-0.7,0.34,0);// stern/bow walls
+  p(0.42,0.4,0.86,T,0.82,0.36,0);                                // raised pointed bow
+  p(0.26,0.36,0.86,T,-0.78,0.34,0);                              // raised stern
+  p(0.52,0.1,0.64,T,0,0.4,0);                                    // bench seat
+  p(0.06,0.06,1.0,OAR,0.2,0.48,0.6); p(0.18,0.04,0.34,OAR,0.2,0.46,1.04);   // right oar + blade
+  p(0.06,0.06,1.0,OAR,0.2,0.48,-0.6); p(0.18,0.04,0.34,OAR,0.2,0.46,-1.04); // left oar + blade
+  g.scale.setScalar(1.06); return g; }
 function planeTick(e,dt){
   // un-ridden: settle onto the ground (prop is still when parked)
   if(e.vel.y>-30) e.vel.y-=16*dt;
@@ -5004,14 +5065,18 @@ function planeTick(e,dt){
   e.mesh.position.set(e.pos.x, e.pos.y, e.pos.z);
 }
 function boatTick(e,dt){
-  var feetW=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z))).liquid;
-  var headW=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.4),Math.floor(e.pos.z))).liquid;
-  e.vel.y-=16*dt; if(e.vel.y<-30)e.vel.y=-30;
-  if(headW) e.vel.y=1.6; else if(feetW) e.vel.y=(e.vel.y<0?e.vel.y*0.2:0);
-  var ny=e.pos.y+e.vel.y*dt, gy=Math.floor(ny-0.05);
-  if(e.vel.y<0 && isSolid(World.getBlock(Math.floor(e.pos.x),gy,Math.floor(e.pos.z)))){ e.pos.y=gy+1; e.vel.y=0; } else e.pos.y=ny;
+  var bx=Math.floor(e.pos.x), bz=Math.floor(e.pos.z), fy=Math.floor(e.pos.y);
+  var onWater = blk(World.getBlock(bx,fy,bz)).liquid || blk(World.getBlock(bx,fy-1,bz)).liquid || blk(World.getBlock(bx,fy+1,bz)).liquid;
+  if(onWater){
+    var surf=fy, g=0; while(surf<WORLD_H && blk(World.getBlock(bx,surf,bz)).liquid && g++<40) surf++;
+    var tgt=surf-0.06; e.pos.y += (tgt-e.pos.y)*Math.min(1,dt*7); e.vel.y=0;
+  } else {
+    e.vel.y-=16*dt; if(e.vel.y<-30)e.vel.y=-30;
+    var ny=e.pos.y+e.vel.y*dt, gy=Math.floor(ny-0.05);
+    if(e.vel.y<0 && isSolid(World.getBlock(bx,gy,bz))){ e.pos.y=gy+1; e.vel.y=0; } else e.pos.y=ny;
+  }
   e.mesh.position.set(e.pos.x, e.pos.y, e.pos.z);
-  e.mesh.position.y += Math.sin(now*0.002+e.pos.x)*0.03;            // gentle bob
+  e.mesh.position.y += Math.sin(now*0.002+e.pos.x)*0.04;            // gentle bob
 }
 function makeFish(){
   var g=new THREE.Group(); g.__mats=[];
@@ -5540,15 +5605,75 @@ function shootArrow(e){
   projectiles.push({mesh:m, pos:new THREE.Vector3(ox,oy,oz), vel:dir.multiplyScalar(24), life:3});
 }
 function clearProjectiles(){ for(var i=0;i<projectiles.length;i++) scene.remove(projectiles[i].mesh); projectiles=[]; }
+function playerShootArrow(){
+  var dir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
+  var ox=Player.pos.x+dir.x*0.5, oy=Player.pos.y+Player.eye-0.12, oz=Player.pos.z+dir.z*0.5;
+  var m=new THREE.Mesh(new THREE.BoxGeometry(0.07,0.07,0.72), new THREE.MeshBasicMaterial({color:0x6b5836}));
+  m.position.set(ox,oy,oz); m.lookAt(ox+dir.x,oy+dir.y,oz+dir.z); scene.add(m);
+  projectiles.push({mesh:m, pos:new THREE.Vector3(ox,oy,oz), vel:dir.clone().multiplyScalar(34), life:4, friendly:true, dmg:5});
+}
+function arrowHitEntity(e,dmg,dir){
+  e.hp-=dmg; e.hurt=0.3;
+  if((e.kind==='bear'||e.kind==='boar') && !e.tamed){ e.provoked=true; e.aggroT=14; }
+  if(e.vel){ e.vel.x+=dir.x*4.5; e.vel.z+=dir.z*4.5; e.vel.y=3.0; }
+  sfxHurtMob(e.kind);
+}
 function tickProjectiles(dt){
   for(var i=projectiles.length-1;i>=0;i--){ var p=projectiles[i];
     p.vel.y -= 7*dt;
     p.pos.x+=p.vel.x*dt; p.pos.y+=p.vel.y*dt; p.pos.z+=p.vel.z*dt; p.mesh.position.copy(p.pos);
     p.life-=dt;
-    var dx=p.pos.x-Player.pos.x, dy=p.pos.y-(Player.pos.y+1.0), dz=p.pos.z-Player.pos.z;
-    if(dx*dx+dy*dy+dz*dz < 0.6){ if(mobDmgMult()>0) damagePlayer(3*mobDmgMult()); scene.remove(p.mesh); projectiles.splice(i,1); continue; }
+    if(p.friendly){
+      var hitE=null, bestD=1e9;
+      for(var j=0;j<entities.length;j++){ var e=entities[j];
+        if(e.kind==='boat'||e.kind==='plane'||e.kind==='fish'||e===Player.riding) continue;
+        if(e.hp==null || e.hp<=0) continue;
+        var ex=p.pos.x-e.pos.x, ez=p.pos.z-e.pos.z, hd=ex*ex+ez*ez, hw=(e.width||0.7)*0.5+0.4;
+        if(hd < hw*hw && p.pos.y > e.pos.y-0.3 && p.pos.y < e.pos.y+(e.height||1.2)+0.3 && hd<bestD){ bestD=hd; hitE=e; } }
+      if(hitE){ var d=Math.hypot(p.vel.x,p.vel.z)||1; arrowHitEntity(hitE,p.dmg||5,{x:p.vel.x/d,z:p.vel.z/d}); scene.remove(p.mesh); projectiles.splice(i,1); continue; }
+    } else {
+      var dx=p.pos.x-Player.pos.x, dy=p.pos.y-(Player.pos.y+1.0), dz=p.pos.z-Player.pos.z;
+      if(dx*dx+dy*dy+dz*dz < 0.6){ if(mobDmgMult()>0) damagePlayer(3*mobDmgMult()); scene.remove(p.mesh); projectiles.splice(i,1); continue; }
+    }
     if(p.life<=0 || isSolid(World.getBlock(Math.floor(p.pos.x),Math.floor(p.pos.y),Math.floor(p.pos.z)))){ scene.remove(p.mesh); projectiles.splice(i,1); }
   }
+}
+function castFishingRod(){
+  if(Player.fishing){   // reel in
+    var fs=Player.fishing;
+    if(fs.state==='bite'){
+      var roll=Math.random();
+      if(roll<0.74){ giveItem('RAW_FISH',1); toast('\uD83D\uDC1F Caught a fish!'); }
+      else if(roll<0.88){ giveItem('STRING',1); toast('Reeled in some string'); }
+      else if(roll<0.95){ giveItem('LEATHER',1); toast('Reeled in an old boot \u2014 leather'); }
+      else { giveItem('BONE',1); toast('Reeled in a bone'); }
+      giveXP(2); unlock('fisherman');
+    } else { toast('Reeled in \u2014 nothing biting yet'); }
+    if(fs.bob) scene.remove(fs.bob); Player.fishing=null; sfxClick(); damageHeld(); return;
+  }
+  // cast: look for a water surface ahead
+  var dir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
+  var spot=null;
+  for(var d=1.5; d<=7 && !spot; d+=0.6){ var bx=Math.floor(Player.pos.x+dir.x*d), bz=Math.floor(Player.pos.z+dir.z*d);
+    for(var yy=Math.floor(Player.pos.y+2); yy>Math.floor(Player.pos.y)-5; yy--){
+      if(blk(World.getBlock(bx,yy,bz)).liquid && !blk(World.getBlock(bx,yy+1,bz)).liquid){ spot=[bx+0.5, yy+1, bz+0.5]; break; } }
+  }
+  if(!spot){ toast('\uD83C\uDFA3 Aim at open water to cast'); return; }
+  var bob=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,0.16), new THREE.MeshBasicMaterial({color:0xe23b25}));
+  bob.position.set(spot[0],spot[1]+0.04,spot[2]); scene.add(bob);
+  Player.fishing={bob:bob, pos:spot, state:'wait', biteT:2.5+Math.random()*4.5, biteWin:0};
+  sfxSplash(); toast('\uD83C\uDFA3 Cast \u2014 wait for a bite\u2026');
+}
+function tickFishing(dt){
+  var fs=Player.fishing; if(!fs) return;
+  var held=inv.hotbar[hotbarSel];
+  if(!held || !ITEMS[held.key] || !ITEMS[held.key].rod){ if(fs.bob) scene.remove(fs.bob); Player.fishing=null; return; }
+  var dx=Player.pos.x-fs.pos[0], dz=Player.pos.z-fs.pos[2];
+  if(dx*dx+dz*dz>72){ if(fs.bob) scene.remove(fs.bob); Player.fishing=null; toast('Line snapped \u2014 too far'); return; }
+  if(fs.state==='wait'){ fs.biteT-=dt; fs.bob.position.y=fs.pos[1]+0.04+Math.sin(now*0.004)*0.03;
+    if(fs.biteT<=0){ fs.state='bite'; fs.biteWin=1.7; sfxSplash(); toast('\u2757 A bite! Use the rod!'); } }
+  else if(fs.state==='bite'){ fs.biteWin-=dt; fs.bob.position.y=fs.pos[1]-0.16+Math.sin(now*0.03)*0.05;
+    if(fs.biteWin<=0){ fs.state='wait'; fs.biteT=2.5+Math.random()*4.5; } }
 }
 function tickEntities(dt){
   var pp=Player.pos;
@@ -5558,7 +5683,7 @@ function tickEntities(dt){
         e.pos.x=pp.x; e.pos.z=pp.z; e.pos.y=pp.y+0.3;
         var dyaw=Player.yaw-(e.lastYaw==null?Player.yaw:e.lastYaw); e.lastYaw=Player.yaw;
         while(dyaw>Math.PI)dyaw-=2*Math.PI; while(dyaw<-Math.PI)dyaw+=2*Math.PI;
-        e.bank=(e.bank||0)+((-dyaw*7)-(e.bank||0))*Math.min(1,dt*5);
+        e.bank=(e.bank||0)+((dyaw*7)-(e.bank||0))*Math.min(1,dt*5);
         if(e.bank>0.6)e.bank=0.6; if(e.bank<-0.6)e.bank=-0.6;
         e.mesh.position.set(e.pos.x,e.pos.y,e.pos.z);
         e.mesh.rotation.set(Player.pitch*0.7, Player.yaw, e.bank, 'YXZ');
@@ -5930,6 +6055,7 @@ function hardcoreGameOver(){
 function respawn(){
   if(World.dim!=='overworld'){ travelDim('overworld'); }
   Player.hp=Player.maxHp; Player.hunger=Player.maxHunger; Player.sat=5; Player.invul=3; Player.riding=null;
+  if(Player.fishing){ if(Player.fishing.bob) scene.remove(Player.fishing.bob); Player.fishing=null; }
   Player.pos.copy(Player.spawn); Player.vel.set(0,0,0);
   // clear hostiles near the spawn so you don't get jumped, and pause spawning briefly
   for(var i=entities.length-1;i>=0;i--){ var e=entities[i];
@@ -6480,6 +6606,7 @@ function openPauseMenu(){
   ps.textContent=sfxOn?'On':'Off'; ps.classList.toggle('on',sfxOn);
   document.getElementById('pSens').value=Math.round(lookSens*100);
   var pdf=document.getElementById('pDiff'); if(pdf){ pdf.textContent=difficulty.charAt(0).toUpperCase()+difficulty.slice(1); pdf.classList.toggle('on',difficulty!=='normal'); }
+  var pmd=document.getElementById('pMode'); if(pmd){ pmd.textContent=(gameMode==='creative')?'Creative':'Survival'; pmd.classList.toggle('on',gameMode==='creative'); }
   var pd=document.getElementById('pDist'); pd.value=RENDER_DIST; document.getElementById('pDistV').textContent=RENDER_DIST;
   var paj=document.getElementById('pAutoJump'); if(paj){ paj.textContent=autoJump?'On':'Off'; paj.classList.toggle('on',autoJump); }
   var pg=document.getElementById('pGrief'); if(pg){ pg.textContent=mobGriefing?'On':'Off'; pg.classList.toggle('on',mobGriefing); }
@@ -6512,7 +6639,7 @@ function updateTorchLights(dt){
   torchFlkU.value = 0.84 + 0.16*(0.5+0.5*Math.sin(now*0.013)) + (Math.random()-0.5)*0.05;   // flicker
   torchScanT-=dt; if(torchScanT>0) return; torchScanT=0.25;
   var px=Math.floor(Player.pos.x), py=Math.floor(Player.pos.y), pz=Math.floor(Player.pos.z), found=[];
-  for(var dx=-10;dx<=10;dx++) for(var dz=-10;dz<=10;dz++) for(var dy=-5;dy<=6;dy++){
+  for(var dx=-13;dx<=13;dx++) for(var dz=-13;dz<=13;dz++) for(var dy=-6;dy<=7;dy++){
     var x=px+dx, y=py+dy, z=pz+dz; if(y<1||y>=WORLD_H) continue;
     var bId=World.getBlock(x,y,z), lit=false, lpow=0.95;
     if(bId===B.TORCH){ lit=true; }
@@ -6568,7 +6695,7 @@ function physics(dt){
   var ridingPlane = riding && Player.riding.kind==='plane';
   if(Player.riding && !riding) Player.riding=null;
   if(riding && (input.crouch || (!IS_MOBILE && (keys['ControlLeft']||keys['KeyC'])))){ dismountHorse(); riding=false; }
-  var speed = ridingBoat?7.4:(riding?8.2:(Player.inWater?3.2:(Player.sneaking?2.4:(Player.sprinting?6.8:4.6))));
+  var speed = ridingBoat?(Player.boatFloating?7.4:1.8):(riding?8.2:(Player.inWater?3.2:(Player.sneaking?2.4:(Player.sprinting?6.8:4.6))));
   Player.sneakGuard = Player.sneaking && grounded && !Player.flying;
   var accel = Player.onGround?40:8;
   Player.vel.x += (wishX*speed - Player.vel.x)*Math.min(1,accel*dt);
@@ -6589,13 +6716,19 @@ function physics(dt){
     Player.onGround=false;
     fellFrom=null;   // climbing isn't falling - don't accrue fall damage down a shaft
   }
-  if(ridingBoat && Player.inWater){
-    var headW=blk(World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y+1.2),Math.floor(Player.pos.z))).liquid;
-    if(headW) Player.vel.y=2.6; else Player.vel.y*=0.4;   // bob up if submerged, settle on the surface
+  if(ridingBoat){
+    var bfx=Math.floor(Player.pos.x), bfz=Math.floor(Player.pos.z), fy0=Math.floor(Player.pos.y);
+    var onWater = blk(World.getBlock(bfx,fy0,bfz)).liquid || blk(World.getBlock(bfx,fy0-1,bfz)).liquid || blk(World.getBlock(bfx,fy0+1,bfz)).liquid;
+    if(onWater){
+      var surf=fy0, gg=0; while(surf<WORLD_H && blk(World.getBlock(bfx,surf,bfz)).liquid && gg++<40) surf++;   // first air above the water
+      var tgt=surf-0.06;                                   // hull rides right at the surface
+      Player.vel.y=(tgt-Player.pos.y)*9; if(Player.vel.y>4)Player.vel.y=4; if(Player.vel.y<-4)Player.vel.y=-4;
+      Player.inWater=false; Player.boatFloating=true; fellFrom=null;
+    } else { Player.boatFloating=false; Player.vel.y -= 24*dt; if(Player.vel.y<-40)Player.vel.y=-40; }
   }
   else if(!climbing){ Player.vel.y -= 24*dt; if(Player.vel.y<-40)Player.vel.y=-40; }
-  // jump
-  if(!Player.flying && (input.jump||keys['Space']) && Player.onGround && !Player.inWater){ Player.vel.y=riding?9.8:8.2; Player.onGround=false; }
+  // jump (boats don't jump)
+  if(!Player.flying && !ridingBoat && (input.jump||keys['Space']) && Player.onGround && !Player.inWater){ Player.vel.y=riding?9.8:8.2; Player.onGround=false; }
   // auto-jump (Bedrock-style): hop up 1-block steps while walking into them
   if(autoJump && !Player.flying && Player.onGround && !Player.inWater){
     var hsp=Math.hypot(Player.vel.x,Player.vel.z);
@@ -6615,7 +6748,7 @@ function physics(dt){
     var fIn = IS_MOBILE ? (input.fwd||0) : ((keys['KeyW']?1:0)-(keys['KeyS']?1:0));
     PL.throttle += fIn*dt*0.7; if(PL.throttle<0.16)PL.throttle=0.16; if(PL.throttle>1)PL.throttle=1;
     var pdir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
-    var psp = 7 + PL.throttle*16;                       // ~9.5 .. 23 blocks/s
+    var psp = 4.5 + PL.throttle*8.5;                    // ~5.9 .. 13 blocks/s (calmer cruising)
     Player.vel.x = pdir.x*psp; Player.vel.z = pdir.z*psp;
     Player.vel.y = pdir.y*psp + ((input.jump||keys['Space'])?5:0);
     Player.inWater=false; fellFrom=null;
@@ -6757,6 +6890,8 @@ function loop(t){
     tickMining(dt);
     tickEntities(dt);
     tickProjectiles(dt);
+    tickFishing(dt);
+    if(Player.bowCd>0) Player.bowCd-=dt;
     tickDrops(dt);
     tickSurvival(dt);
     if(frame%4===0){ maybeSpawnEnemies(); maybeSpawnVillagers(); maybeSpawnDwarves(); }
@@ -6790,10 +6925,12 @@ function loop(t){
   tickChestLid(dt);
   // place camera
   if(viewMode!==0){
-    var fwd=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
-    var eyeY=Player.pos.y+Player.eye, dist=4.4, sgn=(viewMode===2)?-1:1; // front view looks from ahead
+    var rp = Player.riding && Player.riding.kind==='plane';
+    var camPitch = rp ? Player.pitch*0.3 : Player.pitch;                  // planes: a dive should not swing the camera overhead
+    var fwd=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(camPitch,Player.yaw,0,'YXZ'));
+    var eyeY=Player.pos.y+Player.eye, dist=rp?5.2:4.4, sgn=(viewMode===2)?-1:1; // front view looks from ahead
     for(var dd=dist; dd>0.8; dd-=0.4){ if(!isSolid(World.getBlock(Math.floor(Player.pos.x-sgn*fwd.x*dd),Math.floor(eyeY-sgn*fwd.y*dd),Math.floor(Player.pos.z-sgn*fwd.z*dd)))){ dist=dd; break; } }
-    camera.position.set(Player.pos.x-sgn*fwd.x*dist, eyeY-sgn*fwd.y*dist+0.3, Player.pos.z-sgn*fwd.z*dist);
+    camera.position.set(Player.pos.x-sgn*fwd.x*dist, eyeY-sgn*fwd.y*dist+(rp?0.7:0.3), Player.pos.z-sgn*fwd.z*dist);
     if(viewMode===2) camera.rotation.set(-Player.pitch, Player.yaw+Math.PI, 0, 'YXZ');
     else camera.rotation.set(Player.pitch, Player.yaw, 0, 'YXZ');
     playerAvatar.visible=true; playerAvatar.position.set(Player.pos.x, Player.pos.y, Player.pos.z); playerAvatar.rotation.y=Player.yaw+Math.PI;
@@ -6879,8 +7016,10 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 81';
+var VERSION='Update 83';
 var CHANGELOG=[
+  { v:'Update 83', t:'Bow, Arrows & Fishing', items:['\uD83C\uDFF9 Craft a Bow (sticks + string) and Arrows (flint + stick + feather) \u2014 use the place/interact button to fire. Gravel now sometimes drops flint','\uD83C\uDFA3 Craft a Fishing Rod (sticks + string). Aim at water and use it to cast, wait for the bite, then use again to reel in fish (and the occasional string, leather or bone)','\u2694\ufe0f Arrows damage mobs and you can hunt with the bow'] },
+  { v:'Update 82', t:'Vehicles, Lights & Creative Toggle', items:['\u2708\ufe0f Plane flies slower and calmer, banks the correct way into turns, the chase-cam stays behind it when you dive, and your character now sits in it instead of looking like they\u2019re sprinting','\uD83D\uDEF6 Boats: can now be placed on water and float properly on the surface, a nicer model with oars + a real inventory icon, slow and no-jumping on land','\uD83D\uDD26 Torchlight now reaches noticeably farther','\u2699\ufe0f New Mode toggle in the game menu \u2014 switch between Survival and Creative any time (Hardcore stays locked)'] },
   { v:'Update 81', t:'The Quarry', items:['\u26CF\ufe0f Added the Quarry - the classic Tekkit auto-miner. Wire it to a generator (placed next to it, or connected by cable) and it digs a 5\u00d75 shaft straight down to bedrock on its own','\uD83D\uDCE6 Everything it mines drops into an adjacent chest (or pops out on top if there\u2019s no chest)','\uD83D\uDD27 Craft it from iron ingots, diamonds and redstone. Tap it to check its mining depth and power status'] },
   { v:'Update 80', t:'Plane, Cactus & Rabbits', items:['\u2708\ufe0f Plane: you can finally board it (just tap it), it no longer bounces when parked, and the propeller only spins while you\u2019re flying','\uD83C\uDF35 Cactus has a proper ribbed, spiny texture and now stings you for half a heart if you press against it','\uD83D\uDC07 Added rabbits - they hop around plains and deserts, are skittish and bolt when you get close'] },
   { v:'Update 79', t:'Smoother Terrain + Wildlife', items:['\uD83C\uDFD4\ufe0f Fixed the big terrain problem - biomes now blend with smooth slopes instead of sudden vertical cliffs and walls at their borders (mountains still rise tall, coasts ease into beaches)','\uD83E\uDD8A Added foxes - skittish, run from you, and hunt chickens & ducks; drop leather','\uD83D\uDC17 Added boars - roam the forests and fight back if attacked, dropping pork & leather'] },
@@ -6954,6 +7093,13 @@ document.getElementById('pDiff').addEventListener('click', function(){
   toast('Difficulty: '+this.textContent);
 });
 document.getElementById('pDist').addEventListener('input', function(){ var n=+this.value; setRenderDist(n); document.getElementById('pDistV').textContent=n; });
+document.getElementById('pMode').addEventListener('click', function(){
+  if(gameMode==='hardcore'){ toast('\u2620\uFE0F Hardcore can\u2019t switch modes'); return; }
+  gameMode = (gameMode==='creative')?'survival':'creative';
+  if(gameMode!=='creative'){ Player.flying=false; }
+  this.textContent=(gameMode==='creative')?'Creative':'Survival'; this.classList.toggle('on',gameMode==='creative');
+  toast('Mode: '+this.textContent+(gameMode==='creative'?' \u2014 double-tap jump to fly':''));
+});
 document.getElementById('pAutoJump').addEventListener('click', function(){ autoJump=!autoJump; this.textContent=autoJump?'On':'Off'; this.classList.toggle('on',autoJump); });
 document.getElementById('pGrief').addEventListener('click', function(){ ac(); mobGriefing=!mobGriefing; this.textContent=mobGriefing?'On':'Off'; this.classList.toggle('on',mobGriefing); });
 document.getElementById('pFire').addEventListener('click', function(){ ac(); fireSpread=!fireSpread; this.textContent=fireSpread?'On':'Off'; this.classList.toggle('on',fireSpread); });
