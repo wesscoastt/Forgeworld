@@ -245,15 +245,19 @@
     <button class="mbtn primary" id="pResume">Resume</button>
     <div class="prow"><span>Music</span><button class="tog on" id="pMusic">On</button></div>
     <div class="prow"><span>Sound</span><button class="tog on" id="pSound">On</button></div>
+    <div class="prow"><span>Master Vol</span><input type="range" id="pVolMaster" min="0" max="100" value="70"></div>
+    <div class="prow"><span>Music Vol</span><input type="range" id="pVolMusic" min="0" max="100" value="50"></div>
+    <div class="prow"><span>SFX Vol</span><input type="range" id="pVolSfx" min="0" max="100" value="100"></div>
     <div class="prow"><span>Difficulty</span><button class="tog" id="pDiff">Normal</button></div>
     <div class="prow"><span>Mode</span><button class="tog" id="pMode">Survival</button></div>
     <div class="prow"><span>View</span><button class="tog" id="pView">1st Person</button></div>
     <div class="prow"><span>Sensitivity</span><input type="range" id="pSens" min="40" max="200" value="100"></div>
+    <div class="prow"><span>FOV <b id="pFovV"></b></span><input type="range" id="pFov" min="60" max="110" value="72"></div>
     <div class="prow"><span>View Distance <b id="pDistV"></b></span><input type="range" id="pDist" min="3" max="10" value="7"></div>
     <div class="prow"><span>Auto Jump</span><button class="tog on" id="pAutoJump">On</button></div>
     <div class="prow"><span>Mob Griefing</span><button class="tog on" id="pGrief">On</button></div>
     <div class="prow"><span>Fire Spread</span><button class="tog on" id="pFire">On</button></div>
-    <button class="mbtn" id="pGuide">&#128214; Guidebook</button>
+    <button class="mbtn" id="pGuide">&#128214; Wiki & Help</button>
     <button class="mbtn" id="pAch">Achievements</button>
     <button class="mbtn" id="pExit">Save &amp; Quit to Title</button>
   </div>
@@ -266,7 +270,6 @@
   <div class="tbtn hidden" id="btnDown">&#9660;</div>
   <div class="tbtn" id="btnCrouch">SNEAK</div>
   <div id="topbtns">
-    <div class="pill" id="btnSound">&#9834;</div>
     <div class="pill" id="btnInv">Inventory</div>
     <div class="pill" id="btnMenu">&#9776;</div>
   </div>
@@ -318,7 +321,7 @@
 
 <div id="guidescreen" class="hidden">
   <div class="screenpanel">
-    <h2>&#128214; Guidebook</h2>
+    <h2>&#128214; Wiki & Help</h2>
     <div id="guideBody" style="text-align:left; max-height:64vh; overflow:auto; font-size:13.5px; line-height:1.5; padding-right:6px;"></div>
     <button class="mbtn" id="btnGuideBack">Back</button>
   </div>
@@ -477,10 +480,17 @@ defBlock({key:'WOOD_FENCE', name:'Wooden Fence', col:[150,108,62], solid:true, h
 defBlock({key:'FENCE_GATE', name:'Fence Gate', col:[150,108,62], solid:true, hard:1.0, shape:'gate', tex:'PLANKS' });
 defBlock({key:'LAVA', name:'Lava', col:[222,92,24], solid:false, transparent:true, liquid:true, lava:true, hurt:4, light:13 });
 defBlock({key:'WOOL', name:'Wool', col:[228,228,232], solid:true, hard:0.8 });
+defBlock({key:'RED_WOOL', name:'Red Wool', col:[176,62,54], solid:true, hard:0.8 });
+defBlock({key:'YELLOW_WOOL', name:'Yellow Wool', col:[222,190,64], solid:true, hard:0.8 });
+defBlock({key:'BLUE_WOOL', name:'Blue Wool', col:[64,96,196], solid:true, hard:0.8 });
+defBlock({key:'GREEN_WOOL', name:'Green Wool', col:[84,140,58], solid:true, hard:0.8 });
+defBlock({key:'PURPLE_WOOL', name:'Purple Wool', col:[140,86,176], solid:true, hard:0.8 });
+defBlock({key:'PINK_WOOL', name:'Pink Wool', col:[226,140,176], solid:true, hard:0.8 });
 defBlock({key:'DRY_GRASS', name:'Savanna Grass', col:[150,140,70], top:[166,158,84], side:[124,98,58], solid:true, tool:'shovel', hard:0.7, drop:'DIRT' });
 defBlock({key:'JUNGLE_LEAVES', name:'Jungle Leaves', col:[42,104,34], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'MACERATOR', name:'Macerator', col:[110,112,120], top:[138,140,150], side:[96,98,108], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
 defBlock({key:'GENERATOR', name:'Generator', col:[92,96,104], top:[150,120,60], side:[80,84,92], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
+defBlock({key:'AETHER_FORGE', name:'Aether Forge', col:[181,143,68], top:[120,235,245], side:[150,118,55], spec:[150,205,232], solid:true, tool:'pickaxe', tier:2, hard:3.4 });
 defBlock({key:'CABLE', name:'Energy Cable', col:[202,128,52], solid:true, tool:'pickaxe', hard:0.4, shape:'cable' });
 defBlock({key:'SOLAR_PANEL', name:'Solar Panel', col:[40,52,110], top:[26,38,98], side:[92,96,104], solid:true, tool:'pickaxe', tier:1, hard:2.2 });
 defBlock({key:'ENERGY_CELL', name:'Energy Cell', col:[58,64,80], top:[86,150,214], side:[52,58,74], solid:true, tool:'pickaxe', tier:1, hard:3.0 });
@@ -641,6 +651,20 @@ mat('FLINT','Flint',[58,56,62]);
 mat('ARROW','Arrow',[120,100,72]);
 defItem({key:'BOW',name:'Bow',color:[150,110,60],durability:240,stack:1,bow:true});
 defItem({key:'FISHING_ROD',name:'Fishing Rod',color:[150,110,60],durability:96,stack:1,rod:true});
+// wildflowers (picked from grassland) and the dyes made from them
+mat('POPPY','Poppy',[204,42,38],{flower:6});
+mat('DANDELION','Dandelion',[242,197,42],{flower:7});
+mat('CORNFLOWER','Cornflower',[74,108,208],{flower:8});
+mat('DAISY','Daisy',[238,240,236],{flower:9});
+mat('AZURE_BLUET','Azure Bluet',[180,138,216],{flower:10});
+mat('RED_DYE','Red Dye',[182,46,40]);
+mat('YELLOW_DYE','Yellow Dye',[226,192,52]);
+mat('BLUE_DYE','Blue Dye',[64,98,200]);
+mat('WHITE_DYE','White Dye',[236,238,234]);
+mat('PURPLE_DYE','Purple Dye',[146,88,184]);
+mat('PINK_DYE','Pink Dye',[228,142,178]);
+mat('GREEN_DYE','Green Dye',[86,142,60]);
+if(ITEMS.CACTUS) ITEMS.CACTUS.smeltTo='GREEN_DYE';   // smelt cactus for green dye
 // per-wood colored tool sets (same wooden tier, tinted to the wood)
 [['SPRUCE','Spruce',[114,84,50]],
  ['BIRCH','Birch',[200,180,132]],
@@ -791,6 +815,13 @@ function iconFor(key){
     else if(K==='LEATHER'){ x.fillStyle=css([150,108,66]); x.beginPath(); x.moveTo(9,9); x.lineTo(23,9); x.lineTo(25,20); x.lineTo(16,26); x.lineTo(7,20); x.closePath(); x.fill(); R(13,13,6,6,[120,84,50]); }
     else if(K==='FEATHER'){ x.strokeStyle=css([200,200,210]); x.lineWidth=2; x.beginPath(); x.moveTo(11,27); x.lineTo(22,7); x.stroke(); x.fillStyle=css([242,242,248]); x.beginPath(); x.moveTo(22,7); x.lineTo(26,16); x.lineTo(15,21); x.closePath(); x.fill(); }
     else if(K==='RAW_FISH'||K==='COOKED_FISH'){ var fc=(K.charAt(0)==='C')?[196,150,96]:[150,170,190]; x.fillStyle=css(fc); x.beginPath(); if(x.ellipse) x.ellipse(15,16,9,5,0,0,7); else x.arc(15,16,6,0,7); x.fill(); x.beginPath(); x.moveTo(23,16); x.lineTo(28,11); x.lineTo(28,21); x.closePath(); x.fill(); C(11,14,1.4,[20,20,20]); }
+    else if(K==='POPPY'||K==='DANDELION'||K==='CORNFLOWER'||K==='DAISY'||K==='AZURE_BLUET'){
+      R(15,14,2,12,[74,140,60]);                                                        // stem
+      R(11,18,2,4,[74,140,60]); R(19,16,2,4,[74,140,60]);                                // leaves
+      if(K==='CORNFLOWER'){ C(13,11,3,col); C(19,11,3,col); C(16,9,3,col); C(16,14,3,col); }
+      else { C(16,11,6,col); }                                                           // petals
+      C(16,11,2.3, K==='DAISY'?[242,200,60]:K==='DANDELION'?[250,232,150]:[250,238,180]); // center
+    }
     else if(K==='ARROW'){ x.save(); x.translate(16,16); x.rotate(-0.62);
       R(-1.1,-12,2.2,21,[120,100,72]);                                                         // shaft
       x.fillStyle=css([96,98,104]); x.beginPath(); x.moveTo(-3.6,-12); x.lineTo(3.6,-12); x.lineTo(0,-17.5); x.closePath(); x.fill();   // head
@@ -963,7 +994,7 @@ var World = {
   key: function(x,z){ return x+','+z; },
   ck: function(x,y,z){ return x+','+y+','+z; },
   biomeAt: function(wx,wz){
-    if(this.dim==='ashlands'){ return (this.bnoise.fbm(wx*0.004+300, wz*0.004-300, 2) > 0.04) ? 101 : 100; }
+    if(this.dim==='underforge'){ return (this.bnoise.fbm(wx*0.004+300, wz*0.004-300, 2) > 0.04) ? 101 : 100; }
     var cont = this.bnoise.fbm(wx*0.0011+11, wz*0.0011-7, 3);
     if(cont < -0.18) return 7;       // ocean (more common)
     // pick biome by argmax of independent noise fields -> contiguous blobs, never thin strips
@@ -1002,7 +1033,7 @@ var World = {
     return SEA + 1 + base*10;
   },
   heightAt: function(wx,wz){
-    if(this.dim==='ashlands'){
+    if(this.dim==='underforge'){
       var b=this.biomeAt(wx,wz), abase=this.noise.fbm(wx*0.02, wz*0.02, 3);
       var hh = (b===101) ? SEA+2 + abase*9 + Math.pow(Math.max(0,abase),1.3)*14 : SEA-2 + abase*4;
       return Math.max(3, Math.min(WORLD_H-10, Math.floor(hh)));
@@ -1039,7 +1070,7 @@ var World = {
     return Math.max(2, Math.min(WORLD_H-6, Math.floor(h)));
   },
   genColumn: function(blocks, lx,lz, wx,wz, hmap){
-    if(this.dim==='ashlands'){ this.genAshColumn(blocks,lx,lz,wx,wz,hmap); return; }
+    if(this.dim==='underforge'){ this.genAshColumn(blocks,lx,lz,wx,wz,hmap); return; }
     var biome = this.biomeAt(wx,wz);
     var h = this.heightAt(wx,wz);
     hmap[lx*CHUNK+lz] = h;
@@ -1415,7 +1446,7 @@ var World = {
   },
   // ===================== Spread-out villages (deterministic, world-space) =====================
   genVillage: function(ch){
-    if(this.dim==='ashlands') return;
+    if(this.dim==='underforge') return;
     if(this._vseed!==this.seed){ this._vcache={}; this._vseed=this.seed; }
     var VREGION=96, REACH=42;
     var r0x=Math.floor((ch.cx*CHUNK-REACH)/VREGION), r1x=Math.floor((ch.cx*CHUNK+CHUNK-1+REACH)/VREGION);
@@ -1547,7 +1578,7 @@ var World = {
   },
   genStructures: function(ch){
     var cx=ch.cx, cz=ch.cz;
-    if(this.dim==='ashlands'){ this.genAshFortress(ch); return; }
+    if(this.dim==='underforge'){ this.genAshFortress(ch); return; }
     this.genVillage(ch);
     if(hash3(cx,101,cz,this.seed^0xB00B) > 0.035) return;
     var lx=5+(hash3(cx,102,cz,this.seed)*6|0), lz=5+(hash3(cx,103,cz,this.seed)*6|0);
@@ -2331,7 +2362,7 @@ function getRainNoise(){ if(rainNoiseBuf||!actx) return rainNoiseBuf; var a=actx
   return rainNoiseBuf; }
 function startRainSound(){ var a=ac(); if(!a||rainSrc) return; rainSrc=a.createBufferSource(); rainSrc.buffer=getRainNoise()||getNoise(); rainSrc.loop=true;
   rainFilter=a.createBiquadFilter(); rainFilter.type='lowpass'; rainFilter.frequency.value=2300;
-  rainGainNode=a.createGain(); rainGainNode.gain.value=0; rainSrc.connect(rainFilter); rainFilter.connect(rainGainNode); rainGainNode.connect(masterGain);
+  rainGainNode=a.createGain(); rainGainNode.gain.value=0; rainSrc.connect(rainFilter); rainFilter.connect(rainGainNode); rainGainNode.connect(sfxGain||masterGain);
   try{ rainSrc.start(); }catch(e){} }
 function stopRainSound(){ if(rainSrc){ try{ rainSrc.stop(); }catch(e){} rainSrc=null; rainGainNode=null; rainFilter=null; } }
 function thunder(){ var a=ac(); if(!a||!sfxOn) return;
@@ -2339,7 +2370,7 @@ function thunder(){ var a=ac(); if(!a||!sfxOn) return;
   var f=a.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(320,a.currentTime); f.frequency.exponentialRampToValueAtTime(60,a.currentTime+2.3);
   var g=a.createGain(); g.gain.setValueAtTime(0.0001,a.currentTime); g.gain.exponentialRampToValueAtTime(0.55,a.currentTime+0.07);
   g.gain.exponentialRampToValueAtTime(0.18,a.currentTime+0.7); g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+2.5);
-  s.connect(f); f.connect(g); g.connect(masterGain); try{ s.start(); s.stop(a.currentTime+2.6); }catch(e){}
+  s.connect(f); f.connect(g); g.connect(sfxGain||masterGain); try{ s.start(); s.stop(a.currentTime+2.6); }catch(e){}
   tone(110,0.35,'sawtooth',0.26,38); }
 function lightningFlash(){ var el=document.getElementById('lflash');
   if(!el){ el=document.createElement('div'); el.id='lflash'; el.style.cssText='position:fixed;inset:0;background:#e6ecff;opacity:0;pointer-events:none;z-index:55;transition:opacity 0.12s;'; document.body.appendChild(el); }
@@ -2362,13 +2393,13 @@ function showChestLid(x,y,z){
   var t=World.tiles[World.ck(x,y,z)]||{}; var front=(t.front!=null)?t.front:4;
   var grp=new THREE.Group();
   var m=new THREE.MeshBasicMaterial({color:0x7a4a22, map:mobNoiseTex, side:THREE.DoubleSide});
-  var hinge=new THREE.Group(); hinge.position.set(0,0,-0.42);
-  var lid=new THREE.Mesh(new THREE.BoxGeometry(0.82,0.15,0.82), m); lid.position.set(0,0.075,0.42); hinge.add(lid);
+  var hinge=new THREE.Group(); hinge.position.set(0,0,-0.5);   // pivot on the back-top edge of the block
+  var lid=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.1,1.0), m); lid.position.set(0,0.05,0.5); hinge.add(lid);
   var lm=new THREE.MeshBasicMaterial({color:0xcaa23a});
-  var latch=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.1,0.05), lm); latch.position.set(0,0.02,0.84); hinge.add(latch);
+  var latch=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.12,0.06), lm); latch.position.set(0,0.0,1.0); hinge.add(latch);
   grp.add(hinge);
   var yaw = front===4?0 : (front===5?Math.PI : (front===0?-Math.PI/2 : Math.PI/2));
-  grp.rotation.y=yaw; grp.position.set(x+0.5, y+0.84, z+0.5);
+  grp.rotation.y=yaw; grp.position.set(x+0.5, y+1.0, z+0.5);   // rests on top of the block, not inside it
   scene.add(grp);
   chestLid={grp:grp, hinge:hinge, t:0, opening:true};
 }
@@ -2377,7 +2408,7 @@ function tickChestLid(dt){
   chestLid.t += (chestLid.opening?1:-1)*dt*6;
   if(chestLid.t>1) chestLid.t=1;
   if(chestLid.t<=0 && !chestLid.opening){ removeChestLid(); return; }
-  chestLid.hinge.rotation.x = -1.25*Math.max(0,chestLid.t);
+  chestLid.hinge.rotation.x = -1.5*Math.max(0,chestLid.t);   // swings up to near-vertical, clear of the box
 }
 function tickUnderwater(dt){
   if(!waterVeil){ waterVeil=document.createElement('div'); waterVeil.id='waterveil';
@@ -2454,7 +2485,7 @@ function tickRain(dt){
   rainGeo.attributes.position.needsUpdate=true;
 }
 function tickWeather(dt){
-  if(World.dim==='ashlands'){
+  if(World.dim==='underforge'){
     ashStormTimer-=dt;
     if(ashStormTimer<=0){ ashStormOn=!ashStormOn; ashStormTimer=ashStormOn?(16+Math.random()*16):(40+Math.random()*50); if(ashStormOn && running) toast('\uD83C\uDF2B\uFE0F An ash storm sweeps in\u2026'); }
     ashStorm += ((ashStormOn?1:0)-ashStorm)*Math.min(1,dt*0.4);
@@ -2478,7 +2509,7 @@ function tickWeather(dt){
 }
 function tickSky(){
   skyGroup.position.copy(camera.position);
-  if(World.dim==='ashlands'){ sunSprite.visible=false; moonSprite.visible=false; if(starMat)starMat.opacity=0; cloudGroup.visible=false; return; }
+  if(World.dim==='underforge'){ sunSprite.visible=false; moonSprite.visible=false; if(starMat)starMat.opacity=0; cloudGroup.visible=false; return; }
   sunSprite.visible=true; moonSprite.visible=true; cloudGroup.visible=true;
   var a = timeOfDay*Math.PI*2 - Math.PI/2, R=340;
   sunSprite.position.set(Math.cos(a)*R, Math.sin(a)*R, R*0.15);
@@ -2733,10 +2764,11 @@ function buildPlantMesh(ch){
     else if(gr<0.205){ var fc=6+(hash3(wx,7,wz,World.seed^21)*5|0); pushCross(p,u,ix,ref, lx+0.5, sy+1, lz+0.5, 0.34, 0.5, fc); } // flower (cells 6-10)
   }
   for(var tk in World.tiles){ var tl=World.tiles[tk]; if(!tl) continue;
-    if(tl.type!=='sapling' && tl.type!=='crop') continue;
+    if(tl.type!=='sapling' && tl.type!=='crop' && tl.type!=='flower') continue;
     var pa=tk.split(','); var tx=+pa[0],ty=+pa[1],tz=+pa[2]; if((tx>>4)!==ch.cx||(tz>>4)!==ch.cz) continue;
     var lxp=tx-ch.cx*CHUNK, lzp=tz-ch.cz*CHUNK;
-    if(tl.type==='sapling'){ var sc=(tl.wood==='spruce')?12:(tl.wood==='birch')?13:(tl.wood==='cherry')?14:11; pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.32, 0.5, sc); }
+    if(tl.type==='flower'){ pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.34, 0.5, tl.cell||6); }
+    else if(tl.type==='sapling'){ var sc=(tl.wood==='spruce')?12:(tl.wood==='birch')?13:(tl.wood==='cherry')?14:11; pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.32, 0.5, sc); }
     else { var cell=(tl.crop==='wheat'||tl.crop==='corn')?2:(tl.crop==='carrot'||tl.crop==='tomato')?3:4; pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, tl.mature?0.6:0.3, cell); }
   }
   if(p.length){ var g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(p,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(u,2)); g.setIndex(ix);
@@ -2861,11 +2893,13 @@ function blockBoxes(id,x,y,z){
     return [[x,y,z,x+1,y+1,z+TT]];
   }
   if(b.shape==='door'){
-    if(open) return [];
-    dir2=dir2||'north'; var T=0.2;
-    if(dir2==='south') return [[x,y,z+1-T,x+1,y+1,z+1]];
-    if(dir2==='east') return [[x+1-T,y,z,x+1,y+1,z+1]];
-    if(dir2==='west') return [[x,y,z,x+T,y+1,z+1]];
+    var dOpen=t.open, dDir=t.dir;
+    if(t.doorTop){ var dbt=World.tiles[World.ck(x,y-1,z)]; if(dbt){ dOpen=dbt.open; dDir=dbt.dir; } }   // top half follows the bottom tile
+    if(dOpen) return [];
+    dDir=dDir||'north'; var T=0.2;
+    if(dDir==='south') return [[x,y,z+1-T,x+1,y+1,z+1]];
+    if(dDir==='east') return [[x+1-T,y,z,x+1,y+1,z+1]];
+    if(dDir==='west') return [[x,y,z,x+T,y+1,z+1]];
     return [[x,y,z,x+1,y+1,z+T]];
   }
   return [[x,y,z,x+1,y+1,z+1]];
@@ -3038,7 +3072,6 @@ function setupTouch(){
   document.getElementById('btnCrouch').addEventListener('touchstart', function(e){ e.preventDefault(); input.crouch=!input.crouch; this.classList.toggle('on',input.crouch); });
   document.getElementById('btnInv').addEventListener('touchstart', function(e){ e.preventDefault(); toggleInventory(); });
   document.getElementById('btnMenu').addEventListener('touchstart', function(e){ e.preventDefault(); openPauseMenu(); });
-  document.getElementById('btnSound').addEventListener('touchstart', function(e){ e.preventDefault(); toggleSound(); });
 }
 function bindHold(id, cb){
   var el=document.getElementById(id);
@@ -3101,6 +3134,40 @@ function harvestTuft(){
   var ch=World.getChunk(g.x>>4,g.z>>4,false); if(ch) buildPlantMesh(ch);
   sfxBreak(); triggerHandSwing(); return true;
 }
+function lookFlower(){
+  var dir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
+  var ox=Player.pos.x, oy=Player.pos.y+Player.eye, oz=Player.pos.z;
+  var x=Math.floor(ox), y=Math.floor(oy), z=Math.floor(oz);
+  var stepX=dir.x>0?1:-1, stepY=dir.y>0?1:-1, stepZ=dir.z>0?1:-1;
+  function tmax(o,d,s){ if(d===0) return Infinity; var v=s>0?(Math.floor(o)+1-o):(o-Math.floor(o)); return v/Math.abs(d); }
+  var tMaxX=tmax(ox,dir.x,stepX), tMaxY=tmax(oy,dir.y,stepY), tMaxZ=tmax(oz,dir.z,stepZ);
+  var tDX=dir.x!==0?Math.abs(1/dir.x):Infinity, tDY=dir.y!==0?Math.abs(1/dir.y):Infinity, tDZ=dir.z!==0?Math.abs(1/dir.z):Infinity;
+  var t=0;
+  for(var i=0;i<64;i++){
+    var id=World.getBlock(x,y,z);
+    if(id===B.AIR){
+      var ftile=World.tiles[x+','+y+','+z];
+      if(ftile && ftile.type==='flower'){ return {x:x,y:y,z:z, cell:ftile.cell||6, placed:true}; }
+      if(World.getBlock(x,y-1,z)===B.GRASS && !(World.grassTaken && World.grassTaken[x+','+y+','+z])){
+        var gr=hash3(x,5,z,World.seed^9);
+        if(gr>=0.17 && gr<0.205){ return {x:x,y:y,z:z, cell:6+(hash3(x,7,z,World.seed^21)*5|0)}; }
+      }
+    } else if(isSolidTarget(id)){ return null; }
+    if(tMaxX<tMaxY && tMaxX<tMaxZ){ x+=stepX; t=tMaxX; tMaxX+=tDX; }
+    else if(tMaxY<tMaxZ){ y+=stepY; t=tMaxY; tMaxY+=tDY; }
+    else { z+=stepZ; t=tMaxZ; tMaxZ+=tDZ; }
+    if(t>REACH) break;
+  }
+  return null;
+}
+function harvestFlower(){
+  var g=lookFlower(); if(!g) return false;
+  if(g.placed){ delete World.tiles[World.ck(g.x,g.y,g.z)]; }
+  else { World.grassTaken[g.x+','+g.y+','+g.z]=1; }
+  giveItem(['POPPY','DANDELION','CORNFLOWER','DAISY','AZURE_BLUET'][g.cell-6]||'POPPY', 1);
+  var ch=World.getChunk(g.x>>4,g.z>>4,false); if(ch) buildPlantMesh(ch);
+  sfxBreak(); triggerHandSwing(); return true;
+}
 var harvestCd=0;
 
 /* ----------------------------- MINING ----------------------------------- */
@@ -3108,11 +3175,13 @@ var mining={ target:null, progress:0, needed:1 };
 var autoJump=true;
 var mobGriefing=true, fireSpread=true, waypoints=[];
 function currentTool(){ var s=inv.hotbar[hotbarSel]; if(s && ITEMS[s.key] && ITEMS[s.key].tool) return ITEMS[s.key]; return null; }
+function heldEnchLvl(name){ var s=inv.hotbar[hotbarSel]; return (s && s.ench && s.ench[name])? s.ench[name] : 0; }
 function miningSpeed(blockId){
   var b=blk(blockId); var tool=currentTool();
   var base=1.0;
   if(tool && b.tool && tool.tool===b.tool){ base = tool.speed; }
   else if(tool && tool.tool==='sword'){ base = 1.0; }
+  base *= (1 + 0.34*heldEnchLvl('over'));   // Overclock enchant
   return base;
 }
 function canHarvest(blockId){
@@ -3137,6 +3206,7 @@ function tickMining(dt){
   if(harvestCd>0) harvestCd-=dt;
   // tall grass breaks instantly when held over
   if(harvestCd<=0 && harvestTuft()){ harvestCd=0.18; mining.target=null; mining.progress=0; return; }
+  if(harvestCd<=0 && harvestFlower()){ harvestCd=0.22; mining.target=null; mining.progress=0; return; }
   // holding while aimed at a mob = keep punching it
   if(mobInFront()){ attackEntities(); mining.target=null; mining.progress=0; return; }
   var hit=raycast();
@@ -3156,6 +3226,7 @@ function tapAction(){
   if(uiOpen) return;
   if(attackEntities()) return;
   if(harvestTuft()) return;
+  if(harvestFlower()) return;
   if(tryHarvest()) return;
   doPlace();
 }
@@ -3220,13 +3291,13 @@ function breakBlock(hit){
   // gravity blocks (sand/gravel) above? simple: leave for now
   World.setBlock(hit.x,hit.y,hit.z,B.AIR,true);
   World.floodSeed(hit.x,hit.y,hit.z);
-  World.reflowLight(hit.x,hit.y,hit.z);
-  if(isLogId(id)) scheduleLeafDecay(hit.x,hit.y,hit.z);
+  World.reflowLight(hit.x,hit.y,hit.z); forceTorchRescan();
+  if(isLogId(id)) scheduleLeafDecay([[hit.x,hit.y,hit.z]]);
   if(id===B.LOG) unlock('getting_wood');
   if(id===B.STONE||id===B.COBBLE) unlock('stone_age');
   if(id===B.DIAMOND_ORE) unlock('diamonds');
   damageTool();
-  sfxBreak();
+  sfxBreak(id); rumble(0.16,0.1,35);
 }
 function isLogId(id){ return id===B.LOG||id===B.SPRUCE_LOG||id===B.BIRCH_LOG||id===B.CHERRY_LOG; }
 var leafDecayQ=[];
@@ -3315,6 +3386,8 @@ function tickLeaves(dt){
 function damageTool(){
   var s=inv.hotbar[hotbarSel];
   if(s && ITEMS[s.key] && ITEMS[s.key].tool){
+    var temp=(s.ench && s.ench.temp)||0;   // Tempered enchant: chance to skip wear
+    if(temp>0 && Math.random() < temp*0.22){ return; }
     s.dur = (s.dur==null? ITEMS[s.key].durability : s.dur) - 1;
     if(s.dur<=0){ inv.hotbar[hotbarSel]=null; toast('Tool broke'); }
     renderHotbar();
@@ -3370,6 +3443,8 @@ function doPlace(){
     playerShootArrow(); Player.bowCd=0.55; triggerHandSwing(); sfxBow(); if(gameMode!=='creative') damageHeld(); return;
   }
   if(heldU && ITEMS[heldU.key] && ITEMS[heldU.key].rod){ castFishingRod(); triggerHandSwing(); return; }
+  // feed / tame / breed animals (uses mob-in-front, must run before the block raycast early-return)
+  if(tryFeedAnimal(inv.hotbar[hotbarSel])) return;
   var hit=raycast(); if(!hit) return;
   var slot=inv.hotbar[hotbarSel];
   // interact with tile blocks first (right-click open)
@@ -3380,6 +3455,7 @@ function doPlace(){
     if(qt){ if(qt.done) toast('\u26CF\uFE0F Quarry: finished (hit bedrock)'); else { var dep=(qt.cy==null)?0:Math.max(0,(hit.y-1)-qt.cy); toast('\u26CF\uFE0F Quarry mining \u2014 depth '+dep+(drawPower(hit.x,hit.y,hit.z,0)?'':' (no power: connect a generator by cable)')); } }
     return; }
   if(hit.id===B.GENERATOR){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
+  if(hit.id===B.AETHER_FORGE){ openAetherForge(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.SOLAR_PANEL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.ENERGY_CELL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.HOPPER){ openHopper(World.ck(hit.x,hit.y,hit.z)); return; }
@@ -3402,7 +3478,7 @@ function doPlace(){
     if(placeFurniture(slot, hit)){ if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(); }
     return;
   }
-  if(hit.id===B.RIFT_GATE){ travelDim(World.dim==='ashlands'?'overworld':'ashlands'); return; }
+  if(hit.id===B.RIFT_GATE){ travelDim(World.dim==='underforge'?'overworld':'underforge'); return; }
   if(slot && slot.key==='MAP'){ openMapScreen(); return; }
   if(slot && ITEMS[slot.key] && ITEMS[slot.key].igniter){
     var fbx=hit.x+hit.nx, fby=hit.y+hit.ny, fbz=hit.z+hit.nz;
@@ -3446,42 +3522,6 @@ function doPlace(){
       renderHotbar(); sfxSplash?sfxSplash():sfxPlace(); }
     return;
   }
-  // honey befriends & breeds bears
-  if(slot && slot.key==='HONEY'){
-    var ht=mobInFront(3.2);
-    if(ht && ht.kind==='bear'){
-      consumeSlot(slot,1); renderHotbar(); sfxClick(); ht.provoked=false;
-      if(!ht.tamed){ ht.tameProg=(ht.tameProg||0)+1;
-        if(Math.random()<0.4 || ht.tameProg>=3){ ht.tamed=true; ht.love=8; toast('\uD83D\uDC3B Befriended the bear!'); unlock('rancher'); }
-        else toast('\uD83C\uDF6F'); }
-      else if(!ht.baby){ ht.love=12; toast('\u2764'); breedCheck(ht); }
-      return;
-    }
-  }
-  // feed seeds to animals (breeding) - only when aiming at an animal
-  if(slot && slot.key==='SEEDS'){
-    var tgt=mobInFront(3.2);
-    if(tgt && tgt.passive && !tgt.baby){ consumeSlot(slot,1); renderHotbar(); tgt.love=12; sfxClick(); toast('\u2764'); breedCheck(tgt); return; }
-  }
-  // tame horses (wheat/carrot/apple) and wild dogs (raw meat)
-  if(slot){
-    var tameT=mobInFront(3.2);
-    if(tameT && tameT.kind==='horse' && slot.key==='SADDLE' && !Player.riding){
-      consumeSlot(slot,1); renderHotbar(); tameT.tamed=true; tameT.saddled=true;
-      Player.riding=tameT; tameT.ridden=true; sfxClick(); toast('\uD83D\uDC0E Saddled \u2014 tap SNEAK to dismount'); unlock('rancher'); return;
-    }
-    if(tameT && !tameT.tamed && (tameT.kind==='horse'||tameT.kind==='dog'||tameT.kind==='cat')){
-      var hF=(tameT.kind==='horse' && (slot.key==='WHEAT'||slot.key==='CARROT'||slot.key==='APPLE'));
-      var dF=(tameT.kind==='dog' && (slot.key==='RAW_BEEF'||slot.key==='RAW_VENISON'||slot.key==='RAW_CHICKEN'||slot.key==='RAW_DUCK'||slot.key==='RAW_PORK'||slot.key==='RAW_MUTTON'));
-      var cF=(tameT.kind==='cat' && (slot.key==='RAW_FISH'||slot.key==='COOKED_FISH'||slot.key==='CRAB_MEAT'));
-      if(hF||dF||cF){ consumeSlot(slot,1); renderHotbar(); sfxClick();
-        tameT.tameProg=(tameT.tameProg||0)+1;
-        if(Math.random()<0.34 || tameT.tameProg>=4){ tameT.tamed=true; tameT.love=8; toast('\u2764 Tamed the '+tameT.kind+'!'); unlock('rancher'); }
-        else toast('\u2764');
-        return;
-      }
-    }
-  }
   // plant crops (seeds=wheat, carrot, potato, tomato, corn)
   if(slot && slot.key==='BONE_MEAL'){
     var bmc=[[hit.x,hit.y,hit.z],[hit.x,hit.y+1,hit.z]];
@@ -3522,6 +3562,19 @@ function doPlace(){
     }
     return;
   }
+  // place a wildflower on grass/dirt
+  if(slot && ITEMS[slot.key] && ITEMS[slot.key].flower){
+    var fgnd=World.getBlock(hit.x,hit.y,hit.z);
+    var fx=hit.x+hit.nx, fy=hit.y+hit.ny, fz=hit.z+hit.nz;
+    if((fgnd===B.GRASS||fgnd===B.DIRT||fgnd===B.FARMLAND) && hit.ny>0 && World.getBlock(fx,fy,fz)===B.AIR && !World.tiles[World.ck(fx,fy,fz)]){
+      World.tiles[World.ck(fx,fy,fz)]={type:'flower', cell:ITEMS[slot.key].flower};
+      if(World.grassTaken) World.grassTaken[fx+','+fy+','+fz]=1;   // suppress any procedural plant in that cell
+      if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar();
+      var fch=World.getChunk(fx>>4,fz>>4,false); if(fch) buildPlantMesh(fch);
+      sfxPlace();
+    }
+    return;
+  }
   // eat food
   if(slot && ITEMS[slot.key] && ITEMS[slot.key].food){ if(tryEat(slot)) return; }
   if(!slot || ITEMS[slot.key].block==null) return;
@@ -3546,7 +3599,7 @@ function doPlace(){
               isSolid(World.getBlock(nx+1,ny,nz)) || isSolid(World.getBlock(nx,ny,nz-1)) || isSolid(World.getBlock(nx,ny,nz+1));
     if(!sup) return;
   }
-  World.setBlock(nx,ny,nz,pid,true);
+  World.setBlock(nx,ny,nz,pid,true); forceTorchRescan();
   if(blk(pid).log){ World.tiles[World.ck(nx,ny,nz)]={axis: hit.ny!==0?'y':(hit.nx!==0?'x':'z')}; }
   if(pid===B.FURNACE) World.tiles[World.ck(nx,ny,nz)]={type:'furnace', input:null, fuel:null, output:null, burn:0, burnMax:0, cook:0, front:placeFrontFace()};
   if(pid===B.MACERATOR) World.tiles[World.ck(nx,ny,nz)]={type:'macerator', input:null, output:null, grind:0};
@@ -3560,7 +3613,7 @@ function doPlace(){
   renderHotbar();
   if(pid===B.TORCH) unlock('lighting_up');
   if(pid===B.FURNACE) unlock('hot_topic');
-  sfxPlace();
+  sfxPlace(pid);
 }
 function playerFacing(){ var lx=-Math.sin(Player.yaw), lz=-Math.cos(Player.yaw); if(Math.abs(lx)>Math.abs(lz)) return lx>0?'east':'west'; return lz>0?'south':'north'; }
 function placeFrontFace(){ var pf=playerFacing(); return pf==='north'?4:(pf==='south'?5:(pf==='east'?1:0)); }
@@ -3726,6 +3779,18 @@ shaped([['IRON_INGOT','IRON_INGOT','IRON_INGOT'],['IRON_INGOT','FURNACE','IRON_I
 shaped([['COPPER_INGOT','COPPER_INGOT','COPPER_INGOT']], 'CABLE', 6);
 shaped([['GLASS','GLASS','GLASS'],['COAL','REDSTONE','COAL'],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'SOLAR_PANEL', 1);
 shaped([['STRING','STRING'],['STRING','STRING']], 'WOOL', 1);
+shapeless([{key:'POPPY',qty:1}], 'RED_DYE', 1);
+shapeless([{key:'DANDELION',qty:1}], 'YELLOW_DYE', 1);
+shapeless([{key:'CORNFLOWER',qty:1}], 'BLUE_DYE', 1);
+shapeless([{key:'DAISY',qty:1}], 'WHITE_DYE', 1);
+shapeless([{key:'AZURE_BLUET',qty:1}], 'PURPLE_DYE', 1);
+shapeless([{key:'RED_DYE',qty:1},{key:'WHITE_DYE',qty:1}], 'PINK_DYE', 2);
+shapeless([{key:'WOOL',qty:1},{key:'RED_DYE',qty:1}], 'RED_WOOL', 1);
+shapeless([{key:'WOOL',qty:1},{key:'YELLOW_DYE',qty:1}], 'YELLOW_WOOL', 1);
+shapeless([{key:'WOOL',qty:1},{key:'BLUE_DYE',qty:1}], 'BLUE_WOOL', 1);
+shapeless([{key:'WOOL',qty:1},{key:'GREEN_DYE',qty:1}], 'GREEN_WOOL', 1);
+shapeless([{key:'WOOL',qty:1},{key:'PURPLE_DYE',qty:1}], 'PURPLE_WOOL', 1);
+shapeless([{key:'WOOL',qty:1},{key:'PINK_DYE',qty:1}], 'PINK_WOOL', 1);
 shaped([['STEAM_SILK','STEAM_SILK','STEAM_SILK'],['LEATHER',null,'LEATHER']], 'SADDLE', 1);
 shaped([['IRON_INGOT','REDSTONE','IRON_INGOT'],['REDSTONE','COPPER_INGOT','REDSTONE'],['IRON_INGOT','REDSTONE','IRON_INGOT']], 'ENERGY_CELL', 1);
 shaped([['IRON_INGOT','DIAMOND','IRON_INGOT'],['DIAMOND','IRON_INGOT','DIAMOND'],['IRON_INGOT','REDSTONE','IRON_INGOT']], 'QUARRY', 1);
@@ -3744,6 +3809,7 @@ shapeless([{key:'IRON_INGOT',qty:1},{key:'COAL',qty:1}], 'FLINT_STEEL', 1);
 shaped([[null,'IRON_INGOT'],['IRON_INGOT',null]], 'SHEARS', 1);
 shaped([['WOOL','WOOL','WOOL'],['PLANKS','PLANKS','PLANKS']], 'BED', 1);
 shapeless([{key:'COPPER_INGOT',qty:2},{key:'GOLD_ORE',qty:1}],'BRASS_INGOT',2);
+shaped([['BRASS_INGOT','AETHERIUM','BRASS_INGOT'],['AETHERIUM','BRASS_INGOT','AETHERIUM'],['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT']], 'AETHER_FORGE', 1);
 shaped([['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT'],['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT'],['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT']], 'BRASS_BLOCK', 1);
 shaped([['OBSIDIAN','BRASS_INGOT','OBSIDIAN'],['BRASS_INGOT','DIAMOND','BRASS_INGOT'],['OBSIDIAN','BRASS_INGOT','OBSIDIAN']], 'RIFT_GATE', 1);
 shapeless([{key:'TOMATO',qty:1},{key:'CARROT',qty:1}], 'SALAD', 1);
@@ -3870,7 +3936,7 @@ var screenEl=document.getElementById('screen');
 var heldEl=document.getElementById('held');
 
 function refreshUI(){ renderHotbar(); if(uiOpen) rerenderScreen(); }
-function rerenderScreen(){ var sc=screenEl.querySelector('.panel'); var st=sc?sc.scrollTop:screenEl.scrollTop; if(currentScreen==='inv') openInventory(true); else if(currentScreen==='craft') openCrafting(true,true); else if(currentScreen==='furnace') openFurnace(curTileKey,true); else if(currentScreen==='macerator') openMacerator(curTileKey,true); else if(currentScreen==='generator') openGenerator(curTileKey,true); else if(currentScreen==='chest') openChest(curTileKey,true); else if(currentScreen==='hopper') openHopper(curTileKey,true); else if(currentScreen==='backpack') openBackpack(bpackRef); var sc2=screenEl.querySelector('.panel'); if(sc2) sc2.scrollTop=st; else screenEl.scrollTop=st; }
+function rerenderScreen(){ var sc=screenEl.querySelector('.panel'); var st=sc?sc.scrollTop:screenEl.scrollTop; if(currentScreen==='inv') openInventory(true); else if(currentScreen==='craft') openCrafting(true,true); else if(currentScreen==='furnace') openFurnace(curTileKey,true); else if(currentScreen==='macerator') openMacerator(curTileKey,true); else if(currentScreen==='generator') openGenerator(curTileKey,true); else if(currentScreen==='aetherforge') openAetherForge(curTileKey,true); else if(currentScreen==='chest') openChest(curTileKey,true); else if(currentScreen==='hopper') openHopper(curTileKey,true); else if(currentScreen==='backpack') openBackpack(bpackRef); var sc2=screenEl.querySelector('.panel'); if(sc2) sc2.scrollTop=st; else screenEl.scrollTop=st; }
 
 function slotHTML(slot){
   if(!slot) return '';
@@ -3890,7 +3956,7 @@ function renderHotbar(){
     hb.appendChild(d);
   })(i); }
 }
-function selectHotbar(i){ hotbarSel=i; renderHotbar(); }
+function selectHotbar(i){ if(i!==hotbarSel) sfxUITick(); hotbarSel=i; renderHotbar(); }
 
 function makeGridSlot(arr, i, onClick){
   var d=document.createElement('div'); d.className='gslot';
@@ -3936,7 +4002,27 @@ function clickSlot(arr, i, button){
   }
   setHeld(); rerenderScreen();
 }
-var OFFHAND_OK={TORCH:1,SHIELD:1,MAP:1,COMPASS:1};
+function _addToArrays(item, arrays){   // fill a stack into the given slot arrays; returns leftover qty
+  var stackMax=(ITEMS[item.key]&&ITEMS[item.key].stack)||64, hasDur=item.dur!=null, a, i, arr, s;
+  if(!hasDur){ for(a=0;a<arrays.length && item.qty>0;a++){ arr=arrays[a]; for(i=0;i<arr.length && item.qty>0;i++){ s=arr[i]; if(s && s.key===item.key && s.dur==null){ var add=Math.min(item.qty, stackMax-s.qty); s.qty+=add; item.qty-=add; } } } }
+  for(a=0;a<arrays.length && item.qty>0;a++){ arr=arrays[a]; for(i=0;i<arr.length && item.qty>0;i++){ if(!arr[i]){ var put=hasDur?1:Math.min(item.qty,stackMax); var ns={key:item.key,qty:put}; if(hasDur) ns.dur=item.dur; arr[i]=ns; item.qty-=put; if(hasDur) break; } } }
+  return item.qty;
+}
+function _containerArrays(){   // every visible grid array that isn't the player's own inventory
+  var set=[]; for(var k=0;k<liveSlots.length;k++){ var a=liveSlots[k].arr;
+    if(a!==inv.main && a!==inv.hotbar && a!==inv.offhand && a!==inv.armor && set.indexOf(a)<0) set.push(a); }
+  return set;
+}
+function quickTransferSlot(arr, i){   // Y / triangle: shove a whole stack to the other inventory
+  if(cursor) return; var s=arr[i]; if(!s) return;
+  var isPlayer=(arr===inv.main||arr===inv.hotbar);
+  var dest = isPlayer ? _containerArrays() : [inv.hotbar, inv.main];
+  if(!dest.length) return;
+  var moving={key:s.key, qty:s.qty}; if(s.dur!=null) moving.dur=s.dur;
+  var left=_addToArrays(moving, dest);
+  if(left<=0) arr[i]=null; else s.qty=left;
+  sfxUITick(); rerenderScreen(); renderHotbar();
+}
 function clickOffhand(){
   var s=inv.offhand[0];
   if(cursor){
@@ -4210,6 +4296,46 @@ function openCrafting(keep, fromRerender){
   screenEl.appendChild(p);
   bindScreenBg();
 }
+function openAetherForge(tk, keep){
+  curTileKey=tk; if(!World.tiles[tk]) World.tiles[tk]={type:'aetherforge'};
+  openScreen(); currentScreen='aetherforge';
+  screenEl.innerHTML=''; var p=document.createElement('div'); p.className='panel';
+  var h=document.createElement('h2'); h.textContent='\u2699\uFE0F Aether Forge'; p.appendChild(h);
+  var sub=document.createElement('div'); sub.style.cssText='font-size:12px;opacity:0.82;margin-bottom:8px;';
+  sub.textContent='Hold the tool you want to infuse, then spend Aetherium to bind a charm (max Lv 3).'; p.appendChild(sub);
+  var s=inv.hotbar[hotbarSel]; var it=s?ITEMS[s.key]:null; var isTool=!!(it&&it.tool);
+  var tw=document.createElement('div'); tw.style.cssText='display:flex;align-items:center;gap:10px;background:#2a2118;border:2px solid #c09a45;border-radius:6px;padding:8px;margin-bottom:10px;';
+  var ic=document.createElement('div'); ic.className='gslot'; ic.style.cssText='width:40px;height:40px;min-width:40px;'; if(s) ic.innerHTML=miniIcon(s.key); tw.appendChild(ic);
+  var tl=document.createElement('div');
+  if(isTool){ var en=s.ench||{}; var lv=[]; if(en.over)lv.push('Overclock '+en.over); if(en.honed)lv.push('Honed '+en.honed); if(en.temp)lv.push('Tempered '+en.temp);
+    tl.innerHTML='<b>'+it.name+'</b><br><span style="font-size:11px;opacity:.85;color:#8fdcff;">'+(lv.length?lv.join(', '):'No charms yet')+'</span>'; }
+  else tl.innerHTML='<span style="opacity:.8;">Hold a tool in your hand\u2026</span>';
+  tw.appendChild(tl); p.appendChild(tw);
+  var have=countItem('AETHERIUM');
+  var av=document.createElement('div'); av.style.cssText='font-size:12px;margin-bottom:8px;'; av.innerHTML='Aetherium available: <b style="color:#8fdcff;">'+have+'</b>'; p.appendChild(av);
+  function charmRow(name,key,desc){
+    var cur=(isTool && s.ench && s.ench[key])||0, cost=(cur+1)*3, maxed=cur>=3, can=isTool&&!maxed&&have>=cost;
+    var row=document.createElement('button'); row.className='mbtn'; row.style.cssText='display:flex;align-items:center;gap:8px;width:100%;text-align:left;margin:4px 0;padding:8px;'+(can?'':'opacity:.5;');
+    row.innerHTML='<div style="flex:1;"><b>'+name+'</b> <span style="opacity:.7;font-size:11px;">Lv '+cur+'/3</span><br><span style="font-size:11px;opacity:.78;">'+desc+'</span></div><div style="font-size:12px;white-space:nowrap;">'+(maxed?'MAX':(cost+' \u2728'))+'</div>';
+    if(can){ row.onclick=function(){ applyEnchant(key, cost); }; }
+    return row;
+  }
+  p.appendChild(charmRow('Overclock','over','Mine faster (+34% speed / level)'));
+  p.appendChild(charmRow('Honed','honed','More melee damage (+1.6 / level)'));
+  p.appendChild(charmRow('Tempered','temp','Tools wear out slower'));
+  p.appendChild(spacer(8));
+  var back=document.createElement('button'); back.className='mbtn'; back.style.cssText='width:100%;'; back.textContent='Close'; back.onclick=function(){ closeScreen(); };
+  p.appendChild(back); screenEl.appendChild(p); bindScreenBg();
+}
+function applyEnchant(key, cost){
+  var s=inv.hotbar[hotbarSel]; if(!s || !ITEMS[s.key] || !ITEMS[s.key].tool){ toast('Hold a tool first'); return; }
+  var cur=(s.ench && s.ench[key])||0; if(cur>=3){ toast('Already at max'); return; }
+  if(countItem('AETHERIUM')<cost){ toast('Need '+cost+' Aetherium'); return; }
+  takeItem('AETHERIUM', cost); s.ench=s.ench||{}; s.ench[key]=cur+1;
+  tone(880,0.12,'triangle',0.06,1320); setTimeout(function(){ if(sfxOn) tone(1320,0.16,'triangle',0.05,1760); },90); noiseBurst(0.18,0.03,3000);
+  toast('\u2728 '+(key==='over'?'Overclock':key==='honed'?'Honed':'Tempered')+' Lv '+(cur+1)+'!');
+  renderHotbar(); openAetherForge(curTileKey, true);
+}
 function recipeBookBtn(){ var b=document.createElement('button'); b.className='mbtn'; b.style.cssText='margin-top:6px;width:100%;'; b.textContent='\uD83D\uDCD6 Recipe Book'; b.onclick=function(){ if(typeof clearCraftToInv==='function') clearCraftToInv(9); openRecipeBook(); }; return b; }
 var recipeShowAll=false;
 function invCount(key){ var a=inv.main.concat(inv.hotbar), n=0; for(var i=0;i<a.length;i++) if(a[i]&&a[i].key===key) n+=a[i].qty; return n; }
@@ -4232,7 +4358,14 @@ function recipeRow(r){
   row.appendChild(ing);
   var arr=document.createElement('div'); arr.textContent='\u279C'; arr.style.cssText='opacity:0.85;flex:none;'; row.appendChild(arr);
   var out=document.createElement('div'); out.className='gslot'; out.style.cssText='width:30px;height:30px;min-width:30px;flex:none;'; out.innerHTML=miniIcon(r.out,r.qty); row.appendChild(out);
-  var nm=document.createElement('div'); nm.style.cssText='font-size:12px;line-height:1.2;'; nm.textContent=(ITEMS[r.out]?ITEMS[r.out].name:r.out)+(r.qty>1?(' \u00D7'+r.qty):''); row.appendChild(nm);
+  var nmWrap=document.createElement('div'); nmWrap.style.cssText='display:flex;flex-direction:column;gap:1px;min-width:0;';
+  var nm=document.createElement('div'); nm.style.cssText='font-size:12px;line-height:1.2;font-weight:600;'; nm.textContent=(ITEMS[r.out]?ITEMS[r.out].name:r.out)+(r.qty>1?(' \u00D7'+r.qty):''); nmWrap.appendChild(nm);
+  var counts={};
+  if(r.type==='shaped'){ for(var ry2=0;ry2<r.rows.length;ry2++)for(var rx2=0;rx2<r.rows[ry2].length;rx2++){ var kk=r.rows[ry2][rx2]; if(kk) counts[kk]=(counts[kk]||0)+1; } }
+  else { for(var ii=0;ii<r.ing.length;ii++){ var ik=r.ing[ii].key||r.ing[ii], iq=r.ing[ii].qty||1; counts[ik]=(counts[ik]||0)+iq; } }
+  var parts=[]; for(var ck in counts){ parts.push(counts[ck]+'\u00D7 '+(ITEMS[ck]?ITEMS[ck].name:ck)); }
+  var ingn=document.createElement('div'); ingn.style.cssText='font-size:10px;opacity:0.72;line-height:1.15;'; ingn.textContent=parts.join(', '); nmWrap.appendChild(ingn);
+  row.appendChild(nmWrap);
   return row;
 }
 function smeltRow(fromKey,toKey){
@@ -4481,6 +4614,7 @@ function sleepInBed(hit){
   Player.spawn.set(hit.x+0.5, hit.y+1.0, hit.z+0.5);
   if(timeOfDay>0.72 || timeOfDay<0.24){
     timeOfDay=0.26; Player.hp=Math.min(Player.maxHp, Player.hp+4);
+    nightsAwake=0; despawnWatcher();   // a good night's sleep keeps the Watcher away
     toast('\u2600\ufe0f Slept \u2014 morning, spawn point set'); sfxClick(); saveGame(true);
   } else {
     toast('Spawn point set \u2014 you can only sleep at night'); sfxClick();
@@ -5436,6 +5570,19 @@ function animalTick(e,dt){
   if(sp>0) e.mesh.rotation.y=-e.wdir+Math.PI/2;
   if(e.onGround && sp>0){ var ahx=e.pos.x+Math.cos(e.wdir)*0.5, ahz=e.pos.z+Math.sin(e.wdir)*0.5;
     if(isSolid(World.getBlock(Math.floor(ahx),Math.floor(e.pos.y),Math.floor(ahz)))) e.vel.y=6.0; }
+  // trapped-in-a-hole panic: keeps trying to move but can't -> freak out and leap to escape
+  if(e._stuckChk==null){ e._stuckChk=0.5; e._spx=e.pos.x; e._spz=e.pos.z; e.stuckT=0; }
+  e._stuckChk-=dt;
+  if(e._stuckChk<=0){ e._stuckChk=0.5;
+    var moved2=Math.hypot(e.pos.x-e._spx, e.pos.z-e._spz);
+    if(sp>0 && moved2<0.2) e.stuckT=(e.stuckT||0)+0.5; else e.stuckT=Math.max(0,(e.stuckT||0)-0.7);
+    e._spx=e.pos.x; e._spz=e.pos.z;
+  }
+  if(e.stuckT>1.0){   // panicking
+    e.moving=true; e.wcd=0.2; e.wdir+=(Math.random()-0.5)*3.0;
+    if(e.onGround){ e.vel.y=7.4; e.vel.x=Math.cos(e.wdir)*e.speed*1.6; e.vel.z=Math.sin(e.wdir)*e.speed*1.6; }   // desperate leap toward a new way out
+    if(e.stuckT>3.5) e.stuckT=0;
+  }
   if(e.kind==='rabbit' && e.onGround && sp>0){ e.hopCd=(e.hopCd>0)?e.hopCd-dt:0; if(e.hopCd<=0){ e.vel.y=4.6; e.hopCd=0.42; } }   // hop
   var inW=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.2),Math.floor(e.pos.z))).liquid;
   var headW2=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.7),Math.floor(e.pos.z))).liquid;
@@ -5635,7 +5782,11 @@ function tickProjectiles(dt){
       var dx=p.pos.x-Player.pos.x, dy=p.pos.y-(Player.pos.y+1.0), dz=p.pos.z-Player.pos.z;
       if(dx*dx+dy*dy+dz*dz < 0.6){ if(mobDmgMult()>0) damagePlayer(3*mobDmgMult()); scene.remove(p.mesh); projectiles.splice(i,1); continue; }
     }
-    if(p.life<=0 || isSolid(World.getBlock(Math.floor(p.pos.x),Math.floor(p.pos.y),Math.floor(p.pos.z)))){ scene.remove(p.mesh); projectiles.splice(i,1); }
+    var stuck = isSolid(World.getBlock(Math.floor(p.pos.x),Math.floor(p.pos.y),Math.floor(p.pos.z)));
+    if(p.life<=0 || stuck){
+      if(p.friendly && stuck && gameMode!=='creative' && Math.random()<0.6) spawnDrop(Math.floor(p.pos.x),Math.floor(p.pos.y),Math.floor(p.pos.z),'ARROW',1);   // pick it back up
+      scene.remove(p.mesh); projectiles.splice(i,1);
+    }
   }
 }
 function castFishingRod(){
@@ -5860,11 +6011,12 @@ function vehicleInFront(maxd){
 function hitEntity(e){
   var dir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
   var tool=currentTool(); var dmg= (tool && tool.dmg)? tool.dmg : 1;
+  dmg += 1.6*heldEnchLvl('honed');   // Honed enchant
   e.hp-=dmg; e.hurt=0.2;
   if((e.kind==='bear'||e.kind==='boar') && !e.tamed){ e.provoked=true; e.aggroT=14; }   // neutral mobs fight back
   e.vel.x+=dir.x*6; e.vel.z+=dir.z*6; e.vel.y=4.4;
   if(tool && (tool.tool==='sword'||tool.tool==='battleaxe')) damageTool();
-  sfxHurtMob(e.kind);
+  sfxHurtMob(e.kind); rumble(0.4,0.28,80);
 }
 var playerAtkCd=0;
 function attackEntities(){ var e=mobInFront(); if(!e) return false;
@@ -5949,9 +6101,108 @@ function breedCheck(e){
       spawnEnemy(e.kind, bx, e.pos.y, bz);
       var baby=entities[entities.length-1]; baby.baby=true; baby.age=0; baby.mesh.scale.set(0.5,0.5,0.5);
       e.love=0; o.love=0; e.loveCd=o.loveCd=30; giveXP(3); unlock('rancher');
+      spawnHearts(baby,6);
       toast('\uD83D\uDC23 A baby '+e.kind+' was born!'); return;
     }
   }
+}
+var heartParticles=[], heartTex=null;
+function makeHeartTex(){ if(heartTex) return heartTex;
+  var c=document.createElement('canvas'); c.width=c.height=16; var x=c.getContext('2d');
+  x.fillStyle='#e8344e'; var P=[[5,3],[6,3],[9,3],[10,3],[4,4],[5,4],[6,4],[7,4],[8,4],[9,4],[10,4],[11,4],[4,5],[5,5],[6,5],[7,5],[8,5],[9,5],[10,5],[11,5],[5,6],[6,6],[7,6],[8,6],[9,6],[10,6],[6,7],[7,7],[8,7],[9,7],[7,8],[8,8]];
+  for(var i=0;i<P.length;i++) x.fillRect(P[i][0],P[i][1],1,1);
+  x.fillStyle='#ff8095'; x.fillRect(5,4,1,1); x.fillRect(6,4,1,1);
+  heartTex=new THREE.CanvasTexture(c); if(heartTex.magFilter!==undefined) heartTex.magFilter=THREE.NearestFilter; return heartTex; }
+function spawnHearts(e,n){ if(!e) return; n=n||5;
+  for(var i=0;i<n;i++){ var mat=new THREE.SpriteMaterial({map:makeHeartTex(),transparent:true,depthTest:true});
+    var m=new THREE.Sprite(mat); var s=0.26+Math.random()*0.12; m.scale.set(s,s,s);
+    m.position.set(e.pos.x+(Math.random()-0.5)*0.55, e.pos.y+(e.height||1)+0.25+Math.random()*0.35, e.pos.z+(Math.random()-0.5)*0.55);
+    scene.add(m); heartParticles.push({mesh:m, life:0.9+Math.random()*0.3, vy:0.55+Math.random()*0.4, vx:(Math.random()-0.5)*0.3, vz:(Math.random()-0.5)*0.3}); }
+}
+function tickHearts(dt){ for(var i=heartParticles.length-1;i>=0;i--){ var h=heartParticles[i];
+  h.life-=dt; h.mesh.position.x+=h.vx*dt; h.mesh.position.y+=h.vy*dt; h.mesh.position.z+=h.vz*dt;
+  if(h.mesh.material) h.mesh.material.opacity=Math.max(0,Math.min(1,h.life*1.6));
+  if(h.life<=0){ scene.remove(h.mesh); if(h.mesh.material) h.mesh.material.dispose(); heartParticles.splice(i,1); } } }
+function clearHearts(){ for(var i=0;i<heartParticles.length;i++) scene.remove(heartParticles[i].mesh); heartParticles=[]; }
+// ---------------- The Watcher (insomnia apparition) ----------------
+var nightsAwake=0, _nightCounted=false, watcher=null, watcherCd=18, watcherStare=0;
+function makeWatcherMesh(){
+  var g=new THREE.Group(); g.__mats=[];
+  var dark=0x0a0a0e;
+  partMesh(g,0.62,0.78,0.34, dark, 0, 1.18, 0);     // torso
+  partMesh(g,0.5,0.5,0.5,   dark, 0, 1.82, 0);      // head
+  partMesh(g,0.22,0.78,0.26,dark,-0.42,1.18,0);     // arms
+  partMesh(g,0.22,0.78,0.26,dark, 0.42,1.18,0);
+  partMesh(g,0.26,0.84,0.3, dark,-0.17,0.42,0);     // legs
+  partMesh(g,0.26,0.84,0.3, dark, 0.17,0.42,0);
+  // glowing eyes (bright unlit cubes)
+  var em=new THREE.MeshBasicMaterial({color:0xbfffff});
+  var e1=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.07,0.04),em); e1.position.set(-0.12,1.86,0.26); g.add(e1);
+  var e2=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.07,0.04),em); e2.position.set(0.12,1.86,0.26); g.add(e2);
+  g.__eyes=em;
+  return g;
+}
+function surfaceYAt(x,z){ for(var y=WORLD_H-2;y>1;y--){ if(isSolid(World.getBlock(x,y,z))) return y+1; } return SEA; }
+function spawnWatcher(){
+  if(watcher) return;
+  var near = nightsAwake>=9 ? 8 : nightsAwake>=6 ? 12 : 16;
+  var ang = Player.yaw + Math.PI + (Math.random()-0.5)*1.6;   // biased to behind the player
+  var d = near + Math.random()*5;
+  var wx=Math.floor(Player.pos.x - Math.sin(ang)*d), wz=Math.floor(Player.pos.z - Math.cos(ang)*d);
+  var wy=surfaceYAt(wx,wz);
+  if(wy<2||wy>WORLD_H-3) return;
+  var mesh=makeWatcherMesh(); mesh.position.set(wx+0.5, wy, wz+0.5); scene.add(mesh);
+  watcher={mesh:mesh, x:wx+0.5, y:wy, z:wz+0.5, life:7+Math.random()*6, blink:0};
+  sfxWatcherAppear();
+}
+function despawnWatcher(){ if(watcher){ scene.remove(watcher.mesh); watcher=null; } watcherStare=0; }
+function tickWatcher(dt){
+  // only stalks at night once the insomnia builds
+  var night = sunU.value<0.35;
+  if(!night || nightsAwake<3 || gameMode==='creative'){ if(watcher){ despawnWatcher(); } watcherCd=Math.max(watcherCd,6); return; }
+  if(!watcher){
+    watcherCd-=dt;
+    if(watcherCd<=0){ spawnWatcher(); }
+    return;
+  }
+  // face the player, flicker the eyes
+  var dx=Player.pos.x-watcher.x, dz=Player.pos.z-watcher.z, dist=Math.hypot(dx,dz);
+  watcher.mesh.rotation.y=Math.atan2(dx,dz);
+  if(watcher.__eyeT==null) watcher.__eyeT=0; watcher.__eyeT+=dt;
+  if(watcher.mesh.__eyes && watcher.mesh.__eyes.color && watcher.mesh.__eyes.color.setScalar) watcher.mesh.__eyes.color.setScalar(0.6+0.4*Math.abs(Math.sin(watcher.__eyeT*4)));
+  // does the player have it roughly centered in view?
+  var look=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
+  var toW=new THREE.Vector3(watcher.x-Player.pos.x, (watcher.y+1.3)-(Player.pos.y+Player.eye), watcher.z-Player.pos.z); toW.normalize();
+  var facing=look.x*toW.x+look.y*toW.y+look.z*toW.z;
+  // vanishes when you look right at it, or when you get too close
+  if((facing>0.992 && dist<60) || dist<5){
+    watcherStare+=dt;
+    if(watcherStare>0.18 || dist<5){ despawnWatcher(); sfxWatcherBlink();
+      watcherCd = Math.max(7, 26 - nightsAwake*2) + Math.random()*8; return; }
+  } else { watcherStare=Math.max(0,watcherStare-dt*0.5); }
+  // slowly drifts toward you on the worst nights (still vanishes if you face it)
+  if(nightsAwake>=6 && dist>6){ var sp=(nightsAwake>=9?1.1:0.5)*dt; watcher.x+=(dx/dist)*sp; watcher.z+=(dz/dist)*sp; watcher.y=surfaceYAt(Math.floor(watcher.x),Math.floor(watcher.z)); watcher.mesh.position.set(watcher.x,watcher.y,watcher.z); }
+  watcher.life-=dt;
+  if(watcher.life<=0){ despawnWatcher(); watcherCd=Math.max(10, 24-nightsAwake*2)+Math.random()*8; }
+}
+function sfxWatcherAppear(){ tone(70,0.9,'sine',0.05,52); noiseBurst(0.5,0.018,180); }
+function sfxWatcherBlink(){ tone(150,0.16,'sawtooth',0.06,40); noiseBurst(0.12,0.05,2400); }
+function tryFeedAnimal(slot){
+  if(!slot) return false; var k=slot.key;
+  if(k==='HONEY'){ var ht=mobInFront(3.2); if(ht && ht.kind==='bear'){ consumeSlot(slot,1); renderHotbar(); sfxClick(); ht.provoked=false;
+      if(!ht.tamed){ ht.tameProg=(ht.tameProg||0)+1; if(Math.random()<0.4||ht.tameProg>=3){ ht.tamed=true; ht.love=8; spawnHearts(ht); toast('\uD83D\uDC3B Befriended the bear!'); unlock('rancher'); } else toast('\uD83C\uDF6F'); }
+      else if(!ht.baby){ ht.love=12; spawnHearts(ht); breedCheck(ht); } return true; } }
+  var tameT=mobInFront(3.2);
+  if(tameT && tameT.kind==='horse' && k==='SADDLE' && !Player.riding){ consumeSlot(slot,1); renderHotbar(); tameT.tamed=true; tameT.saddled=true; Player.riding=tameT; tameT.ridden=true; sfxClick(); toast('\uD83D\uDC0E Saddled \u2014 tap SNEAK to dismount'); unlock('rancher'); return true; }
+  if(tameT && !tameT.tamed && (tameT.kind==='horse'||tameT.kind==='dog'||tameT.kind==='cat')){
+    var hF=(tameT.kind==='horse'&&(k==='WHEAT'||k==='CARROT'||k==='APPLE'));
+    var dF=(tameT.kind==='dog'&&(k==='RAW_BEEF'||k==='RAW_VENISON'||k==='RAW_CHICKEN'||k==='RAW_DUCK'||k==='RAW_PORK'||k==='RAW_MUTTON'));
+    var cF=(tameT.kind==='cat'&&(k==='RAW_FISH'||k==='COOKED_FISH'||k==='CRAB_MEAT'));
+    if(hF||dF||cF){ consumeSlot(slot,1); renderHotbar(); sfxClick(); tameT.tameProg=(tameT.tameProg||0)+1;
+      if(Math.random()<0.34||tameT.tameProg>=4){ tameT.tamed=true; tameT.love=8; spawnHearts(tameT); toast('\u2764 Tamed the '+tameT.kind+'!'); unlock('rancher'); } else toast('\u2764'); return true; } }
+  if(k==='SEEDS'||k==='WHEAT'||k==='CARROT'){ var tgt=mobInFront(3.2);
+    if(tgt && tgt.passive && !tgt.baby && !(tgt.loveCd>0)){ consumeSlot(slot,1); renderHotbar(); tgt.love=12; sfxClick(); spawnHearts(tgt); breedCheck(tgt); return true; } }
+  return false;
 }
 function saplingForLeaf(id){ return id===B.SPRUCE_LEAVES?'SPRUCE_SAPLING': id===B.BIRCH_LEAVES?'BIRCH_SAPLING': id===B.CHERRY_LEAVES?'CHERRY_SAPLING':'OAK_SAPLING'; }
 function growSaplingTree(x,y,z,wood){
@@ -6032,7 +6283,7 @@ function damagePlayer(amt){
   if(def>0){ amt = amt*(1 - def*0.04); if(amt<0.5) amt=0.5; damageArmor(); }
   if(inv.offhand[0] && inv.offhand[0].key==='SHIELD'){ amt*=0.45; }   // shield blocks ~half
   Player.hp-=amt; Player.invul=0.5; Player.regenCd=4;
-  flashDamage(); sfxHurtPlayer(); updateStats();
+  flashDamage(); sfxHurtPlayer(); rumble(0.7,0.45,180); updateStats();
   if(Player.hp<=0) die();
 }
 function die(){
@@ -6056,6 +6307,7 @@ function respawn(){
   if(World.dim!=='overworld'){ travelDim('overworld'); }
   Player.hp=Player.maxHp; Player.hunger=Player.maxHunger; Player.sat=5; Player.invul=3; Player.riding=null;
   if(Player.fishing){ if(Player.fishing.bob) scene.remove(Player.fishing.bob); Player.fishing=null; }
+  clearHearts(); despawnWatcher();
   Player.pos.copy(Player.spawn); Player.vel.set(0,0,0);
   // clear hostiles near the spawn so you don't get jumped, and pause spawning briefly
   for(var i=entities.length-1;i>=0;i--){ var e=entities[i];
@@ -6231,7 +6483,7 @@ var timeOfDay=0.30; // 0..1 (0.25=morning, 0.5=noon, 0.75=evening, 0=midnight)
 var DAY_LEN=600; // seconds per full cycle
 var sawNight=false;
 function tickDayNight(dt){
-  if(World.dim==='ashlands'){
+  if(World.dim==='underforge'){
     sunU.value = 0.54 - 0.30*ashStorm;
     var ac2=new THREE.Color(0x4a2e26).lerp(new THREE.Color(0x271b18), ashStorm);
     scene.background=ac2; fogColorU.value.copy(ac2); renderer.setClearColor(ac2);
@@ -6244,6 +6496,11 @@ function tickDayNight(dt){
   var bright = Math.max(0, d);
   sunU.value = 0.18 + bright*0.82;
   if(running){ if(sunU.value<0.25) sawNight=true; else if(sawNight && sunU.value>0.7) unlock('survivor'); }
+  if(running){
+    if(sunU.value<0.2){ if(!_nightCounted){ _nightCounted=true; nightsAwake++;
+      if(nightsAwake===3) toast('\uD83D\uDC41\uFE0F You feel watched\u2026 you should sleep'); } }
+    else if(sunU.value>0.6){ _nightCounted=false; }
+  }
   // sky color - continuous blend: day -> warm dusk at the horizon -> night (symmetric for dawn & dusk)
   var c=new THREE.Color();
   if(d>0.4){ c.copy(SKY_DAY); }
@@ -6268,11 +6525,14 @@ function tintMob(e){
 
 /* ----------------------------- AUDIO ------------------------------------ */
 var actx=null;
-var masterGain=null, sfxOn=true, musicGain=null, noiseBuf=null;
+var masterGain=null, sfxOn=true, musicGain=null, sfxGain=null, noiseBuf=null;
+var masterVol=0.7, musicVol=0.5, sfxVol=1.0, fovVal=72;
+function applyVolumes(){ if(masterGain) masterGain.gain.value = sfxOn?masterVol:0; if(musicGain) musicGain.gain.value=musicVol; if(sfxGain) sfxGain.gain.value=sfxVol; }
 function ac(){
   if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)();
-    masterGain=actx.createGain(); masterGain.gain.value=0.55; masterGain.connect(actx.destination);
-    musicGain=actx.createGain(); musicGain.gain.value=0.5; musicGain.connect(masterGain);
+    masterGain=actx.createGain(); masterGain.gain.value=sfxOn?masterVol:0; masterGain.connect(actx.destination);
+    musicGain=actx.createGain(); musicGain.gain.value=musicVol; musicGain.connect(masterGain);
+    sfxGain=actx.createGain(); sfxGain.gain.value=sfxVol; sfxGain.connect(masterGain);
   }catch(e){} }
   if(actx && actx.state==='suspended'){ try{ actx.resume(); }catch(e){} }
   return actx;
@@ -6283,20 +6543,55 @@ function tone(freq,dur,type,vol,slideTo,dest){ var a=ac(); if(!a||!sfxOn)return;
   o.type=type||'square'; o.frequency.setValueAtTime(freq,a.currentTime);
   if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo),a.currentTime+dur);
   g.gain.setValueAtTime(vol||0.1,a.currentTime); g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
-  o.connect(g); g.connect(dest||masterGain); o.start(); o.stop(a.currentTime+dur+0.02); }
+  o.connect(g); g.connect(dest||sfxGain||masterGain); o.start(); o.stop(a.currentTime+dur+0.02); }
 function noiseBurst(dur,vol,cut){ var a=ac(); if(!a||!sfxOn)return; var s=a.createBufferSource(); s.buffer=getNoise();
   var g=a.createGain(); g.gain.setValueAtTime(vol||0.1,a.currentTime); g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
   var f=a.createBiquadFilter(); f.type='lowpass'; f.frequency.value=cut||1200;
-  s.connect(f); f.connect(g); g.connect(masterGain); s.start(); s.stop(a.currentTime+dur); }
+  s.connect(f); f.connect(g); g.connect(sfxGain||masterGain); s.start(); s.stop(a.currentTime+dur); }
+var _uiTickT=0;
+function sfxUITick(){ var nowm=(typeof performance!=='undefined'?performance.now():Date.now()); if(nowm-_uiTickT<35) return; _uiTickT=nowm; tone(600,0.035,'square',0.02,500); }
 // legacy aliases
 function beep(freq,dur,type,vol){ tone(freq,dur,type,vol); }
 function sfxThump(){ noiseBurst(0.09,0.06,600); }
 function sfxClick(){ tone(520,0.04,'triangle',0.05); }
-// world sfx
-function sfxStep(){ noiseBurst(0.07,0.045,420+Math.random()*260); }
+// world sfx — material-aware
+function blockSoundClass(id){ if(id==null) return 'default'; var b=blk(id); if(!b) return 'default'; var k=b.key||'';
+  if(b.leaf||/LEAVES|LEAF|SAPLING|FLOWER|CACTUS|VINE|BUSH|MUSHROOM|KELP|CORAL/.test(k)) return 'leaf';
+  if(/LOG|PLANK|WOOD|DOOR|FENCE|CRAFTING|CHEST|BOOKSHELF|LADDER|SIGN|TRAPDOOR|BARREL|BENCH/.test(k)) return 'wood';
+  if(/WOOL|CARPET|BED/.test(k)) return 'wool';
+  if(/GLASS|ICE/.test(k)) return 'glass';
+  if(/SAND|GRAVEL/.test(k)) return 'sand';
+  if(/GRASS|MOSS|LEAF/.test(k)) return 'grass';
+  if(/DIRT|FARMLAND|PODZOL|MUD|CLAY|SNOW/.test(k)) return 'dirt';
+  if(/IRON|GOLD|COPPER|TIN|STEEL|BRASS|MACHINE|GENERATOR|MACERATOR|CABLE|ENERGY|SOLAR|QUARRY|HOPPER|ANVIL|LANTERN|RAIL/.test(k)) return 'metal';
+  if(/STONE|COBBLE|ORE|BRICK|BEDROCK|ASH|CINDER|FURNACE|DEEPSLATE|TUFF|BASALT|OBSIDIAN/.test(k)) return 'stone';
+  return 'default'; }
+function sfxStep(id){ var c=blockSoundClass(id); var r=Math.random();
+  if(c==='wood'){ noiseBurst(0.05,0.035,520+r*180); tone(150,0.04,'square',0.022,120); }
+  else if(c==='stone'||c==='metal'){ noiseBurst(0.05,0.04,900+r*300); }
+  else if(c==='grass'||c==='leaf'){ noiseBurst(0.06,0.03,360+r*160); }
+  else if(c==='sand'){ noiseBurst(0.07,0.03,300+r*120); }
+  else if(c==='glass'){ noiseBurst(0.04,0.03,2000+r*600); }
+  else if(c==='wool'){ noiseBurst(0.06,0.025,260+r*120); }
+  else noiseBurst(0.07,0.04,420+r*260); }
 function sfxMine(){ noiseBurst(0.10,0.07,700+Math.random()*200); }
-function sfxBreak(){ noiseBurst(0.18,0.11,900); tone(160,0.12,'square',0.04,90); }
-function sfxPlace(){ noiseBurst(0.09,0.08,520); }
+function sfxBreak(id){ var c=blockSoundClass(id);
+  if(c==='wood'){ noiseBurst(0.14,0.09,820); tone(190,0.12,'square',0.05,110); }
+  else if(c==='stone'){ noiseBurst(0.17,0.12,1300); tone(120,0.1,'square',0.05,70); }
+  else if(c==='metal'){ tone(420,0.09,'square',0.06,250); noiseBurst(0.08,0.06,1700); tone(820,0.06,'triangle',0.03,1200); }
+  else if(c==='glass'){ noiseBurst(0.13,0.1,3200); tone(1100,0.09,'triangle',0.06,1700); tone(640,0.07,'triangle',0.04,900); }
+  else if(c==='leaf'||c==='grass'){ noiseBurst(0.11,0.06,2000); }
+  else if(c==='sand'){ noiseBurst(0.16,0.08,360); }
+  else if(c==='dirt'){ noiseBurst(0.13,0.08,520); }
+  else if(c==='wool'){ noiseBurst(0.12,0.06,300); }
+  else { noiseBurst(0.18,0.11,900); tone(160,0.12,'square',0.04,90); } }
+function sfxPlace(id){ var c=blockSoundClass(id);
+  if(c==='wood'){ noiseBurst(0.07,0.06,640); tone(220,0.06,'square',0.035,150); }
+  else if(c==='stone'||c==='metal'){ noiseBurst(0.07,0.07,1100); tone(160,0.05,'square',0.03,110); }
+  else if(c==='glass'){ noiseBurst(0.06,0.06,2600); tone(880,0.05,'triangle',0.035,1300); }
+  else if(c==='sand'||c==='dirt'||c==='grass'){ noiseBurst(0.08,0.06,420); }
+  else if(c==='wool'){ noiseBurst(0.07,0.045,300); }
+  else { noiseBurst(0.09,0.08,520); } }
 function sfxHurtPlayer(){ tone(210,0.2,'square',0.13,110); noiseBurst(0.12,0.05,400); }
 function mobSound(kind, hurt){
   var v = hurt? 0.12 : 0.06;
@@ -6390,8 +6685,14 @@ function musicStep(){ if(!musicOn||!sfxOn) return;
 function startMusic(){ ac(); if(musicTimer) return; musicOn=true; curTrack=(Math.random()*TRACKS.length)|0; trackPlays=0;
   setTimeout(musicStep,700);
   musicTimer=setInterval(function(){ if(Math.random()<0.94) musicStep(); }, Math.round(TRACKS[curTrack].gap*0.62)); }
-function toggleSound(){ sfxOn=!sfxOn; if(masterGain) masterGain.gain.value=sfxOn?0.55:0;
-  var b=document.getElementById('btnSound'); if(b) b.textContent=sfxOn?'\u266a':'\u2715'; toast(sfxOn?'Sound on':'Muted'); }
+function toggleSound(){ sfxOn=!sfxOn; applyVolumes();
+  var b=document.getElementById('btnSound'); if(b) b.textContent=sfxOn?'\u266a':'\u2715'; toast(sfxOn?'Sound on':'Muted'); saveUISettings(); }
+function applyFov(){ if(typeof camera!=='undefined' && camera){ camera.fov=fovVal; camera.updateProjectionMatrix(); } }
+function saveUISettings(){ try{ localStorage.setItem('fw_ui', JSON.stringify({mv:masterVol,muv:musicVol,sv:sfxVol,fov:fovVal,sens:lookSens,on:sfxOn})); }catch(_){ } }
+function loadUISettings(){ try{ var s=JSON.parse(localStorage.getItem('fw_ui')||'null'); if(s){
+  if(s.mv!=null)masterVol=s.mv; if(s.muv!=null)musicVol=s.muv; if(s.sv!=null)sfxVol=s.sv;
+  if(s.fov!=null)fovVal=s.fov; if(s.sens!=null)lookSens=s.sens; if(s.on!=null)sfxOn=s.on;
+  applyVolumes(); applyFov(); } }catch(_){ } }
 
 /* ----------------------------- SAVE / LOAD ------------------------------ */
 var WORLDS_KEY = 'forgecraft_worlds';
@@ -6466,7 +6767,7 @@ function saveGame(quiet){
     var pyaw=ow?Player.yaw:(st?st.yaw:Player.yaw), ppitch=ow?Player.pitch:(st?st.pitch:Player.pitch);
     var data={
       seed:World.seed, edits:edits, tiles:serializeTiles(tilesObj), grassTaken:grass,
-      time:timeOfDay, mode:gameMode,
+      time:timeOfDay, mode:gameMode, nightsAwake:nightsAwake,
       player:{ x:ppx,y:ppy,z:ppz, yaw:pyaw,pitch:ppitch,
         hp:Player.hp,hunger:Player.hunger,sat:Player.sat, sx:Player.spawn.x,sy:Player.spawn.y,sz:Player.spawn.z,
         xp:Player.xp, xpLevel:Player.xpLevel },
@@ -6496,12 +6797,12 @@ function travelDim(target){
   } else {
     World.edits={}; World.tiles={}; World.blockLight={}; World.wsrc={}; World.wlvl={}; World.grassTaken={};
     var sx=Math.floor(Player.pos.x), sz=Math.floor(Player.pos.z), sy=World.heightAt(sx,sz);
-    if(target==='ashlands'){ World.edits[World.ck(sx+1,sy+1,sz)]=B.RIFT_GATE; }   // return gate
+    if(target==='underforge'){ World.edits[World.ck(sx+1,sy+1,sz)]=B.RIFT_GATE; }   // return gate
     Player.pos.set(sx+0.5, sy+2.2, sz+0.5); Player.yaw=0; Player.pitch=0;
   }
   Player.vel.set(0,0,0); Player.spawnGrace=20;
   ashStorm=0; ashStormOn=false; ashStormTimer=22+Math.random()*30;
-  toast(target==='ashlands'?'\uD83C\uDF2B\uFE0F You cross into the Ashlands\u2026':'\u2728 You return to the overworld');
+  toast(target==='underforge'?'\uD83C\uDF2B\uFE0F You cross into the UnderForge\u2026':'\u2728 You return to the overworld');
   updateChunks(Player.pos.x, Player.pos.z);
   rebuildBeds(); rebuildFurniture();
   saveGame(true);
@@ -6518,7 +6819,7 @@ function startWorld(seed, save, mode){
   World.edits = (save&&save.edits)||{};
   World.grassTaken = (save&&save.grassTaken)||{};
   World.tiles = (save&&save.tiles)||{};
-  timeOfDay = save? (save.time||0.3) : 0.30;
+  timeOfDay = save? (save.time||0.3) : 0.30; nightsAwake = (save&&save.nightsAwake)||0; despawnWatcher();
   // rebuild block light from torches in edits
   for(var ek in World.edits){ var id=World.edits[ek]; if(blk(id).light){ var pa=ek.split(','); World.addLight(+pa[0],+pa[1],+pa[2],blk(id).light); } }
   if(save && save.player){
@@ -6605,6 +6906,10 @@ function openPauseMenu(){
   pm.textContent=musicOn?'On':'Off'; pm.classList.toggle('on',musicOn);
   ps.textContent=sfxOn?'On':'Off'; ps.classList.toggle('on',sfxOn);
   document.getElementById('pSens').value=Math.round(lookSens*100);
+  var pvm=document.getElementById('pVolMaster'); if(pvm) pvm.value=Math.round(masterVol*100);
+  var pvu=document.getElementById('pVolMusic'); if(pvu) pvu.value=Math.round(musicVol*100);
+  var pvs=document.getElementById('pVolSfx'); if(pvs) pvs.value=Math.round(sfxVol*100);
+  var pfv=document.getElementById('pFov'); if(pfv){ pfv.value=Math.round(fovVal); var pfvL=document.getElementById('pFovV'); if(pfvL) pfvL.textContent=Math.round(fovVal); }
   var pdf=document.getElementById('pDiff'); if(pdf){ pdf.textContent=difficulty.charAt(0).toUpperCase()+difficulty.slice(1); pdf.classList.toggle('on',difficulty!=='normal'); }
   var pmd=document.getElementById('pMode'); if(pmd){ pmd.textContent=(gameMode==='creative')?'Creative':'Survival'; pmd.classList.toggle('on',gameMode==='creative'); }
   var pd=document.getElementById('pDist'); pd.value=RENDER_DIST; document.getElementById('pDistV').textContent=RENDER_DIST;
@@ -6635,11 +6940,16 @@ function dismountHorse(){
   Player.riding=null; toast('Dismounted');
 }
 var torchScanT=0;
+var _torchPx=1e9, _torchPy=1e9, _torchPz=1e9, _torchForce=0;
 function updateTorchLights(dt){
-  torchFlkU.value = 0.84 + 0.16*(0.5+0.5*Math.sin(now*0.013)) + (Math.random()-0.5)*0.05;   // flicker
-  torchScanT-=dt; if(torchScanT>0) return; torchScanT=0.25;
-  var px=Math.floor(Player.pos.x), py=Math.floor(Player.pos.y), pz=Math.floor(Player.pos.z), found=[];
-  for(var dx=-13;dx<=13;dx++) for(var dz=-13;dz<=13;dz++) for(var dy=-6;dy<=7;dy++){
+  torchFlkU.value = 0.84 + 0.16*(0.5+0.5*Math.sin(now*0.013)) + (Math.random()-0.5)*0.05;   // flicker (every frame)
+  torchScanT-=dt; if(torchScanT>0) return; torchScanT=0.18;
+  var px=Math.floor(Player.pos.x), py=Math.floor(Player.pos.y), pz=Math.floor(Player.pos.z);
+  _torchForce-=0.18;
+  if(px===_torchPx && py===_torchPy && pz===_torchPz && _torchForce>0) return;   // same block, recently scanned -> skip the heavy scan
+  _torchPx=px; _torchPy=py; _torchPz=pz; _torchForce=0.6;
+  var found=[];
+  for(var dx=-11;dx<=11;dx++) for(var dz=-11;dz<=11;dz++) for(var dy=-5;dy<=6;dy++){
     var x=px+dx, y=py+dy, z=pz+dz; if(y<1||y>=WORLD_H) continue;
     var bId=World.getBlock(x,y,z), lit=false, lpow=0.95;
     if(bId===B.TORCH){ lit=true; }
@@ -6656,6 +6966,7 @@ function updateTorchLights(dt){
   for(var j=n;j<16;j++) torchUVals[j].set(0,0,0,0);
   torchNU.value=n;
 }
+function forceTorchRescan(){ _torchForce=0; }   // call when a light block is placed/removed
 function physics(dt){
   // safety net: recover from falling through the world, being embedded, or sinking into a block
   if(!Player.riding){
@@ -6758,13 +7069,18 @@ function physics(dt){
   moveAxis('y', Player.vel.y*dt);
   // footsteps
   var spd=Math.hypot(Player.vel.x,Player.vel.z);
-  if(Player.onGround && !Player.inWater && spd>1.3){ stepCd-=dt*(0.6+spd*0.25); if(stepCd<=0){ sfxStep(); stepCd=1; } }
+  if(Player.onGround && !Player.inWater && spd>1.3){ stepCd-=dt*(0.6+spd*0.25); if(stepCd<=0){ sfxStep(World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y-0.2),Math.floor(Player.pos.z))); stepCd=1; } }
   tickFallDamage();
 }
 var stepCd=0;
 var mobIdleCd=3;
 // ---------------- Gamepad / controller support ----------------
-var gamepadActive=false, gpIndex=-1, gpPrev={}, gpPlaceCd=0;
+var gamepadActive=false, gpIndex=-1, gpPrev={}, gpPlaceCd=0, gpPad=null;
+function rumble(strong, weak, ms){
+  try{ if(gpPad && gpPad.vibrationActuator && gpPad.vibrationActuator.playEffect){
+    gpPad.vibrationActuator.playEffect('dual-rumble', {duration:ms||120, strongMagnitude:Math.min(1,strong||0.4), weakMagnitude:Math.min(1,weak!=null?weak:(strong||0.4))});
+  } }catch(_){ }
+}
 window.addEventListener('gamepadconnected', function(e){ gpIndex=e.gamepad.index; gamepadActive=true; try{ toast('Controller connected'); }catch(_){} });
 window.addEventListener('gamepaddisconnected', function(e){ if(e.gamepad.index===gpIndex){ gpIndex=-1; gamepadActive=false; input.fwd=0; input.strafe=0; input.mine=false; input.jump=false; input.crouch=false; } });
 function gpBtn(b){ return !!(b && (b.pressed || b.value>0.5)); }
@@ -6786,9 +7102,10 @@ function gpFocusables(cont){
 function gpCenter(el){ var r=el.getBoundingClientRect(); return {x:r.left+r.width/2, y:r.top+r.height/2}; }
 function gpSetFocus(el){
   if(gpFocusEl===el) return;
+  var had=!!gpFocusEl;
   if(gpFocusEl) gpFocusEl.classList.remove('gpfocus');
   gpFocusEl=el;
-  if(el){ el.classList.add('gpfocus'); try{ el.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){ } }
+  if(el){ el.classList.add('gpfocus'); if(had) sfxUITick(); try{ el.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){ } }
 }
 function gpEnsureFocus(cont){
   if(gpFocusEl && cont.contains(gpFocusEl) && gpVisible(gpFocusEl)) return true;
@@ -6815,6 +7132,7 @@ function gpActivate(){
   if(el.tagName==='INPUT' && el.type==='range') return;
   if(el.tagName==='INPUT' && (el.type==='text'||el.type==='search')){ try{ el.focus(); }catch(_){ } return; }
   el.click();
+  if(cursor && el && heldEl){ var r=el.getBoundingClientRect(); heldEl.style.left=(r.left+r.width/2)+'px'; heldEl.style.top=(r.top+r.height/2)+'px'; }   // keep the held stack visible under the controller focus
 }
 function gpBack(cont){
   var els=gpFocusables(cont);
@@ -6841,6 +7159,11 @@ function gpUITick(bt, ax, pressed, dt){
     } else gpMoveFocus(navx,navy,cont);
   }
   if(pressed(0)) gpActivate();
+  if(pressed(3)){   // Y / triangle - quick-move the focused slot to the other inventory
+    if(gpFocusEl && (gpFocusEl.classList.contains('gslot')||gpFocusEl.classList.contains('slot'))){
+      for(var qk=0;qk<liveSlots.length;qk++){ if(liveSlots[qk].el===gpFocusEl){ quickTransferSlot(liveSlots[qk].arr, liveSlots[qk].i); break; } }
+    }
+  }
   if(pressed(1)) gpBack(cont);
   for(var i=0;i<16;i++) gpPrev[i]=gpBtn(bt[i]);   // consume all edges so nothing leaks into gameplay
   return true;
@@ -6850,23 +7173,25 @@ function pollGamepad(dt){
   var pads=navigator.getGamepads(), gp=(gpIndex>=0)?pads[gpIndex]:null;
   if(!gp){ for(var i=0;i<pads.length;i++){ if(pads[i]){ gp=pads[i]; gpIndex=i; break; } } }
   if(!gp){ gamepadActive=false; return; }
-  gamepadActive=true;
+  gamepadActive=true; gpPad=gp;
   var ax=gp.axes, bt=gp.buttons;
   function dz(v){ v=v||0; return Math.abs(v)<0.18?0:v; }
   function pressed(idx){ var d=gpBtn(bt[idx]), was=gpPrev[idx]; gpPrev[idx]=d; return d&&!was; }
   // menu / inventory cursor takes priority over in-game controls
   if(gpUITick(bt, ax, pressed, dt)){ input.fwd=0; input.strafe=0; input.mine=false; input.jump=false; input.crouch=false; return; }
-  // look - right stick (in-game only)
+  // look - right stick, with an expo curve for finer aim (console-style)
   var rx=dz(ax[2]), ry=dz(ax[3]);
-  if(rx||ry){ var sens=2.7*lookSens; Player.yaw -= rx*sens*dt; Player.pitch -= ry*sens*dt; clampPitch(); }
+  if(rx||ry){ var sens=3.0*lookSens;
+    var ex=(rx<0?-1:1)*Math.pow(Math.abs(rx),1.5), ey=(ry<0?-1:1)*Math.pow(Math.abs(ry),1.5);
+    Player.yaw -= ex*sens*dt; Player.pitch -= ey*sens*dt; clampPitch(); }
   // move - left stick
   input.fwd = -dz(ax[1]);
   input.strafe = dz(ax[0]);
   // held actions
   input.jump   = gpBtn(bt[0]);   // A
   input.crouch = gpBtn(bt[1]);   // B (sneak / dismount)
-  input.sprint = gpBtn(bt[10]);  // L3
-  input.mine   = gpBtn(bt[7]);   // RT - mine / attack
+  input.sprint = gpBtn(bt[10]) || (-dz(ax[1]))>0.92;   // L3, or push the stick fully forward
+  input.mine   = (bt[7]&&bt[7].value!=null)? (bt[7].value>0.3) : gpBtn(bt[7]);   // RT (analog) - mine / attack
   // edge actions
   if(pressed(0)) tryToggleFly();              // double-tap A -> creative flight
   if(pressed(6)) doPlace();                   // LT - place / use / interact
@@ -6891,6 +7216,8 @@ function loop(t){
     tickEntities(dt);
     tickProjectiles(dt);
     tickFishing(dt);
+    tickHearts(dt);
+    tickWatcher(dt);
     if(Player.bowCd>0) Player.bowCd-=dt;
     tickDrops(dt);
     tickSurvival(dt);
@@ -6944,7 +7271,7 @@ function loop(t){
   updateHand();
   if(frame%4===0){ var ce=document.getElementById('coords');
     if(ce){ var bi9=World.biomeAt(Math.floor(Player.pos.x),Math.floor(Player.pos.z));
-      var bn=(World.dim==='ashlands')?(bi9===101?'Cinder Wastes':'Ash Desert'):(['Plains','Forest','Mountains','Desert','Taiga','Birch Forest','Cherry Grove','Ocean','Savanna','Snowy Plains','Jungle'][bi9]||'');
+      var bn=(World.dim==='underforge')?(bi9===101?'Cinder Wastes':'Ash Desert'):(['Plains','Forest','Mountains','Desert','Taiga','Birch Forest','Cherry Grove','Ocean','Savanna','Snowy Plains','Jungle'][bi9]||'');
       var txt='XYZ: '+Math.floor(Player.pos.x)+' '+Math.floor(Player.pos.y)+' '+Math.floor(Player.pos.z)+'   '+bn;
       var hs=inv.hotbar[hotbarSel];
       if(hs && hs.key==='COMPASS' && World.dim==='overworld'){
@@ -7016,8 +7343,14 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 83';
+var VERSION='Update 89';
 var CHANGELOG=[
+  { v:'Update 89', t:'In-Game Wiki & Critter Fixes', items:['\uD83D\uDCD6 The Guidebook is now a searchable in-game <b>Wiki</b> (\u201cWiki & Help\u201d in the menu) covering everything \u2014 enchanting, the Watcher, flowers, taming & breeding, the controller, combat, vehicles and settings. Type in the search box to jump to any topic','\uD83D\uDC3E Smarter animals \u2014 an animal that falls into a hole or pen now <b>panics and leaps</b> to scramble out instead of bumping the wall forever','\uD83D\uDCE6 Fixed the <b>chest lid</b> clipping through the chest \u2014 it now rests on top of the box and swings cleanly open'] },
+  { v:'Update 88', t:'The UnderForge & Aether Forge', items:['\uD83C\uDFED Renamed the Ashlands to the <b>UnderForge</b> \u2014 same gloomy steampunk underworld, a name that fits ForgeWorld','\u2699\uFE0F <b>Aether Forge</b> \u2014 a new craftable enchanting station (brass ingots + aetherium). Place it, hold a tool, and spend Aetherium to bind steampunk charms: <b>Overclock</b> (mine faster), <b>Honed</b> (more melee damage), and <b>Tempered</b> (tools last longer), up to Lv 3 each','\uD83D\uDD0A Settings overhaul \u2014 the mute button now lives in the menu, with new <b>Master / Music / SFX</b> volume sliders and an <b>FOV</b> slider. All of them remember your choice between sessions'] },
+  { v:'Update 87', t:'Placeable Flowers & The Watcher', items:['\uD83C\uDF38 Flowers are now placeable \u2014 plant any wildflower (poppy, dandelion, cornflower, daisy, azure bluet) on grass or dirt to decorate your world, and pick them back up by hitting them','\uD83D\uDC41\uFE0F The Watcher: go too many nights without sleeping and no phantoms come \u2014 instead a silent dark figure starts appearing at the edge of the night, watching you. Look right at it or get close and it vanishes. The longer you stay awake, the closer and more often it returns. Sleep in a bed to make it stop','\uD83D\uDECF\uFE0F Sleeping now also clears your sleepless-night count, keeping the Watcher away'] },
+  { v:'Update 86', t:'Controller, Sound & Recipe Book', items:['\uD83D\uDD0A Material sounds \u2014 breaking, placing and walking now sound right for each block: wood knocks, stone thuds, glass shatters, sand & grass are soft, metal clinks, leaves rustle','\uD83C\uDFAE Controller feel: vibration on hits, breaking blocks & taking damage; smoother expo-curve aiming for finer control; analog right-trigger mining; sprint by pushing the stick fully forward (or L3)','\uD83D\uDCD6 Recipe Book now lists every ingredient by name under each recipe, so you know exactly what each slot needs'] },
+  { v:'Update 85', t:'Controller & Performance', items:['\uD83C\uDFAE Quick-transfer: with a controller, press Y / \u25B3 on any chest or furnace slot to instantly move that stack into your inventory (and the same the other way). Picked-up items now show under the controller cursor','\uD83D\uDD0A Menu sounds \u2014 moving through menus and scrolling the hotbar now click like Minecraft','\u26A1 Performance: the torch-light scan was re-scanning ~10,000 blocks several times a second even while standing still; it now only rescans when you move to a new block (instant when you place/break a light). Should cut the random frame hitches on desktop'] },
+  { v:'Update 84', t:'Dyes, Breeding & Fixes', items:['\uD83C\uDF38 Pick the wildflowers in the grass (poppy, dandelion, cornflower, daisy, azure bluet) and craft them into dyes; smelt cactus for green dye; combine any dye with wool to make coloured wool','\u2764\ufe0f Fixed breeding & taming \u2014 feeding animals now works out in the open (it only registered before if you were also aiming at a block). Feed two animals seeds/wheat/carrot to breed them, with hearts popping up','\uD83D\uDEAA Fixed doors \u2014 a bug made every door non-solid, so closed doors didn\u2019t block you. They work again','\uD83C\uDF42 Leaves now decay when you break the wood out from under them','\uD83C\uDFF9 Arrows you fire can now sometimes be picked back up off the ground'] },
   { v:'Update 83', t:'Bow, Arrows & Fishing', items:['\uD83C\uDFF9 Craft a Bow (sticks + string) and Arrows (flint + stick + feather) \u2014 use the place/interact button to fire. Gravel now sometimes drops flint','\uD83C\uDFA3 Craft a Fishing Rod (sticks + string). Aim at water and use it to cast, wait for the bite, then use again to reel in fish (and the occasional string, leather or bone)','\u2694\ufe0f Arrows damage mobs and you can hunt with the bow'] },
   { v:'Update 82', t:'Vehicles, Lights & Creative Toggle', items:['\u2708\ufe0f Plane flies slower and calmer, banks the correct way into turns, the chase-cam stays behind it when you dive, and your character now sits in it instead of looking like they\u2019re sprinting','\uD83D\uDEF6 Boats: can now be placed on water and float properly on the surface, a nicer model with oars + a real inventory icon, slow and no-jumping on land','\uD83D\uDD26 Torchlight now reaches noticeably farther','\u2699\ufe0f New Mode toggle in the game menu \u2014 switch between Survival and Creative any time (Hardcore stays locked)'] },
   { v:'Update 81', t:'The Quarry', items:['\u26CF\ufe0f Added the Quarry - the classic Tekkit auto-miner. Wire it to a generator (placed next to it, or connected by cable) and it digs a 5\u00d75 shaft straight down to bedrock on its own','\uD83D\uDCE6 Everything it mines drops into an adjacent chest (or pops out on top if there\u2019s no chest)','\uD83D\uDD27 Craft it from iron ingots, diamonds and redstone. Tap it to check its mining depth and power status'] },
@@ -7084,7 +7417,12 @@ document.getElementById('pMusic').addEventListener('click', function(){ musicOn=
   this.textContent=musicOn?'On':'Off'; this.classList.toggle('on',musicOn); });
 document.getElementById('pSound').addEventListener('click', function(){ toggleSound();
   this.textContent=sfxOn?'On':'Off'; this.classList.toggle('on',sfxOn); });
-document.getElementById('pSens').addEventListener('input', function(){ lookSens=(+this.value)/100; });
+document.getElementById('pSens').addEventListener('input', function(){ lookSens=(+this.value)/100; saveUISettings(); });
+document.getElementById('pVolMaster').addEventListener('input', function(){ masterVol=(+this.value)/100; applyVolumes(); saveUISettings(); });
+document.getElementById('pVolMusic').addEventListener('input', function(){ musicVol=(+this.value)/100; applyVolumes(); saveUISettings(); });
+document.getElementById('pVolSfx').addEventListener('input', function(){ sfxVol=(+this.value)/100; applyVolumes(); if(sfxOn) sfxUITick(); saveUISettings(); });
+document.getElementById('pFov').addEventListener('input', function(){ fovVal=+this.value; applyFov(); var l=document.getElementById('pFovV'); if(l) l.textContent=fovVal; saveUISettings(); });
+loadUISettings();
 document.getElementById('pDiff').addEventListener('click', function(){
   if(gameMode==='hardcore'){ toast('\u2620\uFE0F Hardcore is locked to max difficulty'); return; }
   difficulty = difficulty==='normal'?'easy' : difficulty==='easy'?'peaceful' : 'normal';
@@ -7110,7 +7448,7 @@ document.getElementById('pGuide').addEventListener('click', function(){ ac(); op
 document.getElementById('btnGuideBack').addEventListener('click', function(){ document.getElementById('guidescreen').classList.add('hidden'); });
 function openGuide(){
   var b=document.getElementById('guideBody');
-  b.innerHTML = [
+  var secs = [
     '<h3>\u2316 Basics</h3>',
     '<p>Drag the left side of the screen to move and the right side to look. Use <b>JUMP</b> and <b>SNEAK</b> on the right. <b>Tap</b> a block to interact/place; <b>hold</b> on a block to mine it. Tap a mob to attack. Pick your held item from the <b>hotbar</b> along the bottom, or open <b>Inventory</b> for everything.</p>',
     '<h3>\u2764 Staying Alive</h3>',
@@ -7136,14 +7474,43 @@ function openGuide(){
     '<h3>\uD83E\uDE91 Furniture</h3>',
     '<p>Craft a <b>Carpenter\u2019s Bench</b> (4 planks + 2 sticks), place it, and tap it to build chairs, tables, stools, side tables, standing lamps and bookshelves. Place the furniture anywhere to decorate your home.</p>',
     '<h3>\u26ab Obsidian</h3>',
-    '<p>Pour <b>water</b> (a bucket) onto <b>lava</b> and it hardens into <b>Obsidian</b> \u2014 mineable only with a diamond or aetherium pickaxe. You\u2019ll need obsidian to build the <b>Rift Gate</b> to the Ashlands.</p>',
+    '<p>Pour <b>water</b> (a bucket) onto <b>lava</b> and it hardens into <b>Obsidian</b> \u2014 mineable only with a diamond or aetherium pickaxe. You\u2019ll need obsidian to build the <b>Rift Gate</b> to the UnderForge.</p>',
     '<h3>\uD83D\uDD25 Fire & Storms</h3>',
     '<p>Craft <b>Flint &amp; Steel</b> (iron + coal) and tap a block to set it alight. Fire hurts anyone in it, spreads through wood, leaves and wool, and burns them away. During thunderstorms <b>lightning can spark fires</b>. Turn <b>Fire Spread</b> off in the Game Menu so fire never eats terrain, and <b>Mob Griefing</b> off so creeper blasts hurt you but leave blocks intact.</p>',
-    '<h3>\uD83C\uDF2B\uFE0F The Ashlands</h3>',
-    '<p>Craft a <b>Rift Gate</b> (brass + redstone + diamond), place it, and tap to cross into the <b>Ashlands</b> \u2014 a gloomy steampunk underworld of gray ash deserts and lava-filled cinder wastes. Beware <b>ash storms</b>. Explore <b>ruined brass fortresses</b> for loot, and mine <b>Aetherium Ore</b> deep underground. <b>Aetherium</b> crafts the strongest tools in the game. A return gate appears when you arrive \u2014 tap any Rift Gate to go home (dying sends you back too).</p>',
+    '<h3>\uD83C\uDF2B\uFE0F The UnderForge</h3>',
+    '<p>Craft a <b>Rift Gate</b> (brass + redstone + diamond), place it, and tap to cross into the <b>UnderForge</b> \u2014 a gloomy steampunk underworld of gray ash deserts and lava-filled cinder wastes. Beware <b>ash storms</b>. Explore <b>ruined brass fortresses</b> for loot, and mine <b>Aetherium Ore</b> deep underground. <b>Aetherium</b> crafts the strongest tools in the game. A return gate appears when you arrive \u2014 tap any Rift Gate to go home (dying sends you back too).</p>',
     '<h3>\uD83E\uDDED Tips</h3>',
-    '<p>Switch 1st/3rd-person view in this menu. Tap an item in your inventory to see its name. Your world auto-saves when you open this menu.</p>'
-  ].join('');
+    '<p>Switch 1st/3rd-person view in this menu. Tap an item in your inventory to see its name. Your world auto-saves when you open this menu.</p>',
+    '<h3>\u2699\uFE0F Enchanting (Aether Forge)</h3>',
+    '<p>Bring back <b>Aetherium</b> and <b>Brass Ingots</b> from the UnderForge and craft an <b>Aether Forge</b> (a ring of 8 brass around 4 aetherium). Place it, <b>hold the tool you want to infuse</b>, then tap the forge. Spend Aetherium to bind steampunk charms (cost rises each level, max Lv 3): <b>Overclock</b> mines faster, <b>Honed</b> adds melee damage, and <b>Tempered</b> makes tools last far longer. Charms stay on the tool.</p>',
+    '<h3>\uD83D\uDC41\uFE0F The Watcher & Sleeping</h3>',
+    '<p>Go several nights <b>without sleeping</b> and a silent dark figure starts appearing at the edge of the night, watching you. <b>Look right at it or walk up to it and it vanishes.</b> The longer you stay awake, the closer and more often it returns. It will not hurt you \u2014 but to make it stop, <b>sleep in a bed</b> at night (which also clears the count and sets your respawn).</p>',
+    '<h3>\uD83C\uDF38 Flowers & Dyes</h3>',
+    '<p>Wildflowers (poppy, dandelion, cornflower, daisy, azure bluet) grow on grassland \u2014 hit one to pick it. You can <b>place flowers back down</b> on grass or dirt to decorate, and pick them up again by hitting them. Each flower crafts into a <b>dye</b> (cactus smelts to green); combine a dye with wool for colored wool.</p>',
+    '<h3>\uD83D\uDC3E Taming & Breeding</h3>',
+    '<p>Hold an animal\u2019s favorite food and tap it. Feed two of the same animal to breed a baby (with hearts). <b>Wheat/carrot</b> for cows, sheep and pigs; <b>seeds</b> for chickens. <b>Tame</b> a wolf with meat, a cat with raw fish, and a horse with wheat/carrots/apples \u2014 then give the horse a <b>saddle</b> to ride. Tamed pets follow you.</p>',
+    '<h3>\uD83C\uDFF9 Bow, Arrows & Fishing</h3>',
+    '<p>Craft a <b>Bow</b> (sticks + string) and <b>Arrows</b> (flint + stick + feather; gravel sometimes drops flint). Hold the bow and tap to fire \u2014 arrows damage mobs and can be recovered. A <b>Fishing Rod</b> cast over water lands a bobber; wait for the splash, then tap to reel in fish, string, leather or bone.</p>',
+    '<h3>\u2708\uFE0F Boats & Planes</h3>',
+    '<p>A <b>Boat</b> (5 planks) floats \u2014 place it on water and tap to sail; SNEAK to exit. Build a <b>Plane</b> with a propeller for flight: tap to board, push forward to take off, steer with look (it banks into turns), SNEAK to dismount.</p>',
+    '<h3>\uD83C\uDFAE Controller</h3>',
+    '<p>Plug in an Xbox-style controller and it just works. <b>Left stick</b> moves (push fully forward or click L3 to sprint), <b>right stick</b> looks. <b>A</b> jump (double-tap to fly in creative), <b>B</b> sneak/dismount, <b>RT</b> mine/attack, <b>LT</b> place/use, <b>LB/RB</b> or D-pad change hotbar, <b>X</b> inventory, <b>Y</b> camera. In menus: D-pad/stick to move, <b>A</b> select, <b>B</b> back, <b>Y</b> to quick-transfer a stack between a container and your inventory. It rumbles on hits and damage.</p>',
+    '<h3>\uD83D\uDD0A Settings</h3>',
+    '<p>This menu has <b>Master / Music / SFX</b> volume sliders, a <b>Mute</b> toggle and an <b>FOV</b> slider \u2014 all remembered between sessions \u2014 plus look <b>Sensitivity</b>, <b>View Distance</b>, Auto-Jump, difficulty and Survival/Creative mode.</p>'
+  ];
+  b.innerHTML='';
+  var srch=document.createElement('input'); srch.type='search'; srch.placeholder='\uD83D\uDD0D Search the wiki\u2026';
+  srch.style.cssText='width:100%;box-sizing:border-box;padding:9px;margin-bottom:10px;font-size:14px;border-radius:7px;border:1px solid #7a6a4a;background:#1c1812;color:#eee;';
+  b.appendChild(srch);
+  var holder=document.createElement('div');
+  var html=secs.join(''); var parts=html.split(/(?=<h3)/);
+  for(var pi=0; pi<parts.length; pi++){ var pp=parts[pi]; if(!pp || !pp.replace(/\s/g,'')) continue;
+    var d=document.createElement('div'); d.className='wikiSec'; d.style.cssText='margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.06);'; d.innerHTML=pp; holder.appendChild(d); }
+  b.appendChild(holder);
+  var none=document.createElement('div'); none.style.cssText='opacity:.6;font-size:13px;padding:10px;display:none;'; none.textContent='No matches \u2014 try another word.'; b.appendChild(none);
+  srch.addEventListener('input', function(){ var q=this.value.toLowerCase().trim(); var els=holder.querySelectorAll('.wikiSec'), shown=0;
+    for(var i=0;i<els.length;i++){ var ht=(!q || els[i].textContent.toLowerCase().indexOf(q)>=0); els[i].style.display=ht?'':'none'; if(ht) shown++; }
+    none.style.display=shown?'none':''; });
   document.getElementById('guidescreen').classList.remove('hidden');
 }
 document.getElementById('pExit').addEventListener('click', exitToTitle);
