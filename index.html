@@ -496,6 +496,9 @@ defBlock({key:'CABLE', name:'Energy Cable', col:[202,128,52], solid:true, tool:'
 defBlock({key:'SOLAR_PANEL', name:'Solar Panel', col:[40,52,110], top:[26,38,98], side:[92,96,104], solid:true, tool:'pickaxe', tier:1, hard:2.2 });
 defBlock({key:'ENERGY_CELL', name:'Energy Cell', col:[58,64,80], top:[86,150,214], side:[52,58,74], solid:true, tool:'pickaxe', tier:1, hard:3.0 });
 defBlock({key:'QUARRY', name:'Quarry', col:[210,176,44], top:[44,46,52], side:[210,176,44], solid:true, tool:'pickaxe', tier:2, hard:3.4 });
+defBlock({key:'COMPRESSOR', name:'Compressor', col:[96,104,116], top:[150,156,168], side:[84,92,104], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
+defBlock({key:'WIND_TURBINE', name:'Wind Turbine', col:[214,220,228], top:[150,160,175], side:[226,230,236], solid:true, tool:'pickaxe', tier:1, hard:2.6 });
+defBlock({key:'MFSU', name:'Advanced Energy Cell', col:[60,46,92], top:[150,86,224], side:[52,40,82], solid:true, tool:'pickaxe', tier:2, hard:3.2 });
 defBlock({key:'HOPPER', name:'Hopper', col:[64,66,74], top:[40,42,48], side:[72,74,82], solid:true, tool:'pickaxe', tier:1, hard:2.6 });
 
 function blk(id){ return BLOCKS[id] || BLOCKS[0]; }
@@ -552,6 +555,10 @@ mat('GOLD_DUST','Gold Dust',[216,188,96],{smeltTo:'GOLD_INGOT'});
 mat('COPPER_DUST','Copper Dust',[184,112,66],{smeltTo:'COPPER_INGOT'});
 mat('TIN_DUST','Tin Dust',[190,198,210],{smeltTo:'TIN_INGOT'});
 mat('STEEL_INGOT','Steel Ingot',[150,156,166]);
+// metal plates (Compressor output) - used to craft advanced machines
+mat('IRON_PLATE','Iron Plate',[176,178,186],{plate:true});
+mat('GOLD_PLATE','Gold Plate',[236,210,108],{plate:true});
+mat('COPPER_PLATE','Copper Plate',[210,134,84],{plate:true});
 mat('DIAMOND','Diamond',[120,224,224]);
 mat('EMERALD','Emerald',[52,200,116]);
 // --- ARMOR: tier x slot ---
@@ -3551,6 +3558,9 @@ function doPlace(){
   if(isCrafting(hit.id)){ openCrafting(true); return; }
   if(hit.id===B.FURNACE){ openFurnace(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.MACERATOR){ openMacerator(World.ck(hit.x,hit.y,hit.z)); return; }
+  if(hit.id===B.COMPRESSOR){ openCompressor(World.ck(hit.x,hit.y,hit.z)); return; }
+  if(hit.id===B.WIND_TURBINE){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
+  if(hit.id===B.MFSU){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.QUARRY){ var qt=World.tiles[World.ck(hit.x,hit.y,hit.z)];
     if(qt){ if(qt.done) toast('\u26CF\uFE0F Quarry: finished (hit bedrock)'); else { var dep=(qt.cy==null)?0:Math.max(0,(hit.y-1)-qt.cy); toast('\u26CF\uFE0F Quarry mining \u2014 depth '+dep+(drawPower(hit.x,hit.y,hit.z,0)?'':' (no power: connect a generator by cable)')); } }
     return; }
@@ -3708,6 +3718,9 @@ function doPlace(){
   if(pid===B.SOLAR_PANEL) World.tiles[World.ck(nx,ny,nz)]={type:'generator', solar:true, energy:0};
   if(pid===B.ENERGY_CELL) World.tiles[World.ck(nx,ny,nz)]={type:'generator', cell:true, energy:0};
   if(pid===B.QUARRY){ World.tiles[World.ck(nx,ny,nz)]={type:'quarry', cd:0, qx:null, qz:null, cy:null, done:false}; toast('\u26CF\uFE0F Quarry placed \u2014 wire it to a generator with cable to start mining'); }
+  if(pid===B.COMPRESSOR) World.tiles[World.ck(nx,ny,nz)]={type:'compressor', input:null, output:null, press:0};
+  if(pid===B.WIND_TURBINE){ World.tiles[World.ck(nx,ny,nz)]={type:'generator', wind:true, energy:0}; toast('\uD83D\uDCA8 Wind turbine \u2014 place it high with open sky for the most power'); }
+  if(pid===B.MFSU) World.tiles[World.ck(nx,ny,nz)]={type:'generator', cell:true, cap:64000, energy:0};
   if(pid===B.HOPPER){ var hdir = (hit.ny!==0) ? [0,-1,0] : [-hit.nx,0,-hit.nz]; World.tiles[World.ck(nx,ny,nz)]={type:'hopper', buf:newArray(5), dir:hdir, cd:0}; }
   if(isChest(pid)) World.tiles[World.ck(nx,ny,nz)]={type:'chest', items:newArray(27), front:placeFrontFace()};
   if(gameMode!=='creative') consumeSlot(slot,1);
@@ -3898,6 +3911,9 @@ shapeless([{key:'WOOL',qty:1},{key:'PINK_DYE',qty:1}], 'PINK_WOOL', 1);
 shaped([['STEAM_SILK','STEAM_SILK','STEAM_SILK'],['LEATHER',null,'LEATHER']], 'SADDLE', 1);
 shaped([['IRON_INGOT','REDSTONE','IRON_INGOT'],['REDSTONE','COPPER_INGOT','REDSTONE'],['IRON_INGOT','REDSTONE','IRON_INGOT']], 'ENERGY_CELL', 1);
 shaped([['IRON_INGOT','DIAMOND','IRON_INGOT'],['DIAMOND','IRON_INGOT','DIAMOND'],['IRON_INGOT','REDSTONE','IRON_INGOT']], 'QUARRY', 1);
+shaped([['STONE','IRON_INGOT','STONE'],['IRON_INGOT','REDSTONE','IRON_INGOT'],['STONE','IRON_INGOT','STONE']], 'COMPRESSOR', 1);
+shaped([['IRON_PLATE','IRON_PLATE','IRON_PLATE'],['COPPER_INGOT','REDSTONE','COPPER_INGOT'],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'WIND_TURBINE', 1);
+shaped([['IRON_PLATE','DIAMOND','IRON_PLATE'],['IRON_PLATE','ENERGY_CELL','IRON_PLATE'],['IRON_PLATE','REDSTONE','IRON_PLATE']], 'MFSU', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],['IRON_INGOT','CHEST','IRON_INGOT'],[null,'IRON_INGOT',null]], 'HOPPER', 1);
 shaped([['LEATHER','LEATHER','LEATHER'],['LEATHER','CHEST','LEATHER'],['LEATHER','LEATHER','LEATHER']], 'BACKPACK', 1);
 shaped([[null,'IRON_INGOT',null],['IRON_INGOT','TORCH','IRON_INGOT'],[null,'IRON_INGOT',null]], 'LANTERN', 1);
@@ -4628,8 +4644,26 @@ function openMacerator(tk, keep){
   screenEl.appendChild(p);
   bindScreenBg();
 }
-var GEN_MAX=2000;
+function openCompressor(tk, keep){
+  curTileKey=tk; var tile=World.tiles[tk]; if(!tile){ tile=World.tiles[tk]={type:'compressor',input:null,output:null,press:0}; }
+  openScreen(); currentScreen='compressor';
+  screenEl.innerHTML=''; var p=document.createElement('div'); p.className='panel';
+  var h=document.createElement('h2'); h.textContent='Compressor'; p.appendChild(h);
+  var hint=document.createElement('div'); hint.className='small'; hint.style.textAlign='center'; hint.style.opacity='0.8';
+  hint.textContent='Presses ingots into plates (and cobble back into stone) \u2014 wire it to power to run fast'; p.appendChild(hint);
+  p.appendChild(spacer(4));
+  var widget=document.createElement('div'); widget.style.cssText='display:flex;flex-direction:column;gap:6px;align-items:center;';
+  var row=document.createElement('div'); row.className='row'; row.style.justifyContent='center';
+  var arrow=document.createElement('div'); arrow.className='arrow'; arrow.textContent='\u27a4';
+  row.appendChild(tileSlot(tile,'input')); row.appendChild(arrow); row.appendChild(tileSlot(tile,'output'));
+  widget.appendChild(row);
+  machineLayout(p, widget);
+  p.appendChild(closeBtn(0));
+  screenEl.appendChild(p);
+  bindScreenBg();
+}
 var CELL_MAX=16000;
+var GEN_MAX=2000;
 function openGenerator(tk, keep){
   curTileKey=tk; var tile=World.tiles[tk]; if(!tile){ tile=World.tiles[tk]={type:'generator',slot:null,burn:0,burnMax:0,energy:0}; }
   openScreen(); currentScreen='generator';
@@ -4655,7 +4689,7 @@ function openGenerator(tk, keep){
     widget.appendChild(row);
   }
   var barWrap=document.createElement('div'); barWrap.style.cssText='width:82%;height:16px;background:#0008;border-radius:8px;overflow:hidden;border:1px solid #ffffff22;';
-  var ecap=tile.cell?CELL_MAX:GEN_MAX;
+  var ecap=tile.cap||(tile.cell?CELL_MAX:GEN_MAX);
   var bar=document.createElement('div'); var pct=Math.max(0,Math.min(100,Math.round(100*(tile.energy||0)/ecap)));
   bar.style.cssText='height:100%;width:'+pct+'%;background:linear-gradient(90deg,#ff9f1a,#ffe27a);';
   barWrap.appendChild(bar); widget.appendChild(barWrap);
@@ -4879,6 +4913,33 @@ function openMapScreen(){
   }
   p.appendChild(closeBtn(0)); screenEl.appendChild(p); bindScreenBg();
 }
+var wpHud=null, wpEls=[];
+function updateWaypointHud(){
+  if(!running || uiOpen || !waypoints || !waypoints.length || World.dim==='underforge'){ if(wpHud) wpHud.style.display='none'; return; }
+  if(!wpHud){ wpHud=document.createElement('div'); wpHud.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:8;overflow:hidden;'; document.body.appendChild(wpHud); }
+  wpHud.style.display='';
+  while(wpEls.length<waypoints.length){
+    var el=document.createElement('div'); el.style.cssText='position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:0px;font:600 11px ui-monospace,Menlo,monospace;text-shadow:0 1px 2px #000,0 0 3px #000;';
+    var dia=document.createElement('span'); dia.style.cssText='font-size:14px;line-height:1;';
+    var nm=document.createElement('span'); nm.style.cssText='color:#fff;line-height:1.1;';
+    var ds=document.createElement('span'); ds.style.cssText='color:#cfe;opacity:0.85;font-size:9.5px;line-height:1;';
+    el.appendChild(dia); el.appendChild(nm); el.appendChild(ds); el.__d=dia; el.__n=nm; el.__s=ds;
+    wpHud.appendChild(el); wpEls.push(el);
+  }
+  while(wpEls.length>waypoints.length){ var ex=wpEls.pop(); ex.remove(); }
+  var W=window.innerWidth, H=window.innerHeight, v=new THREE.Vector3(), m=26;
+  for(var i=0;i<waypoints.length;i++){ var w=waypoints[i], el=wpEls[i];
+    var ddx=w.x+0.5-camera.position.x, ddz=w.z+0.5-camera.position.z, dist=Math.sqrt(ddx*ddx+ddz*ddz);
+    if(dist<3.5){ el.style.display='none'; continue; } el.style.display='';
+    v.set(w.x+0.5, Player.pos.y+1.0, w.z+0.5); v.project(camera);
+    if(v.z>1){ v.x=-v.x; v.y=-v.y; }            // behind camera -> mirror so it clamps to the correct edge
+    var sx=(v.x*0.5+0.5)*W, sy=(-v.y*0.5+0.5)*H;
+    sx=Math.max(m,Math.min(W-m,sx)); sy=Math.max(m,Math.min(H-m,sy));
+    el.style.left=sx+'px'; el.style.top=sy+'px';
+    el.__d.textContent='\u25C6'; el.__d.style.color=w.color||'#ffd23f';
+    el.__n.textContent=w.name; el.__s.textContent=Math.round(dist)+'m';
+  }
+}
 
 /* ----------------------------- FURNACE TICK ----------------------------- */
 function tickFurnaces(dt){
@@ -4903,6 +4964,7 @@ function tickFurnaces(dt){
   if(currentScreen==='furnace' && (frame%6===0)) rerenderScreen();
 }
 var MACERATE={ IRON_ORE:'IRON_DUST', GOLD_ORE:'GOLD_DUST', COPPER_ORE:'COPPER_DUST', TIN_ORE:'TIN_DUST' };
+var COMPRESS={ IRON_INGOT:'IRON_PLATE', GOLD_INGOT:'GOLD_PLATE', COPPER_INGOT:'COPPER_PLATE', COBBLE:'STONE', COBBLE_DEEP:'DEEPSLATE', GRAVEL:'COBBLE' };
 var PDIRS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
 function drawPower(x,y,z,amt,skipCell){
   var seen={}, q=[[x,y,z]], steps=0; seen[World.ck(x,y,z)]=1;
@@ -4965,7 +5027,14 @@ function tickGenerators(dt){
       if(dd>0 && World.skyLightAt(+sp[0],(+sp[1])+1,+sp[2])>11) t.energy=Math.min(GEN_MAX,(t.energy||0)+9*dd*dt);
       continue;
     }
-    if(t.cell){ var cp=tk.split(','); if((t.energy||0) < CELL_MAX){ if(drawPower(+cp[0],+cp[1],+cp[2], 16*dt, true)) t.energy=Math.min(CELL_MAX,(t.energy||0)+16*dt); } continue; }
+    if(t.wind){ var wp=tk.split(',');                                  // wind turbine: more power the higher it sits, needs open sky
+      if(World.skyLightAt(+wp[0],(+wp[1])+1,+wp[2])>11){ var alt=Math.max(0,(+wp[1])-SEA);
+        var gust=0.55+0.45*(0.5+0.5*Math.sin(now*0.0006 + ((+wp[0])+(+wp[2]))*0.35));
+        t.energy=Math.min(GEN_MAX,(t.energy||0)+(2.4+alt*0.17)*gust*dt);
+      }
+      continue;
+    }
+    if(t.cell){ var cp=tk.split(','), cap=t.cap||CELL_MAX; if((t.energy||0) < cap){ if(drawPower(+cp[0],+cp[1],+cp[2], 16*dt, true)) t.energy=Math.min(cap,(t.energy||0)+16*dt); } continue; }
     if(t.burn>0){ t.burn-=dt; t.energy=Math.min(GEN_MAX,(t.energy||0)+22*dt); }
     if(t.burn<=0 && t.slot && (t.energy||0)<GEN_MAX){
       var fv=ITEMS[t.slot.key] && ITEMS[t.slot.key].fuel;
@@ -4988,6 +5057,20 @@ function tickMacerators(dt){
     } else { t.grind=0; }
   }
   if(currentScreen==='macerator' && (frame%6===0)) rerenderScreen();
+}
+function tickCompressors(dt){
+  for(var tk in World.tiles){ var t=World.tiles[tk]; if(t.type!=='compressor') continue;
+    var to = t.input && COMPRESS[t.input.key];
+    var outOK = to && (!t.output || (t.output.key===to && t.output.qty <= (ITEMS[to]?(ITEMS[to].stack||64):(blk(B[to])?64:64))-1));
+    if(to && outOK){ var pa=tk.split(','), powered=drawPower(+pa[0],+pa[1],+pa[2], 9*dt);
+      t.press = (t.press||0) + dt*(powered?3.5:1);
+      if(t.press>=6){ t.press=0;
+        if(!t.output) t.output={key:to,qty:1}; else t.output.qty+=1;
+        t.input.qty-=1; if(t.input.qty<=0) t.input=null;
+      }
+    } else { t.press=0; }
+  }
+  if(currentScreen==='compressor' && (frame%6===0)) rerenderScreen();
 }
 var QUARRY_R=2;   // mines a (2R+1)x(2R+1) column straight down
 function quarryOutput(ox,oy,oz,key){
@@ -5634,6 +5717,7 @@ function spawnEnemy(kind, x,y,z){
   var e={ kind:kind, mesh:mesh, pos:new THREE.Vector3(x,y,z), vel:new THREE.Vector3(), hp:d.hp,
     onGround:false, atkCd:0, hurt:0, fuse:0, wcd:0, wdir:Math.random()*6.283, moving:false,
     passive:!!d.passive, width:d.w, height:d.h, speed:d.sp, dmg:d.dmg };
+  if(difficulty==='easy' && !d.passive){ e.hp=Math.max(1,Math.round(d.hp*0.7)); }   // easy: hostiles are frailer
   if(kind==='skeleton') e.atkCd=1.4+Math.random()*1.4;
   entities.push(e);
 }
@@ -5705,7 +5789,22 @@ function animalTick(e,dt){
         if(fpd<1.4){ e.prey.hp-=9*dt; e.prey.hurt=0.2; e.prey.noDrop=true; } }
       else e.prey=null; }
   }
-  var sp=e.moving?(e.fleeBoost?e.speed*1.7:e.speed):0;
+  else if(e.kind==='dog' && !e.tamed && gameMode!=='creative'){   // wild dogs hunt rabbits & sheep
+    if(!e.prey || e.prey.hp<=0 || entities.indexOf(e.prey)<0){ e.prey=null; e.huntCd=(e.huntCd>0)?e.huntCd-dt:0;
+      if(e.huntCd<=0){ e.huntCd=3+Math.random()*3; e.prey=findPrey(e,['rabbit','sheep','chicken'],16); } }
+    if(e.prey){ var dpx=e.prey.pos.x-e.pos.x, dpz=e.prey.pos.z-e.pos.z, dpd=Math.hypot(dpx,dpz);
+      if(dpd<18){ e.wdir=Math.atan2(dpz,dpx); e.moving=true; e.wcd=Math.max(e.wcd,0.4); e.fleeBoost=true; e.prey.fleeFrom=e;
+        if(dpd<1.6){ e.prey.hp-=10*dt; e.prey.hurt=0.2; e.prey.noDrop=true; } }
+      else e.prey=null; }
+  }
+  else if(e.kind==='cat' && !e.tamed && gameMode!=='creative'){   // wild cats stalk rabbits & birds
+    if(!e.prey || e.prey.hp<=0 || entities.indexOf(e.prey)<0){ e.prey=null; e.huntCd=(e.huntCd>0)?e.huntCd-dt:0;
+      if(e.huntCd<=0){ e.huntCd=4+Math.random()*4; e.prey=findPrey(e,['rabbit','bird'],12); } }
+    if(e.prey){ var cpx=e.prey.pos.x-e.pos.x, cpz=e.prey.pos.z-e.pos.z, cpd=Math.hypot(cpx,cpz);
+      if(cpd<13){ e.wdir=Math.atan2(cpz,cpx); e.moving=true; e.wcd=Math.max(e.wcd,0.4); e.fleeBoost=true; e.prey.fleeFrom=e;
+        if(cpd<1.3){ e.prey.hp-=8*dt; e.prey.hurt=0.2; e.prey.noDrop=true; } }
+      else e.prey=null; }
+  }
   e.vel.x=Math.cos(e.wdir)*sp; e.vel.z=Math.sin(e.wdir)*sp;
   if(sp>0) e.mesh.rotation.y=-e.wdir+Math.PI/2;
   if(e.onGround && sp>0){ var ahx=e.pos.x+Math.cos(e.wdir)*0.5, ahz=e.pos.z+Math.sin(e.wdir)*0.5;
@@ -6182,8 +6281,9 @@ function maybeSpawnEnemies(){
   if(spawnGrace>0) return;            // brief grace after respawn
   if(sunU.value>0.5) return; // only at night
   var hostiles=0; for(var hi=0;hi<entities.length;hi++){ var hk=entities[hi].kind; if(hk!=='fish'&&hk!=='emberwisp'&&!entities[hi].passive) hostiles++; }
-  if(hostiles >= (IS_MOBILE?6:10)) return;
-  if(Math.random()>0.055) return;
+  var hostCap=(IS_MOBILE?6:10); if(difficulty==='easy') hostCap=Math.max(2,Math.floor(hostCap*0.5));
+  if(hostiles >= hostCap) return;
+  if(Math.random() > (difficulty==='easy'?0.03:0.055)) return;
   var ang=Math.random()*Math.PI*2, dist=14+Math.random()*16;
   var x=Math.floor(Player.pos.x+Math.cos(ang)*dist), z=Math.floor(Player.pos.z+Math.sin(ang)*dist);
   // find surface
@@ -7418,6 +7518,7 @@ function loop(t){
   tickDayNight(dt);
   tickFurnaces(dt);
   tickMacerators(dt);
+  tickCompressors(dt);
   tickQuarries(dt);
   tickGenerators(dt);
   tickHoppers(dt);
@@ -7475,6 +7576,7 @@ function loop(t){
   // damage flash via fog tint? simple overlay using clear color blend skipped; use crosshair? keep minimal
   renderer.autoClear=true;
   renderer.render(scene,camera);
+  updateWaypointHud();
   if(viewMode===0 && running){
     if(handCam.aspect!==camera.aspect){ handCam.aspect=camera.aspect; handCam.updateProjectionMatrix(); }
     renderer.autoClear=false; renderer.clearDepth(); renderer.render(handScene, handCam); renderer.autoClear=true;
@@ -7521,8 +7623,10 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 94';
+var VERSION='Update 96';
 var CHANGELOG=[
+  { v:'Update 96', t:'Waypoints, Wiki & Wilder AI', items:['\uD83E\uDDED <b>In-world waypoint markers</b> \u2014 add a waypoint on the <b>Map</b> and it now floats in the world with its name and live distance, sticking to the screen edge with an arrow when it is off to the side or behind you (just like the waypoint mods)','\uD83D\uDCD6 New Wiki section <b>\u201CWhere to Start\u201D</b> \u2014 a step-by-step progression guide from first-day wood and stone, through iron and machines, all the way to UnderForge end-game gear','\uD83D\uDC3A Wilder animal AI \u2014 wild <b>dogs</b> now hunt rabbits &amp; sheep and <b>cats</b> stalk rabbits &amp; birds (joining the bears and foxes); the prey flee for their lives','\uD83D\uDE42 <b>Easy mode</b> is gentler now \u2014 fewer and rarer hostile spawns, a lower night-time mob cap, and frailer monsters'] },
+  { v:'Update 95', t:'More Tekkit Tech', items:['\u2699\uFE0F <b>Compressor</b> \u2014 a new machine that presses ingots into <b>metal plates</b> (iron / gold / copper) and crushes cobble back into stone & gravel into cobble. Runs faster wired to power','\uD83D\uDCA8 <b>Wind Turbine</b> \u2014 a generator that makes power from open sky day and night, and the higher you build it the more wind it catches (built from iron plates)','\uD83D\uDD0B <b>Advanced Energy Cell</b> \u2014 stores 4\u00D7 the power of a normal Energy Cell (plates + Energy Cell + diamond)','\uD83D\uDD17 New tech tree: Macerator \u2192 dust, Compressor \u2192 plates \u2192 the advanced machines. All wire into the same cable/power network'] },
   { v:'Update 94', t:'Chrome Texture Fix & Swim Revert', items:['\uD83D\uDDA5\uFE0F Fixed the shimmering / garbled ground textures on Chrome PC \u2014 the surface grain (and ore, water, ashstone detail) hashed raw world coordinates, so far from spawn it fed huge numbers into sin() and some GPUs returned garbage that crawled as you moved. Coordinates are now wrapped, so textures stay crisp and stable everywhere','\uD83C\uDFCA Reverted the swimming animation \u2014 you stay upright in the water again (a proper swim animation will come back later)','\uD83E\uDDCD Hardened the anti-clip safety \u2014 it now checks your whole footprint instead of just the centre, so slipping a corner into a block pops you back out reliably'] },
   { v:'Update 93', t:'Vibrant Skies', items:['\uD83C\uDF05 Gradient sky \u2014 the flat backdrop is now a rich vertical gradient: deep saturated blue overhead fading to a brighter horizon, shifting through the whole day/night cycle','\uD83C\uDF07 Sunrise & sunset glow \u2014 warm orange and pink light now blooms across the horizon around the sun at dawn and dusk','\u2600\uFE0F Soft sun halo \u2014 the sun has a gentle glow that swells and warms as it sinks toward the horizon','\uD83C\uDF00 The UnderForge return gate is now a full framed rift portal (it used to be a single block) \u2014 just walk into the energy to head home'] },
   { v:'Update 92', t:'Real Rift Portal & Swimming', items:['\uD83C\uDF00 The Rift Gate is now an <b>actual portal</b> \u2014 place one and a full 2\u00D73 wall of swirling violet energy tears open inside a dark rift frame (about 4\u00D75 overall). <b>Walk into the energy</b> to cross to the UnderForge and back \u2014 no more tapping a flat pink block','\uD83C\uDFCA Swimming animation \u2014 your character now goes horizontal with a breaststroke pull and flutter kick while swimming, instead of standing upright in the water'] },
@@ -7634,6 +7738,13 @@ function openGuide(){
   var secs = [
     '<h3>\u2316 Basics</h3>',
     '<p>Drag the left side of the screen to move and the right side to look. Use <b>JUMP</b> and <b>SNEAK</b> on the right. <b>Tap</b> a block to interact/place; <b>hold</b> on a block to mine it. Tap a mob to attack. Pick your held item from the <b>hotbar</b> along the bottom, or open <b>Inventory</b> for everything.</p>',
+    '<h3>\\uD83E\\uDDED Where to Start (Progression)</h3>',
+    '<p><b>1. First day:</b> punch trees for wood, make a <b>Crafting Table</b>, then wooden tools. Mine stone for stone tools and a <b>Furnace</b>. Punch animals/grass for food and seeds. Before dark, wall off a shelter, place <b>Torches</b> for light, and craft a <b>Bed</b> (3 wool + 3 planks) to skip the night and set your respawn.</p>',
+    '<p><b>2. Getting established:</b> mine <b>coal</b> (torches + smelting) and <b>iron</b> (iron tools & armor, buckets, shears). Start a small farm (till dirt with a hoe, plant seeds/carrots) and breed animals by feeding them. Explore for a <b>village</b> to trade.</p>',
+    '<p><b>3. Going deeper:</b> dig down for <b>copper &amp; tin</b> (alloy into <b>bronze</b> tools) and eventually <b>diamond</b> (best normal tools/armor) and <b>redstone</b>. Watch for caves, lava and mobs.</p>',
+    '<p><b>4. First machines:</b> build a <b>Macerator</b> (ore into 2x dust = double ingots), a <b>Generator</b> + <b>Energy Cables</b>, and <b>Solar Panels</b>. Powered machines run much faster.</p>',
+    '<p><b>5. Advanced tech:</b> build a <b>Compressor</b> to press ingots into <b>plates</b>, then a <b>Wind Turbine</b> (more power the higher you build it) and an <b>Advanced Energy Cell</b>. Drop a <b>Quarry</b> and wire it up to auto-mine while you do other things.</p>',
+    '<p><b>6. End game:</b> craft a <b>Rift Gate</b> and step through into the <b>UnderForge</b> to mine <b>Aetherium</b> - the strongest tools in the game. Build an <b>Aether Forge</b> to enchant your gear, then hunt the bosses. Use a <b>Map</b> and drop <b>waypoints</b> so you can always find your way home.</p>',
     '<h3>\u2764 Staying Alive</h3>',
     '<p>Hearts are your health, drumsticks are hunger. Eat food (apples, cooked meat) to refill hunger \u2014 once it\u2019s high you slowly regenerate health. Falling, drowning, lava, and mobs hurt you. At night, hostile mobs appear, so build shelter or carry a weapon.</p>',
     '<h3>\u26cf Mining & Tool Tiers</h3>',
@@ -7643,7 +7754,7 @@ function openGuide(){
     '<h3>\uD83D\uDD28 Crafting & Smelting</h3>',
     '<p>Open <b>Inventory</b> for the 2\u00d72 grid, or place &amp; tap a <b>Crafting Table</b> for the full 3\u00d73. Tap the <b>\uD83D\uDCD6 Recipe Book</b> button to browse every recipe. Build a <b>Furnace</b> to smelt ore into ingots and cook food (fuel = coal, wood, planks).</p>',
     '<h3>\u2699 Machines & Metals</h3>',
-    '<ul><li><b>Macerator</b> \u2014 grinds ore into 2\u00d7 dust; smelt the dust for double ingots.</li><li><b>Generator</b> \u2014 burns fuel into power. Run <b>Energy Cables</b> (copper) from it to power a Macerator or Furnace a few blocks away.</li><li><b>Powered machines</b> \u2014 a cabled Macerator grinds ~3.5\u00d7 faster; a cabled Furnace smelts 3\u00d7 faster with no coal.</li><li><b>Solar Panel</b> \u2014 free power in daylight when open to the sky; wire it in with cables.</li><li><b>Bronze</b> \u2014 alloy 3 copper + 1 tin \u2192 bronze ingots \u2192 an iron-level tool set.</li><li><b>Brass</b> \u2014 2 copper + 1 gold ore \u2192 brass ingots (steampunk building + portal parts).</li><li><b>Steel</b> \u2014 iron + coal.</li></ul>',
+    '<ul><li><b>Macerator</b> \u2014 grinds ore into 2\u00d7 dust; smelt the dust for double ingots.</li><li><b>Generator</b> \u2014 burns fuel into power. Run <b>Energy Cables</b> (copper) from it to power a Macerator or Furnace a few blocks away.</li><li><b>Powered machines</b> \u2014 a cabled Macerator grinds ~3.5\u00d7 faster; a cabled Furnace smelts 3\u00d7 faster with no coal.</li><li><b>Solar Panel</b> \u2014 free power in daylight when open to the sky; wire it in with cables.</li><li><b>Compressor</b> - presses ingots into <b>metal plates</b> (and crushes cobble back into stone, gravel into cobble). Plates build the advanced machines. Faster when cabled to power.</li><li><b>Wind Turbine</b> - makes power from open sky day and night; the <b>higher you build it</b>, the more wind it catches. Needs iron plates.</li><li><b>Advanced Energy Cell</b> - stores 4x the power of a normal Energy Cell. Built from plates + an Energy Cell + a diamond.</li><li><b>Bronze</b> \u2014 alloy 3 copper + 1 tin \u2192 bronze ingots \u2192 an iron-level tool set.</li><li><b>Brass</b> \u2014 2 copper + 1 gold ore \u2192 brass ingots (steampunk building + portal parts).</li><li><b>Steel</b> \u2014 iron + coal.</li></ul>',
     '<h3>\uD83D\uDCA7 World Tools</h3>',
     '<ul><li><b>Bucket</b> (3 iron) scoops &amp; places water. Water flows and settles like real liquid.</li><li><b>Boat</b> (5 planks) \u2014 place on water and tap to sail; SNEAK to exit, SNEAK+tap to pick up.</li><li><b>Torch</b> \u2014 lights the area with a warm flicker. Put one in your <b>Off-Hand</b> slot to carry light in your left hand while you mine.</li><li><b>Shield</b> (planks + iron) in the off-hand blocks about half of incoming damage.</li><li><b>Shears</b> (2 iron) \u2014 tap a sheep for 1\u20133 wool; it goes naked and regrows its coat in time.</li><li><b>Bed</b> (3 wool + 3 planks) \u2014 tap at night to skip to morning and set your respawn point.</li><li><b>Map</b> (8 planks + redstone) \u2014 hold and tap to see a top-down view of explored land; add named <b>waypoints</b> at your spot.</li><li><b>Compass</b> (4 iron + redstone) \u2014 hold it for the heading and distance back to spawn.</li></ul>',
     '<h3>\uD83C\uDF31 Farming</h3>',
