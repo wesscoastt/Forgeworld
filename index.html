@@ -446,11 +446,12 @@ function isChest(id){ return id===B.CHEST||id===B.SPRUCE_CHEST||id===B.BIRCH_CHE
 function isCrafting(id){ return id===B.CRAFTING||id===B.SPRUCE_CRAFTING||id===B.BIRCH_CRAFTING||id===B.CHERRY_CRAFTING; }
 defBlock({key:'BED', name:'Bed', col:[178,46,46], top:[206,58,58], side:[150,40,40], solid:false, hard:0.4 });
 defBlock({key:'ASH', name:'Ash', col:[120,116,112], top:[136,132,128], side:[110,106,102], solid:true, tool:'shovel', hard:0.6 });
-defBlock({key:'ASH_STONE', name:'Ashstone', col:[74,70,70], side:[66,62,62], solid:true, tool:'pickaxe', tier:1, hard:1.9, drop:'ASH_STONE' });
-defBlock({key:'CINDER', name:'Cinder Rock', col:[60,52,50], top:[92,58,44], solid:true, tool:'pickaxe', tier:1, hard:2.0, drop:'ASH_STONE' });
+defBlock({key:'ASH_STONE', name:'Ashstone', col:[58,54,62], side:[49,45,53], top:[64,59,68], solid:true, tool:'pickaxe', tier:1, hard:1.9, drop:'ASH_STONE' });
+defBlock({key:'CINDER', name:'Cinder Rock', col:[48,40,42], top:[150,72,34], side:[70,42,38], spec:[214,118,46], solid:true, tool:'pickaxe', tier:1, hard:2.0, drop:'ASH_STONE' });
 defBlock({key:'AETHERIUM_ORE', name:'Aetherium Ore', col:[70,66,80], spec:[150,205,232], solid:true, tool:'pickaxe', tier:3, hard:3.2, drop:'AETHERIUM' });
 defBlock({key:'BRASS_BLOCK', name:'Brass Block', col:[181,143,68], top:[198,160,82], side:[166,130,60], solid:true, tool:'pickaxe', tier:1, hard:2.4 });
-defBlock({key:'RIFT_GATE', name:'Rift Gate', col:[126,72,156], top:[168,104,200], side:[110,62,140], solid:true, transparent:true, light:9, hard:2.0 });
+defBlock({key:'RIFT_GATE', name:'Rift Gate', col:[44,20,60], top:[60,30,82], side:[40,18,56], solid:false, transparent:true, light:11, hard:2.0 });
+defBlock({key:'RIFT_FRAME', name:'Rift Frame', col:[38,32,50], top:[58,50,74], side:[34,28,46], spec:[150,110,200], solid:true, tool:'pickaxe', tier:2, hard:3.0, drop:'RIFT_FRAME' });
 defBlock({key:'OBSIDIAN', name:'Obsidian', col:[30,24,42], top:[40,32,56], side:[24,20,36], solid:true, tool:'pickaxe', tier:4, hard:9.0, drop:'OBSIDIAN' });
 defBlock({key:'PRISMARINE', name:'Prismarine', col:[64,142,134], top:[78,160,150], side:[56,128,120], solid:true, tool:'pickaxe', tier:1, hard:1.6 });
 defBlock({key:'CORAL_PINK', name:'Pink Coral', col:[232,112,168], solid:true, hard:0.5 });
@@ -2273,10 +2274,12 @@ function cycleView(){ viewMode=(viewMode+1)%3; toast(['First person','Third pers
 function updateAvatar(){
   var rk = Player.riding && Player.riding.kind;
   if(rk==='plane' || rk==='boat'){
+    playerAvatar.rotation.x=0;
     if(avatarLimbs.armL){ avatarLimbs.legL.rotation.x=-1.35; avatarLimbs.legR.rotation.x=-1.35;   // knees up, seated
       avatarLimbs.armL.rotation.x=-0.6; avatarLimbs.armR.rotation.x=-0.6; }                        // hands forward on controls
     updateAvatarHeld(); return;
   }
+  playerAvatar.rotation.x=0;
   var sp=Math.hypot(Player.vel.x,Player.vel.z);
   var moving = sp>0.15;
   var sw = moving ? Math.sin(now*0.013)*Math.min(1.15, 0.45+sp*0.14) : Math.sin(now*0.002)*0.05;
@@ -2330,6 +2333,43 @@ function updateHand(){
 var skyGroup=new THREE.Group(); scene.add(skyGroup);
 var sunSprite=new THREE.Sprite(new THREE.SpriteMaterial({ color:0xfff2b0, fog:false })); sunSprite.scale.set(58,58,1); skyGroup.add(sunSprite);
 var moonSprite=new THREE.Sprite(new THREE.SpriteMaterial({ color:0xe6ecff, fog:false })); moonSprite.scale.set(44,44,1); skyGroup.add(moonSprite);
+// soft sun glow halo
+function makeGlowTex(){ var c=document.createElement('canvas'); c.width=c.height=64; var x=c.getContext('2d');
+  var g=x.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,'rgba(255,245,210,0.9)'); g.addColorStop(0.4,'rgba(255,210,140,0.32)'); g.addColorStop(1,'rgba(255,200,140,0)');
+  x.fillStyle=g; x.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); }
+var sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({ map:makeGlowTex(), color:0xfff0c0, transparent:true, opacity:0.0, fog:false, blending:THREE.AdditiveBlending, depthWrite:false }));
+sunGlow.scale.set(150,150,1); skyGroup.add(sunGlow);
+// vibrant gradient sky dome (vertex-coloured, recoloured each frame for time-of-day + sunset glow)
+var skyDomeGeo=new THREE.SphereGeometry(380, 22, 14);
+var _spCount=(skyDomeGeo.attributes && skyDomeGeo.attributes.position && skyDomeGeo.attributes.position.count)||0;
+skyDomeGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(_spCount*3), 3));
+var skyDome=new THREE.Mesh(skyDomeGeo, new THREE.MeshBasicMaterial({ vertexColors:true, side:THREE.BackSide, fog:false, depthWrite:false, depthTest:false }));
+skyDome.renderOrder=-10; skyGroup.add(skyDome);
+var ZEN_DAY=new THREE.Color(0x2f6fcc), ZEN_DUSK=new THREE.Color(0x39376e), ZEN_NIGHT=new THREE.Color(0x05060f), SUN_WARM=new THREE.Color(0xff9a4e), DAWN_PINK=new THREE.Color(0xff7d96);
+function updateSkyDome(horiz, d, underforge){
+  var zen=new THREE.Color();
+  if(underforge){ zen.copy(horiz).multiplyScalar(0.45); }
+  else if(d>0.4) zen.copy(ZEN_DAY);
+  else if(d>=0) zen.copy(ZEN_DUSK).lerp(ZEN_DAY, d/0.4);
+  else if(d>-0.25) zen.copy(ZEN_DUSK).lerp(ZEN_NIGHT, (-d)/0.25);
+  else zen.copy(ZEN_NIGHT);
+  var warmAmt = underforge?0:Math.max(0, 1 - Math.abs(d)/0.34);
+  var a=timeOfDay*Math.PI*2 - Math.PI/2, sl=Math.hypot(Math.cos(a),Math.sin(a),0.15);
+  var ux=Math.cos(a)/sl, uy=Math.sin(a)/sl, uz=0.15/sl;
+  var warm = (d>=0)?SUN_WARM:DAWN_PINK;
+  var pos=skyDomeGeo.attributes.position, col=skyDomeGeo.attributes.color;
+  if(!pos || !pos.count || !col) return;
+  for(var i=0;i<pos.count;i++){
+    var vx=pos.getX(i), vy=pos.getY(i), vz=pos.getZ(i), len=Math.sqrt(vx*vx+vy*vy+vz*vz), ny=vy/len;
+    var t=Math.max(0,Math.min(1, ny*1.3+0.16));
+    var r=horiz.r+(zen.r-horiz.r)*t, g=horiz.g+(zen.g-horiz.g)*t, b=horiz.b+(zen.b-horiz.b)*t;
+    if(warmAmt>0.01){ var dot=(vx*ux+vy*uy+vz*uz)/len, glow=Math.max(0,dot); glow*=glow;
+      var band=Math.max(0,1-Math.abs(ny)*2.1), w=glow*band*warmAmt;
+      r+=(warm.r-r)*w; g+=(warm.g-g)*w; b+=(warm.b-b)*w; }
+    col.setXYZ(i, r,g,b);
+  }
+  col.needsUpdate=true;
+}
 var starMat=new THREE.PointsMaterial({ color:0xffffff, size:2.4, sizeAttenuation:false, transparent:true, opacity:0, fog:false });
 (function(){
   var pos=[]; for(var i=0;i<420;i++){ var u=Math.random(), v=Math.random()*0.95+0.05;
@@ -2409,6 +2449,50 @@ function tickChestLid(dt){
   if(chestLid.t>1) chestLid.t=1;
   if(chestLid.t<=0 && !chestLid.opening){ removeChestLid(); return; }
   chestLid.hinge.rotation.x = -1.5*Math.max(0,chestLid.t);   // swings up to near-vertical, clear of the box
+}
+// ---------------- Rift portal (animated swirling energy) ----------------
+var portalMeshes={}, portalTex=null, portalScanT=0, portalT=0, _portalPx=1e9,_portalPy=1e9,_portalPz=1e9, _portalCd=3.0;
+function makePortalTex(){ if(portalTex) return portalTex;
+  var c=document.createElement('canvas'); c.width=c.height=48; var x=c.getContext('2d');
+  x.fillStyle='#160622'; x.fillRect(0,0,48,48);
+  for(var i=0;i<1700;i++){ var a=Math.random()*6.283, r=Math.pow(Math.random(),0.55)*24; var px=24+Math.cos(a)*r, py=24+Math.sin(a)*r;
+    var v=Math.random(); x.fillStyle='rgba('+(120+(v*130|0))+','+(38+(v*72|0))+','+(168+(v*78|0))+','+(0.32+v*0.55)+')'; x.fillRect(px|0,py|0,2,2); }
+  portalTex=new THREE.CanvasTexture(c); portalTex.wrapS=portalTex.wrapT=THREE.RepeatWrapping;
+  if(portalTex.minFilter!==undefined) portalTex.minFilter=THREE.LinearFilter;
+  return portalTex; }
+function makePortalMesh(){
+  var mat=new THREE.MeshBasicMaterial({map:makePortalTex(), color:0xc070ff, transparent:true, opacity:0.85, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide});
+  return new THREE.Mesh(new THREE.BoxGeometry(0.94,0.99,0.94), mat);
+}
+function clearPortals(){ for(var k in portalMeshes){ if(portalMeshes[k]) scene.remove(portalMeshes[k]); } portalMeshes={}; _portalPx=1e9; }
+function updatePortals(dt){
+  portalT+=dt; portalScanT-=dt;
+  if(portalScanT<=0){ portalScanT=0.5;
+    var px=Math.floor(Player.pos.x),py=Math.floor(Player.pos.y),pz=Math.floor(Player.pos.z);
+    if(!(px===_portalPx&&py===_portalPy&&pz===_portalPz)){
+      _portalPx=px;_portalPy=py;_portalPz=pz;
+      var seen={};
+      for(var dx=-14;dx<=14;dx++)for(var dy=-6;dy<=10;dy++)for(var dz=-14;dz<=14;dz++){
+        var x=px+dx,y=py+dy,z=pz+dz; if(y<1||y>=WORLD_H) continue;
+        if(World.getBlock(x,y,z)===B.RIFT_GATE){ var k=x+','+y+','+z; seen[k]=1;
+          if(!portalMeshes[k]){ var m=makePortalMesh(); m.position.set(x+0.5,y+0.5,z+0.5); scene.add(m); portalMeshes[k]=m; } } }
+      for(var rk in portalMeshes){ if(!seen[rk]){ scene.remove(portalMeshes[rk]); delete portalMeshes[rk]; } }
+    }
+  }
+  var pulse=0.6+0.22*Math.sin(portalT*2.4), oy=(portalT*0.16)%1, ox=Math.sin(portalT*0.6)*0.09;
+  for(var mk in portalMeshes){ var mm=portalMeshes[mk]; if(!mm) continue; if(mm.material.map){ mm.material.map.offset.y=oy; mm.material.map.offset.x=ox; } mm.material.opacity=pulse; }
+}
+function buildPortal(nx,ny,nz){
+  var alongX = Math.abs(Math.sin(Player.yaw)) <= Math.abs(Math.cos(Player.yaw));   // player facing Z -> portal runs along X
+  var ux=alongX?1:0, uz=alongX?0:1, w, hh;
+  for(w=0;w<2;w++) for(hh=0;hh<3;hh++) World.setBlock(nx+ux*w, ny+hh, nz+uz*w, B.RIFT_GATE, true);   // 2 wide x 3 tall energy
+  for(w=-1;w<=2;w++) for(hh=-1;hh<=3;hh++){
+    if(w>=0&&w<=1&&hh>=0&&hh<=2) continue;                                   // skip the interior
+    var bx=nx+ux*w, by=ny+hh, bz=nz+uz*w;
+    if(World.getBlock(bx,by,bz)===B.AIR) World.setBlock(bx,by,bz,B.RIFT_FRAME,true);   // frame, only into air
+  }
+  for(var cd=-1;cd<=2;cd++){ World.markDirty((nx+ux*cd)>>4,(nz+uz*cd)>>4); }
+  forceTorchRescan(); _portalPx=1e9;   // force a portal rescan
 }
 function tickUnderwater(dt){
   if(!waterVeil){ waterVeil=document.createElement('div'); waterVeil.id='waterveil';
@@ -2509,11 +2593,17 @@ function tickWeather(dt){
 }
 function tickSky(){
   skyGroup.position.copy(camera.position);
-  if(World.dim==='underforge'){ sunSprite.visible=false; moonSprite.visible=false; if(starMat)starMat.opacity=0; cloudGroup.visible=false; return; }
-  sunSprite.visible=true; moonSprite.visible=true; cloudGroup.visible=true;
+  if(World.dim==='underforge'){ sunSprite.visible=false; moonSprite.visible=false; sunGlow.visible=false; if(starMat)starMat.opacity=0; cloudGroup.visible=false; return; }
+  sunSprite.visible=true; moonSprite.visible=true; sunGlow.visible=true; cloudGroup.visible=true;
   var a = timeOfDay*Math.PI*2 - Math.PI/2, R=340;
   sunSprite.position.set(Math.cos(a)*R, Math.sin(a)*R, R*0.15);
   moonSprite.position.set(Math.cos(a+Math.PI)*R, Math.sin(a+Math.PI)*R, R*0.15);
+  sunGlow.position.copy(sunSprite.position);
+  var sunUp=Math.max(0, sunSprite.position.y/R);                      // 0 at horizon .. 1 overhead
+  var horizonGlow=Math.max(0, 1 - sunUp*3.2);                         // strong glow at sunrise/sunset
+  sunGlow.material.opacity = Math.max(0, (0.22+0.4*Math.min(1,sunU.value))*Math.min(1, sunUp*3.5+0.15));
+  sunGlow.scale.setScalar(150 + horizonGlow*150);
+  sunGlow.material.color.setRGB(1, 0.86-horizonGlow*0.28, 0.72-horizonGlow*0.4);
   starMat.opacity = Math.max(0, Math.min(1, 1.1 - sunU.value*2.4));
   cloudGroup.position.set(0,0,0);
   var drift = performance.now()*0.0016;
@@ -2557,7 +2647,7 @@ var chunkVert=[
 ].join('\n');
 function chunkFrag(alpha, grain){
   var body = grain ? [
-    ' vec3 q = floor(vWorld*8.0);',
+    ' vec3 q = mod(floor(vWorld*8.0), 256.0);',   // wrap coords so sin() never gets huge args (fixes far-from-origin texture shimmer on some GPUs)
     ' float h = fract(sin(dot(q, vec3(12.9898,78.233,37.719)))*43758.5453);',
     ' float gn = 0.84 + 0.20*h;',
     ' vec3 dc = vColor*gn;',
@@ -2600,7 +2690,7 @@ function chunkFrag(alpha, grain){
     '   } else if(base>=4.0 && base<=10.5){',            // ORES: stone base with colored mineral speckles
     '     vec3 ore = base==4.0?vec3(0.09,0.09,0.10):base==5.0?vec3(0.82,0.68,0.56):base==6.0?vec3(0.93,0.80,0.34):base==7.0?vec3(0.50,0.90,0.90):base==8.0?vec3(0.88,0.17,0.17):base==9.0?vec3(0.82,0.48,0.28):vec3(0.82,0.86,0.90);',
     '     vec2 cl=floor(uv*4.0); vec2 fr=fract(uv*4.0)-0.5;',
-    '     float rnd=fract(sin(dot(cl+floor(vWorld.xz), vec2(12.9898,78.233))+floor(vWorld.y)*7.31)*43758.5453);',
+    '     float rnd=fract(sin(dot(cl+mod(floor(vWorld.xz),256.0), vec2(12.9898,78.233))+mod(floor(vWorld.y),256.0)*7.31)*43758.5453);',
     '     float blob=1.0-smoothstep(0.15,0.34,length(fr));',
     '     dc=mix(dc, ore, blob*step(0.5,rnd)*0.88*vDetail);',
     '     dc*=1.0-0.26*(blob*step(0.8,fract(rnd*7.0)))*vDetail;',
@@ -2610,7 +2700,7 @@ function chunkFrag(alpha, grain){
     ' vec3 c = mix(uFogColor, dc, vFog);'
   ] : [
     ' float isWater = step(vColor.r*1.8, vColor.b) * step(vColor.g*1.4, vColor.b);',  // water = strongly blue (glass/lava excluded)
-    ' float w = sin(vWorld.x*1.7 + uTime*1.6) + sin(vWorld.z*2.1 + uTime*1.3) + sin((vWorld.x+vWorld.z)*1.1 - uTime*1.9);',
+    ' float w = sin(mod(vWorld.x,256.0)*1.7 + uTime*1.6) + sin(mod(vWorld.z,256.0)*2.1 + uTime*1.3) + sin(mod(vWorld.x+vWorld.z,256.0)*1.1 - uTime*1.9);',
     ' vec3 wc = vColor * (1.0 + 0.07*w*isWater);',
     ' wc = torchLit(wc, vWorld);',
     ' vec3 c = mix(uFogColor, wc, vFog);'
@@ -2629,7 +2719,7 @@ function chunkFrag(alpha, grain){
     '  else if(id==17.0){ if(face<1.5){ vec2 c=uv-0.5; col*=0.86+0.16*sin(length(c)*34.0); col*=0.9+0.14*n2(uv*6.0); } else { col*=0.84+0.26*n2(vec2(floor(uv.x*8.0),floor(uv.y*5.0))); col*=1.0-0.18*lineAt(fract(uv.x*6.0),0.5,0.07); } }',
     '  else if(id==18.0){ col*=0.76+0.42*n2(uv*6.0); col*=1.0-0.28*step(0.9,n2(uv*4.0+1.0)); }',
     '  else if(id==19.0){ float lum=max(max(col.r,col.g),col.b); float l2=clamp(lum*1.35+0.24,0.0,1.0); col=vec3(0.98,0.99,1.0)*l2; col+=step(0.985,n2(uv*16.0))*0.06*l2; }',
-    '  else if(id==20.0){ col*=0.86+0.18*n2(uv*5.0); vec2 cl=floor(uv*4.0); vec2 fr=fract(uv*4.0)-0.5; float rnd=fract(sin(dot(cl+floor(wp.xz), vec2(12.9898,78.233))+floor(wp.y)*7.31)*43758.5453); float blob=1.0-smoothstep(0.12,0.32,length(fr)); vec3 crystal=mix(vec3(0.42,0.92,0.96), vec3(0.72,0.5,0.96), n2(cl)); col=mix(col, crystal, blob*step(0.55,rnd)*0.92); }',   // aetherium ore
+    '  else if(id==20.0){ col*=0.86+0.18*n2(uv*5.0); vec2 cl=floor(uv*4.0); vec2 fr=fract(uv*4.0)-0.5; float rnd=fract(sin(dot(cl+mod(floor(wp.xz),256.0), vec2(12.9898,78.233))+mod(floor(wp.y),256.0)*7.31)*43758.5453); float blob=1.0-smoothstep(0.12,0.32,length(fr)); vec3 crystal=mix(vec3(0.42,0.92,0.96), vec3(0.72,0.5,0.96), n2(cl)); col=mix(col, crystal, blob*step(0.55,rnd)*0.92); }',   // aetherium ore
     '  else if(id==21.0){ vec2 g=uv*2.0; vec2 fr=fract(g); float seam=(1.0-smoothstep(0.0,0.05,fr.x))+(1.0-smoothstep(0.0,0.05,fr.y))+(1.0-smoothstep(0.95,1.0,fr.x))+(1.0-smoothstep(0.95,1.0,fr.y)); col*=1.0-0.2*clamp(seam,0.0,1.0); vec2 rc=fr-0.5; float rivet=1.0-smoothstep(0.07,0.12,length(rc)); col=mix(col, col*1.35+0.08, rivet*0.6); col*=0.93+0.1*sin((uv.x+uv.y)*9.0); }',   // brass panels + rivets
     '  else if(id==22.0){ col*=0.9+0.16*n2(uv*10.0); col*=1.0-0.08*step(0.86,n2(uv*22.0)); }',   // ash dust
     '  else if(id==23.0){ col*=0.85+0.2*n2(uv*5.0); col*=1.0-0.14*lineAt(fract(uv.x+0.3*n2(uv*2.0)),0.5,0.05); col*=1.0-0.1*lineAt(uv.y,0.5,0.06); }',   // ashstone
@@ -2642,7 +2732,7 @@ function chunkFrag(alpha, grain){
   return ['precision highp float;',
     'varying vec3 vColor; varying float vFog; varying vec3 vWorld; varying vec2 vUV; varying float vDecor;',
     'uniform vec3 uFogColor; uniform vec4 uTorch[16]; uniform int uTorchN; uniform float uTorchFlk;'].concat(grain?['uniform vec3 uCamPos;']:['uniform float uTime;']).concat([
-    'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.0075,0.0,1.0); f=f*f; tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.4); vec3 warm=vec3(0.95,0.58,0.26); return col*(1.0+warm*tl*0.5)+warm*tl*0.22; }'
+    'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.0048,0.0,1.0); f=f*f; tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.4); vec3 warm=vec3(0.95,0.58,0.26); return col*(1.0+warm*tl*0.5)+warm*tl*0.22; }'
     ]).concat(helpers).concat([
     'void main(){']).concat(body).concat([' gl_FragColor=vec4(c,'+alpha+');','}']).join('\n');
 }
@@ -3204,6 +3294,7 @@ function tickMining(dt){
   if(mineSndCd>0) mineSndCd-=dt;
   if(!input.mine || uiOpen){ mining.target=null; mining.progress=0; return; }
   if(harvestCd>0) harvestCd-=dt;
+  if(_doorCd>0) _doorCd-=dt;
   // tall grass breaks instantly when held over
   if(harvestCd<=0 && harvestTuft()){ harvestCd=0.18; mining.target=null; mining.progress=0; return; }
   if(harvestCd<=0 && harvestFlower()){ harvestCd=0.22; mining.target=null; mining.progress=0; return; }
@@ -3233,8 +3324,12 @@ function tapAction(){
 function tryHarvest(){
   var hit=raycast(); if(!hit) return false;
   var tk=World.ck(hit.x,hit.y+1,hit.z), tl=World.tiles[tk];
+  if(!(tl && tl.type==='crop')){ tk=World.ck(hit.x,hit.y,hit.z); tl=World.tiles[tk]; }   // also accept the aimed cell itself (village crops)
   if(!(tl && tl.type==='crop')) return false;
-  if(!tl.mature) return true; // immature: consume the tap so we don't plant on it
+  if(!tl.mature){   // immature: pull it up so it can always be cleared (gives a seed back)
+    var sd = tl.crop==='carrot'?'CARROT': tl.crop==='potato'?'POTATO': tl.crop==='tomato'?'TOMATO_SEEDS': tl.crop==='corn'?'CORN_SEEDS':'SEEDS';
+    giveItem(sd,1); delete World.tiles[tk]; var ch0=World.getChunk(hit.x>>4,hit.z>>4,false); if(ch0) buildPlantMesh(ch0); sfxBreak(); triggerHandSwing(); return true;
+  }
   if(tl.crop==='wheat'){ giveItem('WHEAT',1); giveItem('SEEDS',1+(hash3(hit.x,1,hit.z,World.seed)*2|0)); }
   else if(tl.crop==='carrot'){ giveItem('CARROT',1+(hash3(hit.x,2,hit.z,World.seed)*3|0)); }
   else if(tl.crop==='tomato'){ giveItem('TOMATO',1+(hash3(hit.x,4,hit.z,World.seed)*3|0)); giveItem('TOMATO_SEEDS',1+(hash3(hit.x,5,hit.z,World.seed)*2|0)); }
@@ -3280,6 +3375,10 @@ function breakBlock(hit){
       if(sr<0.5){ spawnDrop(hit.x,hit.y,hit.z, sr<0.22?'SEEDS':sr<0.30?'CARROT':sr<0.38?'POTATO':sr<0.44?'TOMATO_SEEDS':'CORN_SEEDS',1); } }
     if(id===B.COAL_ORE) dropKey='COAL';
     if(id===B.GRAVEL && hash3(hit.x,hit.y,hit.z,World.seed^57)<0.22) dropKey='FLINT';
+    var prospect=heldEnchLvl('prospector');
+    if(prospect>0 && dropKey && BLOCKS[id].key && BLOCKS[id].key.indexOf('_ORE')>=0){   // Prospector enchant: bonus ore yield
+      for(var pe=0; pe<prospect; pe++){ if(Math.random()<0.45) spawnDrop(hit.x,hit.y,hit.z,dropKey,1); }
+    }
     if(dropKey) spawnDrop(hit.x,hit.y,hit.z,dropKey,1);
   } else if(gameMode!=='creative' && blk(id).tier && !canHarvest(id)){
     var need=['','','a Stone','an Iron/Bronze','a Diamond'][blk(id).tier]||'a better';
@@ -3427,6 +3526,7 @@ function doPlace(){
   }
   // trade with a villager or dwarf (interact / LT)
   var trader=mobInFront(3.4);
+  if(trader && trader.kind==='forgewright'){ if(!uiOpen){ toast('\u2699\uFE0F The Forgewright examines your tool\u2026'); openAetherForge('__npc__'); } return; }
   if(trader && (trader.kind==='villager'||trader.kind==='dwarf')){ if(!uiOpen) openTrade(); return; }
   // shear a sheep
   var heldS=inv.hotbar[hotbarSel];
@@ -3599,6 +3699,7 @@ function doPlace(){
               isSolid(World.getBlock(nx+1,ny,nz)) || isSolid(World.getBlock(nx,ny,nz-1)) || isSolid(World.getBlock(nx,ny,nz+1));
     if(!sup) return;
   }
+  if(pid===B.RIFT_GATE){ buildPortal(nx,ny,nz); if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(pid); toast('\uD83C\uDF00 A rift portal tears open'); return; }
   World.setBlock(nx,ny,nz,pid,true); forceTorchRescan();
   if(blk(pid).log){ World.tiles[World.ck(nx,ny,nz)]={axis: hit.ny!==0?'y':(hit.nx!==0?'x':'z')}; }
   if(pid===B.FURNACE) World.tiles[World.ck(nx,ny,nz)]={type:'furnace', input:null, fuel:null, output:null, burn:0, burnMax:0, cook:0, front:placeFrontFace()};
@@ -3688,7 +3789,10 @@ function placeShape(pid, pb, hit, nx,ny,nz){
   } else return false;
   return true;
 }
+var _doorCd=0;
 function toggleDoor(x,y,z){
+  if(_doorCd>0) return;   // prevent held-use from flickering the door open/closed
+  _doorCd=0.35;
   var t=World.tiles[World.ck(x,y,z)]; var bx=x,by=y,bz=z;
   if(t && t.doorTop){ by=y-1; }
   var bt=World.tiles[World.ck(bx,by,bz)]; if(!bt) return;
@@ -4297,17 +4401,18 @@ function openCrafting(keep, fromRerender){
   bindScreenBg();
 }
 function openAetherForge(tk, keep){
-  curTileKey=tk; if(!World.tiles[tk]) World.tiles[tk]={type:'aetherforge'};
+  curTileKey=tk; var isNpc=(tk==='__npc__');
+  if(!isNpc && !World.tiles[tk]) World.tiles[tk]={type:'aetherforge'};
   openScreen(); currentScreen='aetherforge';
   screenEl.innerHTML=''; var p=document.createElement('div'); p.className='panel';
-  var h=document.createElement('h2'); h.textContent='\u2699\uFE0F Aether Forge'; p.appendChild(h);
+  var h=document.createElement('h2'); h.textContent=isNpc?'\u2699\uFE0F The Forgewright':'\u2699\uFE0F Aether Forge'; p.appendChild(h);
   var sub=document.createElement('div'); sub.style.cssText='font-size:12px;opacity:0.82;margin-bottom:8px;';
-  sub.textContent='Hold the tool you want to infuse, then spend Aetherium to bind a charm (max Lv 3).'; p.appendChild(sub);
+  sub.textContent=isNpc?'\u201CHold out the tool, traveler \u2014 and your Aetherium.\u201D Charms cap at Lv 3.':'Hold the tool you want to infuse, then spend Aetherium to bind a charm (max Lv 3).'; p.appendChild(sub);
   var s=inv.hotbar[hotbarSel]; var it=s?ITEMS[s.key]:null; var isTool=!!(it&&it.tool);
   var tw=document.createElement('div'); tw.style.cssText='display:flex;align-items:center;gap:10px;background:#2a2118;border:2px solid #c09a45;border-radius:6px;padding:8px;margin-bottom:10px;';
   var ic=document.createElement('div'); ic.className='gslot'; ic.style.cssText='width:40px;height:40px;min-width:40px;'; if(s) ic.innerHTML=miniIcon(s.key); tw.appendChild(ic);
   var tl=document.createElement('div');
-  if(isTool){ var en=s.ench||{}; var lv=[]; if(en.over)lv.push('Overclock '+en.over); if(en.honed)lv.push('Honed '+en.honed); if(en.temp)lv.push('Tempered '+en.temp);
+  if(isTool){ var en=s.ench||{}; var lv=[]; if(en.over)lv.push('Overclock '+en.over); if(en.honed)lv.push('Honed '+en.honed); if(en.temp)lv.push('Tempered '+en.temp); if(en.prospector)lv.push('Prospector '+en.prospector);
     tl.innerHTML='<b>'+it.name+'</b><br><span style="font-size:11px;opacity:.85;color:#8fdcff;">'+(lv.length?lv.join(', '):'No charms yet')+'</span>'; }
   else tl.innerHTML='<span style="opacity:.8;">Hold a tool in your hand\u2026</span>';
   tw.appendChild(tl); p.appendChild(tw);
@@ -4323,6 +4428,7 @@ function openAetherForge(tk, keep){
   p.appendChild(charmRow('Overclock','over','Mine faster (+34% speed / level)'));
   p.appendChild(charmRow('Honed','honed','More melee damage (+1.6 / level)'));
   p.appendChild(charmRow('Tempered','temp','Tools wear out slower'));
+  p.appendChild(charmRow('Prospector','prospector','Ores drop extra (per level)'));
   p.appendChild(spacer(8));
   var back=document.createElement('button'); back.className='mbtn'; back.style.cssText='width:100%;'; back.textContent='Close'; back.onclick=function(){ closeScreen(); };
   p.appendChild(back); screenEl.appendChild(p); bindScreenBg();
@@ -4333,7 +4439,7 @@ function applyEnchant(key, cost){
   if(countItem('AETHERIUM')<cost){ toast('Need '+cost+' Aetherium'); return; }
   takeItem('AETHERIUM', cost); s.ench=s.ench||{}; s.ench[key]=cur+1;
   tone(880,0.12,'triangle',0.06,1320); setTimeout(function(){ if(sfxOn) tone(1320,0.16,'triangle',0.05,1760); },90); noiseBurst(0.18,0.03,3000);
-  toast('\u2728 '+(key==='over'?'Overclock':key==='honed'?'Honed':'Tempered')+' Lv '+(cur+1)+'!');
+  toast('\u2728 '+(key==='over'?'Overclock':key==='honed'?'Honed':key==='temp'?'Tempered':'Prospector')+' Lv '+(cur+1)+'!');
   renderHotbar(); openAetherForge(curTileKey, true);
 }
 function recipeBookBtn(){ var b=document.createElement('button'); b.className='mbtn'; b.style.cssText='margin-top:6px;width:100%;'; b.textContent='\uD83D\uDCD6 Recipe Book'; b.onclick=function(){ if(typeof clearCraftToInv==='function') clearCraftToInv(9); openRecipeBook(); }; return b; }
@@ -5299,6 +5405,20 @@ function makeVillager(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,
   if(rh<0.3){ p(0.56,0.1,0.56,[0x6a4a2a,0x3a2a1a,0x222428][Math.random()*3|0],0,1.92,0); p(0.36,0.16,0.36,0x4a3320,0,2.0,0); } // brimmed hat
   else if(rh<0.5){ p(0.54,0.2,0.54,[0x8a3a3a,0x3a5a8a,0x4a6a3a][Math.random()*3|0],0,1.96,0); }                              // cap/beanie
   g.userData.legs=[l1,l2]; return g; }
+function makeForgewright(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
+  var COAT=0x2a2620, BRASS=0xc09a45, COPPER=0xb5703a, SKIN=0xc8a07a, DARK=0x1a1814;
+  p(0.5,0.5,0.5,SKIN,0,1.62,0);                        // head
+  p(0.54,0.16,0.54,DARK,0,1.86,0);                     // cap top
+  p(0.16,0.16,0.06,BRASS,-0.13,1.66,0.26); p(0.16,0.16,0.06,BRASS,0.13,1.66,0.26);   // brass goggle rims
+  p(0.1,0.1,0.05,0x9fe8ff,-0.13,1.66,0.29); p(0.1,0.1,0.05,0xffcc55,0.13,1.66,0.29); // glowing lenses
+  p(0.54,0.06,0.06,0x444038,0,1.66,0.25);              // goggle strap
+  p(0.5,0.66,0.3,COAT,0,1.05,0);                       // coat torso
+  p(0.36,0.5,0.07,BRASS,0,1.0,0.16);                   // brass apron plate
+  p(0.16,0.62,0.22,COAT,-0.33,1.14,0); p(0.16,0.62,0.22,COAT,0.33,1.14,0);   // arms
+  p(0.16,0.2,0.2,COPPER,-0.33,0.8,0); p(0.16,0.2,0.2,0x6a5a3a,0.33,0.8,0);   // gauntlet + glove
+  var l1=p(0.21,0.66,0.24,0x3a352c,-0.12,0.33,0), l2=p(0.21,0.66,0.24,0x3a352c,0.12,0.33,0); // legs
+  p(0.26,0.12,0.32,DARK,-0.12,0.04,0.03); p(0.26,0.12,0.32,DARK,0.12,0.04,0.03);   // boots
+  g.userData.legs=[l1,l2]; return g; }
 function makeDwarf(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   var skins=[0xd8a878,0xc89868,0xe0b48c,0xcaa070], beards=[0x8a4a28,0x6a3a1a,0x9a9aa0,0xc23a2a,0x3a2a1a,0xd8b84a], shirts=[0x6a5a3a,0x4a5a6a,0x7a4a3a,0x556070,0x6a4a2a];
   var SKIN=skins[Math.random()*skins.length|0], BEARD=beards[Math.random()*beards.length|0], SHIRT=shirts[Math.random()*shirts.length|0], HELM=[0x9a7a2a,0x9a9aa0,0xb5772a,0x7a5a2a][Math.random()*4|0];
@@ -5489,7 +5609,8 @@ var MOBDEF={
   boat:{hp:8,w:0.8,h:0.5,sp:0,dmg:0,passive:true},
   plane:{hp:80,w:1.6,h:1.0,sp:0,dmg:0,passive:true},
   villager:{hp:20,w:0.6,h:1.9,sp:1.1,dmg:0,passive:true,villager:true},
-  dwarf:{hp:20,w:0.6,h:1.3,sp:1.2,dmg:0,passive:true}
+  dwarf:{hp:20,w:0.6,h:1.3,sp:1.2,dmg:0,passive:true},
+  forgewright:{hp:26,w:0.6,h:1.9,sp:0.7,dmg:0,passive:true}
 };
 function meshFor(kind){ switch(kind){
   case 'spooler':return makeSpooler(); case 'skeleton':return makeSkeleton(); case 'creeper':return makeCreeper();
@@ -5505,6 +5626,7 @@ function meshFor(kind){ switch(kind){
   case 'plane':return makePlane();
   case 'villager':return makeVillager();
   case 'dwarf':return makeDwarf();
+  case 'forgewright':return makeForgewright();
   default:return makeZombie(); } }
 function spawnEnemy(kind, x,y,z){
   var d=MOBDEF[kind]||MOBDEF.zombie;
@@ -5523,6 +5645,16 @@ function findPrey(pred, kinds, range){
     if(d<bd){ bd=d; best=o; } }
   return best;
 }
+function followsFood(kind, key){
+  if(!key) return false;
+  if(kind==='horse') return key==='WHEAT'||key==='CARROT'||key==='APPLE'||key==='SUGAR';
+  if(kind==='dog') return key==='RAW_BEEF'||key==='RAW_VENISON'||key==='RAW_CHICKEN'||key==='RAW_DUCK'||key==='RAW_PORK'||key==='RAW_MUTTON';
+  if(kind==='cat') return key==='RAW_FISH'||key==='COOKED_FISH'||key==='CRAB_MEAT';
+  if(kind==='bear') return key==='HONEY';
+  if(kind==='chicken'||kind==='duck'||kind==='bird') return key==='SEEDS';
+  if(kind==='rabbit') return key==='CARROT'||key==='SEEDS';
+  return key==='SEEDS'||key==='WHEAT'||key==='CARROT';   // cows, pigs, sheep, deer, etc.
+}
 function animalTick(e,dt){
   if(e.kind==='sheep' && e.sheared){ e.woolTimer-=dt; if(e.woolTimer<=0){ e.sheared=false; setSheepSheared(e,false); } }
   if((e.kind==='bear'||e.kind==='boar') && e.provoked && !e.tamed && gameMode!=='creative'){
@@ -5540,6 +5672,14 @@ function animalTick(e,dt){
   if(e.hurt>0) e.moving=true;
   if(e.tamed){ var tdx=Player.pos.x-e.pos.x, tdz=Player.pos.z-e.pos.z, td=Math.hypot(tdx,tdz);
     if(td>4 && td<34){ e.wdir=Math.atan2(tdz,tdx); e.moving=true; e.wcd=Math.max(e.wcd,0.4); } else if(td<=4){ e.moving=false; } }
+  if(!e.tamed && e.passive && !e.baby){   // lure: follow the player holding this animal's food (like Minecraft)
+    var held=inv.hotbar[hotbarSel];
+    if(held && followsFood(e.kind, held.key)){
+      var ldx=Player.pos.x-e.pos.x, ldz=Player.pos.z-e.pos.z, ld=Math.hypot(ldx,ldz);
+      if(ld<8 && ld>1.6){ e.wdir=Math.atan2(ldz,ldx); e.moving=true; e.wcd=Math.max(e.wcd,0.35); }
+      else if(ld<=1.6){ e.moving=false; e.wcd=Math.max(e.wcd,0.35); }
+    }
+  }
   // flee when attacked, or run from a predator
   e.fleeT=(e.fleeT>0)?e.fleeT-dt:0;
   if(e.hurt>0 && e.kind!=='bear' && e.kind!=='boar') e.fleeT=3.0;
@@ -6021,7 +6161,7 @@ function hitEntity(e){
 var playerAtkCd=0;
 function attackEntities(){ var e=mobInFront(); if(!e) return false;
   if((e.kind==='plane'||e.kind==='boat') && !Player.riding){ doPlace(); return true; }   // tap a vehicle to board it, not attack it
-  if(e.kind==='villager'||e.kind==='dwarf'){ return true; }   // don't attack townsfolk; trade is on the use/interact button
+  if(e.kind==='villager'||e.kind==='dwarf'||e.kind==='forgewright'){ return true; }   // don't attack townsfolk; trade is on the use/interact button
   if(playerAtkCd<=0){ hitEntity(e); playerAtkCd=0.42; triggerHandSwing(); }
   return true;
 }
@@ -6264,7 +6404,16 @@ function maybeSpawnOcean(){
   if(blk(World.getBlockLoaded(x,SEA-3,z)).liquid && blk(World.getBlockLoaded(x,SEA-1,z)).liquid){ spawnEnemy('shark', x+0.5, SEA-2, z+0.5); }
 }
 function maybeSpawnWisp(){
-  return; // wisps removed - replaced by zombie/skeleton/creeper variants
+  if(World.dim!=='underforge') return;   // the Forgewright only roams the UnderForge
+  var fc=0; for(var i=0;i<entities.length;i++) if(entities[i].kind==='forgewright') fc++;
+  if(fc>=2 || Math.random()>0.4) return;
+  var ang=Math.random()*6.283, d=20+Math.random()*16;
+  var x=Math.floor(Player.pos.x+Math.cos(ang)*d), z=Math.floor(Player.pos.z+Math.sin(ang)*d), cy=-1;
+  for(var y=Math.floor(Player.pos.y)+10; y>Math.floor(Player.pos.y)-14; y--){
+    if(isSolid(World.getBlockLoaded(x,y,z)) && !isSolid(World.getBlockLoaded(x,y+1,z)) && !isSolid(World.getBlockLoaded(x,y+2,z))){ cy=y+1; break; } }
+  if(cy<0) return;
+  spawnEnemy('forgewright', x+0.5, cy, z+0.5);
+  toast('\u2699\uFE0F A Forgewright wanders the UnderForge nearby\u2026');
 }
 
 /* ----------------------------- SURVIVAL --------------------------------- */
@@ -6307,7 +6456,7 @@ function respawn(){
   if(World.dim!=='overworld'){ travelDim('overworld'); }
   Player.hp=Player.maxHp; Player.hunger=Player.maxHunger; Player.sat=5; Player.invul=3; Player.riding=null;
   if(Player.fishing){ if(Player.fishing.bob) scene.remove(Player.fishing.bob); Player.fishing=null; }
-  clearHearts(); despawnWatcher();
+  clearHearts(); despawnWatcher(); clearPortals();
   Player.pos.copy(Player.spawn); Player.vel.set(0,0,0);
   // clear hostiles near the spawn so you don't get jumped, and pause spawning briefly
   for(var i=entities.length-1;i>=0;i--){ var e=entities[i];
@@ -6487,6 +6636,7 @@ function tickDayNight(dt){
     sunU.value = 0.54 - 0.30*ashStorm;
     var ac2=new THREE.Color(0x4a2e26).lerp(new THREE.Color(0x271b18), ashStorm);
     scene.background=ac2; fogColorU.value.copy(ac2); renderer.setClearColor(ac2);
+    updateSkyDome(ac2, -1, true);
     MOB_AMBIENT = 0.7;
     return;
   }
@@ -6514,6 +6664,7 @@ function tickDayNight(dt){
     scene.background=c; fogColorU.value.copy(c); renderer.setClearColor(c);
     sunU.value *= (1 - 0.35*rainAmt);
   }
+  updateSkyDome(c, d, false);
   MOB_AMBIENT = 0.32 + 0.68*Math.max(0,Math.min(1,(sunU.value-0.18)/0.82));
 }
 var MOB_AMBIENT=1;
@@ -6787,6 +6938,7 @@ function travelDim(target){
   for(var k in World.chunks){ var c=World.chunks[k]; if(c.mesh)scene.remove(c.mesh); if(c.tmesh)scene.remove(c.tmesh); if(c.pmesh)scene.remove(c.pmesh); if(c.smesh)scene.remove(c.smesh); }
   for(var ei=0;ei<entities.length;ei++){ if(entities[ei].mesh) scene.remove(entities[ei].mesh); }
   entities.length=0; Player.riding=null; buildQueue=[]; fires={};
+  clearPortals(); _portalCd=3.0;
   World.chunks={}; World.wq=[]; World.wseen={}; World.wtimer=0; World.leafQ=[];
   World.dim=target;
   var s=dimStash[target];
@@ -6797,8 +6949,14 @@ function travelDim(target){
   } else {
     World.edits={}; World.tiles={}; World.blockLight={}; World.wsrc={}; World.wlvl={}; World.grassTaken={};
     var sx=Math.floor(Player.pos.x), sz=Math.floor(Player.pos.z), sy=World.heightAt(sx,sz);
-    if(target==='underforge'){ World.edits[World.ck(sx+1,sy+1,sz)]=B.RIFT_GATE; }   // return gate
-    Player.pos.set(sx+0.5, sy+2.2, sz+0.5); Player.yaw=0; Player.pitch=0;
+    if(target==='underforge'){   // build a proper framed return portal (plane in X-Y at z=sz, open along +z)
+      var bx=sx, by=sy+1, bz=sz, pw, ph;
+      for(pw=0;pw<2;pw++) for(ph=0;ph<3;ph++) World.edits[World.ck(bx+pw,by+ph,bz)]=B.RIFT_GATE;
+      for(pw=-1;pw<=2;pw++) for(ph=-1;ph<=3;ph++){ if(pw>=0&&pw<=1&&ph>=0&&ph<=2) continue; World.edits[World.ck(bx+pw,by+ph,bz)]=B.RIFT_FRAME; }
+      for(pw=-1;pw<=2;pw++){ for(ph=0;ph<3;ph++){ World.edits[World.ck(bx+pw,by+ph,bz+1)]=B.AIR; World.edits[World.ck(bx+pw,by+ph,bz+2)]=B.AIR; }
+        World.edits[World.ck(bx+pw,by-1,bz+1)]=B.ASH_STONE; World.edits[World.ck(bx+pw,by-1,bz+2)]=B.ASH_STONE; }   // clear & floor a standing area in front
+    }
+    Player.pos.set(sx+0.5, sy+1.2, sz+2.5); Player.yaw=0; Player.pitch=0;
   }
   Player.vel.set(0,0,0); Player.spawnGrace=20;
   ashStorm=0; ashStormOn=false; ashStormTimer=22+Math.random()*30;
@@ -6948,8 +7106,9 @@ function updateTorchLights(dt){
   _torchForce-=0.18;
   if(px===_torchPx && py===_torchPy && pz===_torchPz && _torchForce>0) return;   // same block, recently scanned -> skip the heavy scan
   _torchPx=px; _torchPy=py; _torchPz=pz; _torchForce=0.6;
+  var dayDim = 1 - 0.6*Math.max(0, Math.min(1, (sunU.value-0.3)/0.7));   // torches barely tint daylight, full glow at night
   var found=[];
-  for(var dx=-11;dx<=11;dx++) for(var dz=-11;dz<=11;dz++) for(var dy=-5;dy<=6;dy++){
+  for(var dx=-14;dx<=14;dx++) for(var dz=-14;dz<=14;dz++) for(var dy=-5;dy<=6;dy++){
     var x=px+dx, y=py+dy, z=pz+dz; if(y<1||y>=WORLD_H) continue;
     var bId=World.getBlock(x,y,z), lit=false, lpow=0.95;
     if(bId===B.TORCH){ lit=true; }
@@ -6961,8 +7120,8 @@ function updateTorchLights(dt){
   }
   found.sort(function(a,b){ return a[3]-b[3]; });
   var n=0, heldTorch=(inv.hotbar[hotbarSel] && inv.hotbar[hotbarSel].key==='TORCH') || (inv.offhand[0] && inv.offhand[0].key==='TORCH');
-  if(heldTorch){ torchUVals[0].set(Player.pos.x, Player.pos.y+1.2, Player.pos.z, 0.95); n=1; }   // carried torch
-  for(var i=0;i<found.length && n<16;i++,n++) torchUVals[n].set(found[i][0],found[i][1],found[i][2], found[i][4]);
+  if(heldTorch){ torchUVals[0].set(Player.pos.x, Player.pos.y+1.2, Player.pos.z, 0.95*dayDim); n=1; }   // carried torch
+  for(var i=0;i<found.length && n<16;i++,n++) torchUVals[n].set(found[i][0],found[i][1],found[i][2], found[i][4]*dayDim);
   for(var j=n;j<16;j++) torchUVals[j].set(0,0,0,0);
   torchNU.value=n;
 }
@@ -6977,9 +7136,14 @@ function physics(dt){
       if(!Player.flying && isSolid(bFeet) && !blk(bFeet).shape && isSolid(bHead) && !blk(bHead).shape){
         var syf=surfaceY(fx,fz); if(syf>0){ Player.pos.y=syf+0.1; Player.vel.set(0,0,0); }
       } else {
-        // feet sunk into a solid block (collision let us through) - pop up to its top (works in flight too)
-        var fy=Math.floor(Player.pos.y+0.08), bf=World.getBlock(fx,fy,fz);
-        if(isSolid(bf) && !blk(bf).shape && !blk(bf).liquid){ Player.pos.y=fy+1.0; if(Player.vel.y<0) Player.vel.y=0; if(!Player.flying) Player.onGround=true; }
+        // feet sunk into a solid block (collision let us through) - pop up to its top (works in flight too). Check the whole footprint, not just the centre.
+        var fy=Math.floor(Player.pos.y+0.08), hw2=Player.width/2-0.02, sunk=false, topY=fy+1.0;
+        var cxs=[Player.pos.x-hw2, Player.pos.x+hw2], czs=[Player.pos.z-hw2, Player.pos.z+hw2];
+        for(var ci=0;ci<2 && !sunk;ci++) for(var cj=0;cj<2 && !sunk;cj++){
+          var bf2=World.getBlock(Math.floor(cxs[ci]),fy,Math.floor(czs[cj]));
+          if(isSolid(bf2) && !blk(bf2).shape && !blk(bf2).liquid){ sunk=true; }
+        }
+        if(sunk){ Player.pos.y=topY; if(Player.vel.y<0) Player.vel.y=0; if(!Player.flying) Player.onGround=true; }
       }
     }
   }
@@ -6999,6 +7163,9 @@ function physics(dt){
   Player.inWater = blk(feet).liquid;
   if(Player.inWater && !Player.wasInWater) sfxSplash();
   Player.wasInWater = Player.inWater;
+  if(_portalCd>0) _portalCd-=dt;
+  else { var pBlk=World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y+0.9),Math.floor(Player.pos.z));
+    if(pBlk===B.RIFT_GATE){ _portalCd=3.0; travelDim(World.dim==='underforge'?'overworld':'underforge'); } }
   Player.sneaking = !!input.crouch || (!IS_MOBILE && (keys['ControlLeft']||keys['KeyC']));
   Player.sprinting = (!!input.sprint || (!IS_MOBILE && (keys['ShiftLeft']||keys['ShiftRight']) && !Player.flying)) && f>0.2 && !Player.sneaking;
   var riding = !!Player.riding && Player.riding.hp>0;
@@ -7018,7 +7185,10 @@ function physics(dt){
     Player.vel.y += ((up-dn)*7.5 - Player.vel.y)*Math.min(1,12*dt);
     Player.inWater=false;
   }
-  else if(Player.inWater){ Player.vel.y += (-2 - Player.vel.y)*Math.min(1,6*dt); if((input.jump||keys['Space'])) Player.vel.y=3.0; }
+  else if(Player.inWater){
+    if(input.jump||keys['Space']) Player.vel.y += (2.3 - Player.vel.y)*Math.min(1,9*dt);   // swim up smoothly (no surface-skip bounce)
+    else Player.vel.y += (-1.5 - Player.vel.y)*Math.min(1,6*dt);                            // sink gently when not holding
+  }
   else if(climbing){
     if(input.jump||keys['Space']) Player.vel.y=3.2;
     else if(Player.sneaking) Player.vel.y=0;
@@ -7127,12 +7297,17 @@ function gpMoveFocus(dx,dy,cont){
   }
   if(best) gpSetFocus(best);
 }
+function gpSlotClick(el, button){   // slots listen on mousedown, not click -> dispatch a real mouse event
+  try{ el.dispatchEvent(new MouseEvent('mousedown', {button:button, bubbles:true, cancelable:true})); }
+  catch(_){ try{ el.click(); }catch(e2){ } }
+  if(cursor && el && heldEl){ var r=el.getBoundingClientRect(); heldEl.style.left=(r.left+r.width/2)+'px'; heldEl.style.top=(r.top+r.height/2)+'px'; }
+}
 function gpActivate(){
   var el=gpFocusEl; if(!el) return;
   if(el.tagName==='INPUT' && el.type==='range') return;
   if(el.tagName==='INPUT' && (el.type==='text'||el.type==='search')){ try{ el.focus(); }catch(_){ } return; }
+  if(el.classList.contains('gslot')||el.classList.contains('slot')){ gpSlotClick(el, 0); return; }   // A = pick up / place a whole stack
   el.click();
-  if(cursor && el && heldEl){ var r=el.getBoundingClientRect(); heldEl.style.left=(r.left+r.width/2)+'px'; heldEl.style.top=(r.top+r.height/2)+'px'; }   // keep the held stack visible under the controller focus
 }
 function gpBack(cont){
   var els=gpFocusables(cont);
@@ -7159,6 +7334,9 @@ function gpUITick(bt, ax, pressed, dt){
     } else gpMoveFocus(navx,navy,cont);
   }
   if(pressed(0)) gpActivate();
+  if(pressed(2)){   // X / square - split half (or place one) on the focused slot
+    if(gpFocusEl && (gpFocusEl.classList.contains('gslot')||gpFocusEl.classList.contains('slot'))) gpSlotClick(gpFocusEl, 2);
+  }
   if(pressed(3)){   // Y / triangle - quick-move the focused slot to the other inventory
     if(gpFocusEl && (gpFocusEl.classList.contains('gslot')||gpFocusEl.classList.contains('slot'))){
       for(var qk=0;qk<liveSlots.length;qk++){ if(liveSlots[qk].el===gpFocusEl){ quickTransferSlot(liveSlots[qk].arr, liveSlots[qk].i); break; } }
@@ -7194,8 +7372,7 @@ function pollGamepad(dt){
   input.mine   = (bt[7]&&bt[7].value!=null)? (bt[7].value>0.3) : gpBtn(bt[7]);   // RT (analog) - mine / attack
   // edge actions
   if(pressed(0)) tryToggleFly();              // double-tap A -> creative flight
-  if(pressed(6)) doPlace();                   // LT - place / use / interact
-  if(gpBtn(bt[6])){ gpPlaceCd-=dt; if(gpPlaceCd<=0){ doPlace(); gpPlaceCd=0.22; } } else gpPlaceCd=0;  // hold LT to repeat-place
+  if(gpBtn(bt[6])){ gpPlaceCd-=dt; if(gpPlaceCd<=0){ doPlace(); gpPlaceCd=0.22; } } else gpPlaceCd=0;  // LT - fires once on press, then repeats while held (no double-fire)
   if(pressed(4)||pressed(14)) selectHotbar((hotbarSel+8)%9);   // LB / Dpad-left - prev
   if(pressed(5)||pressed(15)) selectHotbar((hotbarSel+1)%9);   // RB / Dpad-right - next
   if(pressed(2)) toggleInventory();           // X - inventory
@@ -7250,6 +7427,7 @@ function loop(t){
   tickLeaves(dt);
   updateTorchLights(dt);
   tickChestLid(dt);
+  updatePortals(dt);
   // place camera
   if(viewMode!==0){
     var rp = Player.riding && Player.riding.kind==='plane';
@@ -7343,8 +7521,13 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 89';
+var VERSION='Update 94';
 var CHANGELOG=[
+  { v:'Update 94', t:'Chrome Texture Fix & Swim Revert', items:['\uD83D\uDDA5\uFE0F Fixed the shimmering / garbled ground textures on Chrome PC \u2014 the surface grain (and ore, water, ashstone detail) hashed raw world coordinates, so far from spawn it fed huge numbers into sin() and some GPUs returned garbage that crawled as you moved. Coordinates are now wrapped, so textures stay crisp and stable everywhere','\uD83C\uDFCA Reverted the swimming animation \u2014 you stay upright in the water again (a proper swim animation will come back later)','\uD83E\uDDCD Hardened the anti-clip safety \u2014 it now checks your whole footprint instead of just the centre, so slipping a corner into a block pops you back out reliably'] },
+  { v:'Update 93', t:'Vibrant Skies', items:['\uD83C\uDF05 Gradient sky \u2014 the flat backdrop is now a rich vertical gradient: deep saturated blue overhead fading to a brighter horizon, shifting through the whole day/night cycle','\uD83C\uDF07 Sunrise & sunset glow \u2014 warm orange and pink light now blooms across the horizon around the sun at dawn and dusk','\u2600\uFE0F Soft sun halo \u2014 the sun has a gentle glow that swells and warms as it sinks toward the horizon','\uD83C\uDF00 The UnderForge return gate is now a full framed rift portal (it used to be a single block) \u2014 just walk into the energy to head home'] },
+  { v:'Update 92', t:'Real Rift Portal & Swimming', items:['\uD83C\uDF00 The Rift Gate is now an <b>actual portal</b> \u2014 place one and a full 2\u00D73 wall of swirling violet energy tears open inside a dark rift frame (about 4\u00D75 overall). <b>Walk into the energy</b> to cross to the UnderForge and back \u2014 no more tapping a flat pink block','\uD83C\uDFCA Swimming animation \u2014 your character now goes horizontal with a breaststroke pull and flutter kick while swimming, instead of standing upright in the water'] },
+  { v:'Update 91', t:'Controller, Swimming & Crop Fixes', items:['\uD83C\uDFAE Controller inventory fixed \u2014 <b>A</b> picks up / moves / places a stack and <b>X</b> splits a stack in half (or places one). You can finally manage chests and inventory fully with a controller','\uD83D\uDEAA Doors now open on the <b>first</b> LT press (the trigger was double-firing and snapping them shut); holding LT no longer flickers them','\uD83C\uDFCA Swimming reworked \u2014 smooth rise & sink instead of bouncing, so you can no longer skip across the top of water','\uD83D\uDC2E Animals now <b>follow you when you hold their food</b> (wheat/carrot for cows-sheep-pigs, seeds for chickens, meat for wolves, fish for cats), like Minecraft','\uD83C\uDF3E Village and immature crops can always be harvested or cleared now (and bone meal works on them)','\uD83D\uDD25 The UnderForge ground got a makeover \u2014 harsh red-black ash is now richer molten basalt with an ember glow','\uD83D\uDD26 Torches reach farther and no longer glow harsh yellow in daylight \u2014 they dim in bright light and glow full at night'] },
+  { v:'Update 90', t:'The Forgewright & Prospector', items:['\uD83E\uDDD1\u200D\uD83C\uDFED <b>The Forgewright</b> \u2014 a goggled steampunk smith now wanders the <b>UnderForge</b>. Find him, hold the tool you want to enchant and tap him to bind charms \u2014 no Aether Forge required. (You\u2019ll get a heads-up toast when one appears nearby.)','\u26CF\uFE0F New <b>Prospector</b> charm \u2014 the fourth enchant: ores drop bonus resources (better odds each level). Available at both the Aether Forge and the Forgewright','\uD83D\uDCD6 Wiki updated with the Forgewright and Prospector'] },
   { v:'Update 89', t:'In-Game Wiki & Critter Fixes', items:['\uD83D\uDCD6 The Guidebook is now a searchable in-game <b>Wiki</b> (\u201cWiki & Help\u201d in the menu) covering everything \u2014 enchanting, the Watcher, flowers, taming & breeding, the controller, combat, vehicles and settings. Type in the search box to jump to any topic','\uD83D\uDC3E Smarter animals \u2014 an animal that falls into a hole or pen now <b>panics and leaps</b> to scramble out instead of bumping the wall forever','\uD83D\uDCE6 Fixed the <b>chest lid</b> clipping through the chest \u2014 it now rests on top of the box and swings cleanly open'] },
   { v:'Update 88', t:'The UnderForge & Aether Forge', items:['\uD83C\uDFED Renamed the Ashlands to the <b>UnderForge</b> \u2014 same gloomy steampunk underworld, a name that fits ForgeWorld','\u2699\uFE0F <b>Aether Forge</b> \u2014 a new craftable enchanting station (brass ingots + aetherium). Place it, hold a tool, and spend Aetherium to bind steampunk charms: <b>Overclock</b> (mine faster), <b>Honed</b> (more melee damage), and <b>Tempered</b> (tools last longer), up to Lv 3 each','\uD83D\uDD0A Settings overhaul \u2014 the mute button now lives in the menu, with new <b>Master / Music / SFX</b> volume sliders and an <b>FOV</b> slider. All of them remember your choice between sessions'] },
   { v:'Update 87', t:'Placeable Flowers & The Watcher', items:['\uD83C\uDF38 Flowers are now placeable \u2014 plant any wildflower (poppy, dandelion, cornflower, daisy, azure bluet) on grass or dirt to decorate your world, and pick them back up by hitting them','\uD83D\uDC41\uFE0F The Watcher: go too many nights without sleeping and no phantoms come \u2014 instead a silent dark figure starts appearing at the edge of the night, watching you. Look right at it or get close and it vanishes. The longer you stay awake, the closer and more often it returns. Sleep in a bed to make it stop','\uD83D\uDECF\uFE0F Sleeping now also clears your sleepless-night count, keeping the Watcher away'] },
@@ -7478,11 +7661,11 @@ function openGuide(){
     '<h3>\uD83D\uDD25 Fire & Storms</h3>',
     '<p>Craft <b>Flint &amp; Steel</b> (iron + coal) and tap a block to set it alight. Fire hurts anyone in it, spreads through wood, leaves and wool, and burns them away. During thunderstorms <b>lightning can spark fires</b>. Turn <b>Fire Spread</b> off in the Game Menu so fire never eats terrain, and <b>Mob Griefing</b> off so creeper blasts hurt you but leave blocks intact.</p>',
     '<h3>\uD83C\uDF2B\uFE0F The UnderForge</h3>',
-    '<p>Craft a <b>Rift Gate</b> (brass + redstone + diamond), place it, and tap to cross into the <b>UnderForge</b> \u2014 a gloomy steampunk underworld of gray ash deserts and lava-filled cinder wastes. Beware <b>ash storms</b>. Explore <b>ruined brass fortresses</b> for loot, and mine <b>Aetherium Ore</b> deep underground. <b>Aetherium</b> crafts the strongest tools in the game. A return gate appears when you arrive \u2014 tap any Rift Gate to go home (dying sends you back too).</p>',
+    '<p>Craft a <b>Rift Gate</b> (brass + redstone + diamond), place it and a full glowing rift portal tears open \u2014 <b>walk into the swirling energy</b> to cross into the <b>UnderForge</b> \u2014 a gloomy steampunk underworld of gray ash deserts and lava-filled cinder wastes. Beware <b>ash storms</b>. Explore <b>ruined brass fortresses</b> for loot, and mine <b>Aetherium Ore</b> deep underground. <b>Aetherium</b> crafts the strongest tools in the game. A return gate appears when you arrive \u2014 step into any rift portal to go home (dying sends you back too).</p>',
     '<h3>\uD83E\uDDED Tips</h3>',
     '<p>Switch 1st/3rd-person view in this menu. Tap an item in your inventory to see its name. Your world auto-saves when you open this menu.</p>',
     '<h3>\u2699\uFE0F Enchanting (Aether Forge)</h3>',
-    '<p>Bring back <b>Aetherium</b> and <b>Brass Ingots</b> from the UnderForge and craft an <b>Aether Forge</b> (a ring of 8 brass around 4 aetherium). Place it, <b>hold the tool you want to infuse</b>, then tap the forge. Spend Aetherium to bind steampunk charms (cost rises each level, max Lv 3): <b>Overclock</b> mines faster, <b>Honed</b> adds melee damage, and <b>Tempered</b> makes tools last far longer. Charms stay on the tool.</p>',
+    '<p>Two ways to enchant: craft an <b>Aether Forge</b> (a ring of 8 brass around 4 aetherium) and place it, <b>or</b> find a wandering <b>Forgewright</b> \u2014 a goggled steampunk smith who roams the UnderForge. Either way, <b>hold the tool you want to infuse</b> and tap, then spend Aetherium to bind charms (cost rises each level, max Lv 3): <b>Overclock</b> mines faster, <b>Honed</b> adds melee damage, <b>Tempered</b> makes tools last longer, and <b>Prospector</b> makes ores drop extra. Charms stay on the tool.</p>',
     '<h3>\uD83D\uDC41\uFE0F The Watcher & Sleeping</h3>',
     '<p>Go several nights <b>without sleeping</b> and a silent dark figure starts appearing at the edge of the night, watching you. <b>Look right at it or walk up to it and it vanishes.</b> The longer you stay awake, the closer and more often it returns. It will not hurt you \u2014 but to make it stop, <b>sleep in a bed</b> at night (which also clears the count and sets your respawn).</p>',
     '<h3>\uD83C\uDF38 Flowers & Dyes</h3>',
