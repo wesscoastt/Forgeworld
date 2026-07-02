@@ -515,6 +515,7 @@ defBlock({key:'COMPRESSOR', name:'Compressor', col:[96,104,116], top:[150,156,16
 defBlock({key:'WIND_TURBINE', name:'Wind Turbine', col:[214,220,228], top:[150,160,175], side:[226,230,236], solid:true, tool:'pickaxe', tier:1, hard:2.6 });
 defBlock({key:'MFSU', name:'Advanced Energy Cell', col:[60,46,92], top:[150,86,224], side:[52,40,82], solid:true, tool:'pickaxe', tier:2, hard:3.2 });
 defBlock({key:'HOPPER', name:'Hopper', col:[64,66,74], top:[40,42,48], side:[72,74,82], solid:true, tool:'pickaxe', tier:1, hard:2.6 });
+defBlock({key:'BRASS_PIPE', name:'Brass Pipe', col:[178,140,72], top:[206,170,96], side:[150,116,58], solid:true, tool:'pickaxe', tier:1, hard:1.2 });
 
 function blk(id){ return BLOCKS[id] || BLOCKS[0]; }
 function isSolid(id){ return blk(id).solid; }
@@ -1521,13 +1522,14 @@ var World = {
     var sk=v.cx+','+v.cz; if(!villageSiteSet[sk]){ villageSiteSet[sk]=1; villageSites.push({x:v.cx+0.5, y:v.gy+1, z:v.cz+0.5}); }
     function R(n){ return hash3(v.cx, 600+n, v.cz, seed); }
     var N=5+(R(0)*4|0), i;
+    var bsIdx=(R(5)*N)|0;   // one of the houses is the village blacksmith
     for(i=0;i<N;i++){
       var ang=(i/N)*6.2832 + (R(10+i)-0.5)*0.7;
       var rad=12 + R(20+i)*14;
       var bx=v.cx + Math.round(Math.cos(ang)*rad), bz=v.cz + Math.round(Math.sin(ang)*rad);
       var big=R(30+i)<0.42, rr=big?(3+(R(40+i)*1.99|0)):(2+(R(45+i)*1.99|0));
       this.vPath(ch, v, v.cx, v.cz, bx, bz);
-      this.vHouse(ch, v, bx, bz, rr, big, pal, i);
+      this.vHouse(ch, v, bx, bz, rr, big, pal, i, (i===bsIdx?'smith':null));
     }
     var F=2+(R(60)*2|0);
     for(i=0;i<F;i++){
@@ -1545,6 +1547,7 @@ var World = {
       if(!inCh(ch,px,pz)) continue;
       var gy=this.heightAt(px,pz);
       setW(ch,px,gy,pz,B.GRAVEL); setW(ch,px,gy+1,pz,B.AIR);
+      if(s>0 && s%6===0 && inCh(ch,px+1,pz)){ var lgy=this.heightAt(px+1,pz); setW(ch,px+1,lgy+1,pz,B.WOOD_FENCE); setW(ch,px+1,lgy+2,pz,B.LANTERN); }   // roadside lamp post
     }
   },
   vWell: function(ch, v, pal){
@@ -1558,8 +1561,8 @@ var World = {
     setW(ch,wx-1,h+3,wz-1,B.LANTERN); setW(ch,wx+1,h+3,wz+1,B.LANTERN);
     for(dx=-1;dx<=1;dx++) for(dz=-1;dz<=1;dz++) setW(ch,wx+dx,h+3,wz+dz,pal.roof);
   },
-  vHouse: function(ch, v, cx, cz, R, big, pal, idn){
-    var h=v.gy, wt=big?5:4, rf=wt+1;
+  vHouse: function(ch, v, cx, cz, R, big, pal, idn, role){
+    var h=this.heightAt(cx,cz), wt=big?5:4, rf=wt+1;   // sit on local ground so houses don't float/bury on slopes
     if(!bboxHits(ch, cx-R-1, cz-R-1, cx+R+1, cz+R+2)) return;
     var doorB=pal.door||B.WOOD_DOOR, dx,dz,cy;
     for(dx=-R;dx<=R;dx++) for(dz=-R;dz<=R;dz++){
@@ -1592,12 +1595,17 @@ var World = {
     setW(ch,cx+(R-1),h+1,cz-(R-2),B.FURNACE);
     setTileW(ch,cx+(R-1),h+1,cz-(R-2),{type:'furnace', input:null,fuel:null,output:null,burn:0,burnMax:0,cook:0,front:4});
     setW(ch,cx+(R-1),h+1,cz+(R-1),B.CHEST);
-    var citems=newArray(27); this.fillLoot(citems, cx, cz);
+    var citems=newArray(27); if(role==='smith') this.fillDungeonLoot(citems, cx, cz); else this.fillLoot(citems, cx, cz);
     setTileW(ch,cx+(R-1),h+1,cz+(R-1),{type:'chest', items:citems});
+    if(role==='smith'){   // a blacksmith: forge furnace + lantern beside the door, metal-rich chest
+      setW(ch,cx-1,h+1,cz+R+1,B.FURNACE);
+      setTileW(ch,cx-1,h+1,cz+R+1,{type:'furnace', input:null,fuel:null,output:null,burn:0,burnMax:0,cook:0,front:4});
+      setW(ch,cx-1,h+1,cz+R+2,B.WOOD_FENCE); setW(ch,cx-1,h+2,cz+R+2,B.LANTERN);
+    }
     setW(ch,cx-(R-1),h+wt,cz+(R-1),B.TORCH); setW(ch,cx+(R-1),h+wt,cz-(R-1),B.TORCH);
   },
   vFarm: function(ch, v, cx, cz, rw, rd, pal){
-    var h=v.gy;
+    var h=this.heightAt(cx,cz);   // local ground so field sits flush on slopes
     if(!bboxHits(ch, cx-rw-1, cz-rd-1, cx+rw+1, cz+rd+1)) return;
     var dx,dz;
     // fenced border + corner posts with lanterns
@@ -2833,7 +2841,7 @@ function showCrack(bx,by,bz, nx,ny,nz, stage){
 
 /* ------------------------- CHUNK MANAGEMENT ----------------------------- */
 var buildQueue=[];
-var plantAtlasMat=null, PLANT_N=15;
+var plantAtlasMat=null, PLANT_N=16;
 function makePlantAtlas(){
   var c=16, cv=document.createElement('canvas'); cv.width=c*PLANT_N; cv.height=c; var x=cv.getContext('2d'); x.clearRect(0,0,cv.width,c);
   function stem(o,col){ x.fillStyle=col||'#3f8a30'; x.fillRect(o+7,7,2,9); }
@@ -2868,6 +2876,8 @@ function makePlantAtlas(){
   o=208; x.fillStyle='#cdc9bf'; x.fillRect(o+7,9,2,7); x.fillStyle='#74b34a'; x.fillRect(o+4,3,8,7); x.fillStyle='#8cc861'; x.fillRect(o+6,1,4,4);
   // 14 cherry sapling
   o=224; x.fillStyle='#6b4a2a'; x.fillRect(o+7,9,2,7); x.fillStyle='#e89bc0'; x.fillRect(o+4,3,8,7); x.fillStyle='#f4b9d6'; x.fillRect(o+6,1,4,4);
+  // 15 ripe wheat (golden, full heads)
+  o=240; for(var i=0;i<5;i++){ var bx=(o+2+i*2.6)|0; x.fillStyle='#b79a3e'; x.fillRect(bx,8,2,7); x.fillStyle='#f0d264'; x.fillRect(bx,1,2,8); x.fillStyle='#fce7a0'; x.fillRect(bx,1,2,2); }
   var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; return t;
 }
 function ensurePlantMats(){ if(plantAtlasMat) return;
@@ -2879,6 +2889,12 @@ function pushCross(pos,uv,ix,ref, cx,by,cz,half,h, cell){
     pos.push(a[0],y0,a[1], a[2],y0,a[3], a[2],y1,a[3], a[0],y1,a[1]);
     uv.push(u0,0, u1,0, u1,1, u0,1); ix.push(v,v+1,v+2, v,v+2,v+3); ref.v+=4; }
 }
+function cropStage(tl){
+  if(tl.mature) return 3;
+  if(tl.t==null) return 2;                       // village crops carry only a mature flag
+  return tl.t<9?0 : tl.t<18?1 : tl.t<=26?2 : 3;  // sprout / young / tall / ripe
+}
+var CROP_H=[0.14,0.30,0.46,0.62];
 function buildPlantMesh(ch){
   if(ch.pmesh){ scene.remove(ch.pmesh); ch.pmesh.geometry.dispose(); ch.pmesh=null; }
   ensurePlantMats();
@@ -2900,7 +2916,10 @@ function buildPlantMesh(ch){
     var lxp=tx-ch.cx*CHUNK, lzp=tz-ch.cz*CHUNK;
     if(tl.type==='flower'){ pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.34, 0.5, tl.cell||6); }
     else if(tl.type==='sapling'){ var sc=(tl.wood==='spruce')?12:(tl.wood==='birch')?13:(tl.wood==='cherry')?14:11; pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.32, 0.5, sc); }
-    else { var cell=(tl.crop==='wheat'||tl.crop==='corn')?2:(tl.crop==='carrot'||tl.crop==='tomato')?3:4; pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, tl.mature?0.6:0.3, cell); }
+    else { var st=cropStage(tl);
+      var cell=(tl.crop==='wheat'||tl.crop==='corn')?2:(tl.crop==='carrot'||tl.crop==='tomato')?3:4;
+      if(st>=3 && (tl.crop==='wheat'||tl.crop==='corn')) cell=15;   // golden ripe heads — readable across a field
+      pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, CROP_H[st], cell); }
   }
   if(p.length){ var g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(p,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(u,2)); g.setIndex(ix);
     var m=new THREE.Mesh(g,plantAtlasMat); m.position.set(ch.cx*CHUNK,0,ch.cz*CHUNK); scene.add(m); ch.pmesh=m; }
@@ -2949,7 +2968,12 @@ function updateChunks(px,pz){
 }
 function processBuildQueue(budget){
   var n=0;
-  while(buildQueue.length && n<budget){ var ch=buildQueue.shift(); if(ch.dirty) rebuildChunkMesh(ch); n++; }
+  while(buildQueue.length && n<budget){ var ch=buildQueue.shift();
+    // only rebuild if this chunk is still the loaded chunk for its coords — a chunk that was
+    // queued dirty and then unloaded would otherwise build an orphan mesh with no block data
+    // behind it (a phantom you can see but walk straight through).
+    if(ch.dirty && World.chunks[World.key(ch.cx,ch.cz)]===ch) rebuildChunkMesh(ch);
+    n++; }
 }
 
 /* ----------------------------- PLAYER ----------------------------------- */
@@ -3586,6 +3610,10 @@ function doPlace(){
   if(heldU && ITEMS[heldU.key] && ITEMS[heldU.key].rod){ castFishingRod(); triggerHandSwing(); return; }
   // feed / tame / breed animals (uses mob-in-front, must run before the block raycast early-return)
   if(tryFeedAnimal(inv.hotbar[hotbarSel])) return;
+  // eat food anywhere — must run before the block raycast early-return, or eating only works
+  // when you happen to be aiming at a block in reach (the old "hit or miss" behaviour)
+  var _hs=inv.hotbar[hotbarSel];
+  if(_hs && ITEMS[_hs.key] && ITEMS[_hs.key].food){ if(tryEat(_hs)) return; }
   var hit=raycast(); if(!hit) return;
   var slot=inv.hotbar[hotbarSel];
   // interact with tile blocks first (right-click open)
@@ -3950,6 +3978,7 @@ shaped([['STONE','IRON_INGOT','STONE'],['IRON_INGOT','REDSTONE','IRON_INGOT'],['
 shaped([['IRON_PLATE','IRON_PLATE','IRON_PLATE'],['COPPER_INGOT','REDSTONE','COPPER_INGOT'],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'WIND_TURBINE', 1);
 shaped([['IRON_PLATE','DIAMOND','IRON_PLATE'],['IRON_PLATE','ENERGY_CELL','IRON_PLATE'],['IRON_PLATE','REDSTONE','IRON_PLATE']], 'MFSU', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],['IRON_INGOT','CHEST','IRON_INGOT'],[null,'IRON_INGOT',null]], 'HOPPER', 1);
+shaped([['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT']], 'BRASS_PIPE', 8);
 shaped([['LEATHER','LEATHER','LEATHER'],['LEATHER','CHEST','LEATHER'],['LEATHER','LEATHER','LEATHER']], 'BACKPACK', 1);
 shaped([[null,'IRON_INGOT',null],['IRON_INGOT','TORCH','IRON_INGOT'],[null,'IRON_INGOT',null]], 'LANTERN', 1);
 shaped([[null,'COPPER_INGOT',null],['COPPER_INGOT','TORCH','COPPER_INGOT'],[null,'COPPER_INGOT',null]], 'COPPER_LANTERN', 1);
@@ -5056,6 +5085,60 @@ function tickHoppers(dt){
     if(uiOpen && currentScreen==='hopper' && curTileKey===tk) rerenderScreen();
   }
 }
+// --- Brass Pipes: route items across a connected pipe run, from sources (chests, machine outputs)
+// into the nearest reachable machine input or chest. Bounce-free: a chest source never targets a chest.
+function containerPeek(t){
+  if(!t) return null;
+  if(t.type==='chest'){ for(var i=t.items.length-1;i>=0;i--){ if(t.items[i]) return t.items[i].key; } return null; }
+  if(t.type==='furnace') return t.output?t.output.key:null;
+  if(t.type==='macerator') return t.output?t.output.key:null;
+  if(t.type==='compressor') return t.output?t.output.key:null;
+  return null;
+}
+function pipeCanAccept(t, key){
+  if(!t) return false;
+  var st=(ITEMS[key]&&ITEMS[key].stack)||64;
+  function slotOk(arr){ for(var i=0;i<arr.length;i++){ if(!arr[i]) return true; if(arr[i].key===key && arr[i].qty<st) return true; } return false; }
+  function fieldOk(f){ return !f || (f.key===key && f.qty<st); }
+  if(t.type==='chest') return slotOk(t.items);
+  if(t.type==='furnace') return (ITEMS[key]&&ITEMS[key].fuel)?fieldOk(t.fuel):fieldOk(t.input);
+  if(t.type==='macerator') return fieldOk(t.input);
+  if(t.type==='compressor') return fieldOk(t.input);
+  if(t.type==='generator' && !t.solar && !t.cell && ITEMS[key]&&ITEMS[key].fuel) return fieldOk(t.slot);
+  return false;
+}
+function pipeAt(x,y,z){ return World.getBlock(x,y,z)===B.BRASS_PIPE; }
+function findPipeSink(port, sx,sy,sz, key, srcIsChest){
+  var seen={}, q=[[port.x,port.y,port.z]], head=0, cap=240;
+  seen[port.x+','+port.y+','+port.z]=1;
+  while(head<q.length && head<cap){ var c=q[head++], cx=c[0],cy=c[1],cz=c[2];
+    for(var d=0;d<6;d++){ var nx=cx+PDIRS[d][0],ny=cy+PDIRS[d][1],nz=cz+PDIRS[d][2];
+      if(pipeAt(nx,ny,nz)){ var pk=nx+','+ny+','+nz; if(!seen[pk]){ seen[pk]=1; q.push([nx,ny,nz]); } continue; }
+      if(nx===sx&&ny===sy&&nz===sz) continue;                 // never feed back into the source
+      var tt=World.tiles[World.ck(nx,ny,nz)]; if(!tt) continue;
+      if(srcIsChest && tt.type==='chest') continue;           // no chest->chest bounce in this first version
+      if(pipeCanAccept(tt,key)) return tt;
+    }
+  }
+  return null;
+}
+var pipeCd=0;
+function tickPipes(dt){
+  pipeCd-=dt; if(pipeCd>0) return; pipeCd=0.5;
+  var budget=20;
+  for(var tk in World.tiles){ if(budget<=0) break;
+    var src=World.tiles[tk]; if(!src) continue;
+    if(src.type!=='chest' && src.type!=='furnace' && src.type!=='macerator' && src.type!=='compressor') continue;
+    var key=containerPeek(src); if(key==null) continue;
+    var pa=tk.split(','), sx=+pa[0], sy=+pa[1], sz=+pa[2];
+    var port=null;
+    for(var d=0;d<6;d++){ var px=sx+PDIRS[d][0],py=sy+PDIRS[d][1],pz=sz+PDIRS[d][2]; if(pipeAt(px,py,pz)){ port={x:px,y:py,z:pz}; break; } }
+    if(!port) continue;
+    var sink=findPipeSink(port, sx,sy,sz, key, src.type==='chest');
+    if(sink){ var k2=containerExtract(src); if(k2!=null){ containerInsert(sink,k2); budget--;
+      if(uiOpen && curTileKey===tk) rerenderScreen(); } }
+  }
+}
 function tickGenerators(dt){
   for(var tk in World.tiles){ var t=World.tiles[tk]; if(!t || t.type!=='generator') continue;
     if(t.solar){ var sp=tk.split(','), dd=Math.sin(timeOfDay*Math.PI*2 - Math.PI/2);
@@ -6007,8 +6090,17 @@ function sfxPickup(){ tone(900,0.05,'square',0.045,1200); tone(1320,0.05,'square
 function tickDrops(dt){
   for(var i=drops.length-1;i>=0;i--){ var d=drops[i];
     d.pickCd-=dt; d.life-=dt; d.t+=dt*3;
-    d.vel.y-=16*dt; if(d.vel.y<-30)d.vel.y=-30;
-    var ny=d.pos.y+d.vel.y*dt, gx=Math.floor(d.pos.x), gz=Math.floor(d.pos.z), groundY=Math.floor(ny-0.18);
+    var gx=Math.floor(d.pos.x), gz=Math.floor(d.pos.z);
+    var inLiq  = blk(World.getBlock(gx,Math.floor(d.pos.y+0.1),gz)).liquid;
+    var headLiq= blk(World.getBlock(gx,Math.floor(d.pos.y+0.4),gz)).liquid;
+    if(inLiq){                                  // dropped in water: bob up to the surface instead of sinking
+      d.vel.y += 24*dt; if(d.vel.y>1.8) d.vel.y=1.8; d.vel.y *= 0.82;
+      if(!headLiq && d.vel.y>0) d.vel.y*=0.35;  // reached the surface: settle, don't launch out
+      d.vel.x*=0.85; d.vel.z*=0.85;             // water drag on horizontal drift
+    } else {
+      d.vel.y-=16*dt; if(d.vel.y<-30)d.vel.y=-30;
+    }
+    var ny=d.pos.y+d.vel.y*dt, groundY=Math.floor(ny-0.18);
     if(d.vel.y<0 && isSolid(World.getBlock(gx,groundY,gz))){ d.pos.y=groundY+1+0.2; d.vel.y=0; d.vel.x*=0.6; d.vel.z*=0.6; }
     else d.pos.y=ny;
     d.pos.x+=d.vel.x*dt; d.pos.z+=d.vel.z*dt;
@@ -6508,7 +6600,10 @@ function tickPlants(dt){
       if(tl.t>22){ var pa=tk.split(','); var x=+pa[0],y=+pa[1],z=+pa[2]; delete World.tiles[tk];
         growSaplingTree(x,y,z,tl.wood); var ch=World.getChunk(x>>4,z>>4,false); if(ch) buildPlantMesh(ch); } }
     else if(tl.type==='crop' && !tl.mature){ tl.t=(tl.t||0)+step;
-      if(tl.t>26){ tl.mature=true; var pb=tk.split(','); var ch2=World.getChunk((+pb[0])>>4,(+pb[2])>>4,false); if(ch2) buildPlantMesh(ch2); } }
+      if(tl.t>26) tl.mature=true;
+      var ns=cropStage(tl);
+      if(tl._vs!==ns){ tl._vs=ns; var pb=tk.split(','); var ch2=World.getChunk((+pb[0])>>4,(+pb[2])>>4,false); if(ch2) buildPlantMesh(ch2); }   // redraw as it visibly grows sprout->young->tall->ripe
+    }
   }
 }
 function clearHostiles(){ for(var i=entities.length-1;i>=0;i--){ var k=entities[i].kind; if(k!=='fish'&&!entities[i].passive){ scene.remove(entities[i].mesh); entities.splice(i,1); } } }
@@ -6779,8 +6874,10 @@ function tickDayNight(dt){
   timeOfDay=(timeOfDay+dt/DAY_LEN)%1;
   // sun brightness curve
   var d = Math.sin(timeOfDay*Math.PI*2 - Math.PI/2); // -1 night .. 1 noon
+  // smooth day factor: a gentle S-curve gives real twilight glow through dawn/dusk instead of snapping from night to day at the horizon
+  var day = 0.5 + 0.5*Math.tanh(d*2.6);
   var bright = Math.max(0, d);
-  sunU.value = 0.18 + bright*0.82;
+  sunU.value = 0.15 + day*0.85;
   if(running){ if(sunU.value<0.25) sawNight=true; else if(sawNight && sunU.value>0.7) unlock('survivor'); }
   if(running){
     if(sunU.value<0.2){ if(!_nightCounted){ _nightCounted=true; nightsAwake++;
@@ -7338,7 +7435,8 @@ function physics(dt){
   var wishZ = (-f*cosY - s*sinY);
   var grounded = Player.onGround;
   var feet=World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y+0.1),Math.floor(Player.pos.z));
-  Player.inWater = blk(feet).liquid;
+  var belowFeet=World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y-0.4),Math.floor(Player.pos.z));
+  Player.inWater = blk(feet).liquid || blk(belowFeet).liquid;   // stay "in water" while bobbing at the surface so jump-to-swim keeps working
   if(Player.inWater && !Player.wasInWater) sfxSplash();
   Player.wasInWater = Player.inWater;
   if(_portalCd>0) _portalCd-=dt;
@@ -7394,7 +7492,7 @@ function physics(dt){
       Player.inWater=false; Player.boatFloating=true; fellFrom=null;
     } else { Player.boatFloating=false; Player.vel.y -= 24*dt; if(Player.vel.y<-40)Player.vel.y=-40; }
   }
-  else if(!climbing){ Player.vel.y -= 24*dt; if(Player.vel.y<-40)Player.vel.y=-40; }
+  else if(!climbing && !Player.inWater){ Player.vel.y -= 24*dt; if(Player.vel.y<-40)Player.vel.y=-40; }   // water handles its own vertical motion; don't double-apply gravity or it cancels the swim-up
   // jump (boats don't jump)
   if(!Player.flying && !ridingBoat && (input.jump||keys['Space']) && Player.onGround && !Player.inWater){ Player.vel.y=riding?9.8:8.2; Player.onGround=false; }
   // auto-jump (Bedrock-style): hop up 1-block steps while walking into them
@@ -7610,6 +7708,7 @@ function loop(t){
   tickQuarries(dt);
   tickGenerators(dt);
   tickHoppers(dt);
+  tickPipes(dt);
   tickLeafDecay(dt);
   tickPlants(dt);
   World.tickWater(dt);
@@ -7712,8 +7811,12 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 101';
+var VERSION='Update 105';
 var CHANGELOG=[
+  { v:'Update 105', t:'Brass Pipes & Swim Fix', items:['\uD83C\uDFCA &lt;b&gt;Swimming up finally works&lt;/b&gt; \u2014 holding JUMP now lifts you through water reliably (gravity was quietly cancelling the swim-up every frame)','\uD83D\uDD27 &lt;b&gt;Brass Pipes \u2014 the start of automation!&lt;/b&gt; Craft them from brass (3 brass \u2192 8 pipes) and run a line of pipes between your machines and chests. Pipes automatically carry items from a &lt;b&gt;chest or a machine\u2019s output&lt;/b&gt; into the &lt;b&gt;next machine\u2019s input or a chest&lt;/b&gt; along the connected run. Build a Macerator \u2192 Furnace \u2192 chest line and watch ore process itself hands-free','\u2699\uFE0F This is the first piece of the steampunk factory system \u2014 sorting, extractors and more pipe tricks are coming next'] },
+  { v:'Update 104', t:'Crops Grow & Livelier Villages', items:['\uD83C\uDF3E &lt;b&gt;Crops now grow in visible stages&lt;/b&gt; \u2014 sprout \u2192 young \u2192 tall \u2192 ripe. You can tell at a glance what\u2019s ready: wheat turns golden when it\u2019s time to harvest. Only ripe crops give a full yield (plant \u2192 grow \u2192 harvest wheat \u2192 craft &amp; eat bread)','\uD83C\uDFD8\uFE0F &lt;b&gt;Villages sit properly on the land&lt;/b&gt; \u2014 houses and farms now follow the local ground instead of floating or burying on slopes','\uD83C\uDFE1 &lt;b&gt;Roadside lamp posts&lt;/b&gt; light the paths between buildings at night (and keep mobs off the streets)','\u2692\uFE0F Every village now has a &lt;b&gt;blacksmith&lt;/b&gt; \u2014 an outdoor forge and a chest with metal loot (ingots, tools materials, the occasional gem)'] },
+  { v:'Update 103', t:'Phantom Blocks & Eating Fixes', items:['\uD83D\uDC7B Fixed &lt;b&gt;phantom blocks&lt;/b&gt; \u2014 trees and terrain that rendered but weren\u2019t really there (you walked straight through them). A chunk unloaded while queued for a redraw was rebuilding a ghost mesh with no world behind it; it now skips any chunk that\u2019s no longer loaded','\uD83C\uDF56 Fixed &lt;b&gt;hit-or-miss eating&lt;/b&gt; \u2014 you can now eat no matter where you\u2019re looking. Before, food only worked if you happened to be aiming at a nearby block; equip food and tap use to eat anywhere'] },
+  { v:'Update 102', t:'Water & Light Polish', items:['\uD83C\uDFCA Fixed &lt;b&gt;jump-to-swim cutting out&lt;/b&gt; at the surface \u2014 bobbing at the top of the water no longer drops you; holding JUMP reliably keeps you swimming up','\uD83E\uDEA3 &lt;b&gt;Dropped items float&lt;/b&gt; \u2014 mine a block underwater and the item bobs up to the surface instead of sinking out of reach','\uD83C\uDF07 &lt;b&gt;Smoother day/night light&lt;/b&gt; \u2014 sunrise and sunset now ease through a real twilight glow instead of snapping between day and night, and nights feel a touch moodier'] },
   { v:'Update 101', t:'Climb Out of Water', items:['\uD83C\uDF0A Fixed &lt;b&gt;getting stuck in water&lt;/b&gt; \u2014 swimming toward a shore now &lt;b&gt;vaults you up over the edge&lt;/b&gt; onto land, instead of bobbing against the lip forever. Just swim into the bank the way you\u2019d walk up a step'] },
   { v:'Update 100', t:'Tap to Start Splash', items:['\uD83D\uDD8B\uFE0F Added a &lt;b&gt;Tap to Start&lt;/b&gt; title splash. Browsers (especially iPhone Safari) won\u2019t let any sound play until you\u2019ve interacted with the page once \u2014 consoles can auto-play menu music, web pages legally can\u2019t. The splash turns that required first tap into a proper title screen: press it and the menu theme kicks in right away, then it fades to the menu'] },
   { v:'Update 99', t:'Crash Fix & Menu Music (for real)', items:['\uD83D\uDC1B Fixed the &lt;b&gt;LOOP ERR / \u201CScript error.\u201D&lt;/b&gt; crash \u2014 the animal AI was using an undeclared &lt;b&gt;sp&lt;/b&gt; (speed) variable, which threw every frame an animal moved. Animals now compute their speed correctly (idle = still, fleeing/hunting = faster)','\uD83C\uDFB5 &lt;b&gt;Main-menu music now actually plays.&lt;/b&gt; Instead of asking iPhone Safari to fetch a giant embedded audio URL (which it quietly refused), the song is now decoded straight from its embedded data on your first tap. Falls back to the gentle generative theme if decoding ever fails'] },
