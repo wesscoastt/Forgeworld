@@ -1627,10 +1627,118 @@ var World = {
     setW(ch,cx+rw+1,h+1,cz+rd+1,pal.post); setW(ch,cx+rw+1,h+2,cz+rd+1,B.LANTERN);
     setW(ch,cx-rw-1,h+1,cz-rd-1,pal.post); setW(ch,cx-rw-1,h+2,cz-rd-1,B.LANTERN);
   },
+  // --- rare steampunk world structures (sparse, region-anchored like villages) ---
+  steampunkAnchor: function(rx,rz){
+    if(this._spseed!==this.seed){ this._spcache={}; this._spseed=this.seed; }
+    var key=rx+','+rz, c=this._spcache[key]; if(c!==undefined) return c;
+    var R=144, v=null;
+    if(hash3(rx,911,rz,this.seed^0x57EA) < 0.34){          // only ~1/3 of candidate regions -> uncommon
+      var jx=hash3(rx,912,rz,this.seed), jz=hash3(rx,913,rz,this.seed);
+      var cx=rx*R + 40 + Math.floor(jx*(R-80));
+      var cz=rz*R + 40 + Math.floor(jz*(R-80));
+      if(this.biomeAt(cx,cz)!==7){                          // not open ocean
+        var gy=this.heightAt(cx,cz);
+        if(gy>SEA && gy<SEA+42){
+          var lo=999,hi=0,water=0;
+          for(var sx=-6;sx<=6;sx+=6) for(var sz=-6;sz<=6;sz+=6){ var t=this.heightAt(cx+sx,cz+sz); if(t<=SEA)water++; if(t<lo)lo=t; if(t>hi)hi=t; }
+          if(water===0 && hi-lo<=6) v={cx:cx,cz:cz,kind:(hash3(rx,914,rz,this.seed)*5|0)};
+        }
+      }
+    }
+    this._spcache[key]=v; return v;
+  },
+  genSteampunkStructures: function(ch){
+    var R=144, REACH=22;
+    var r0x=Math.floor((ch.cx*CHUNK-REACH)/R), r1x=Math.floor((ch.cx*CHUNK+CHUNK-1+REACH)/R);
+    var r0z=Math.floor((ch.cz*CHUNK-REACH)/R), r1z=Math.floor((ch.cz*CHUNK+CHUNK-1+REACH)/R);
+    for(var rx=r0x;rx<=r1x;rx++) for(var rz=r0z;rz<=r1z;rz++){
+      var v=this.steampunkAnchor(rx,rz); if(!v) continue;
+      if(v.kind===0) this.buildWindmill(ch,v);
+      else if(v.kind===1) this.buildWatchTower(ch,v);
+      else if(v.kind===2) this.buildPumpStation(ch,v);
+      else if(v.kind===3) this.buildBrassFoundry(ch,v);
+      else this.buildRailStation(ch,v);
+    }
+  },
+  structLoot: function(ch,x,y,z){ setW(ch,x,y,z,B.CHEST); var items=newArray(27); this.fillDungeonLoot(items,x,z); setTileW(ch,x,y,z,{type:'chest',items:items}); },
+  buildWindmill: function(ch,v){
+    var cx=v.cx, cz=v.cz, h=this.heightAt(cx,cz), TH=11, dx,dz,y;
+    for(y=0;y<TH;y++) for(dx=-2;dx<=2;dx++) for(dz=-2;dz<=2;dz++){ var r2=dx*dx+dz*dz; if(r2>5) continue;
+      if(r2>=4){ var isDoor=(y<2 && dx===0 && dz===2); if(!isDoor) setW(ch,cx+dx,h+y,cz+dz, (y%3===2)?B.BRASS_BLOCK:B.COBBLE); }
+      else if(y===0){ setW(ch,cx+dx,h,cz+dz,B.COBBLE); }
+    }
+    for(dx=-2;dx<=2;dx++) for(dz=-2;dz<=2;dz++){ if(dx*dx+dz*dz<=5) setW(ch,cx+dx,h+TH,cz+dz,B.BRASS_BLOCK); }
+    var hy=h+TH+3, hz=cz+3; setW(ch,cx,hy,hz,B.BRASS_BLOCK);        // hub + 4 sail arms
+    for(var a=1;a<=4;a++){ setW(ch,cx,hy+a,hz,B.PLANKS); setW(ch,cx,hy-a,hz,B.PLANKS); setW(ch,cx+a,hy,hz,B.PLANKS); setW(ch,cx-a,hy,hz,B.PLANKS);
+      if(a>=2){ setW(ch,cx+1,hy+a,hz,B.SPRUCE_PLANKS); setW(ch,cx-1,hy-a,hz,B.SPRUCE_PLANKS); setW(ch,cx+a,hy-1,hz,B.SPRUCE_PLANKS); setW(ch,cx-a,hy+1,hz,B.SPRUCE_PLANKS); } }
+    setW(ch,cx+1,h+1,cz+2,B.LANTERN);
+    this.structLoot(ch,cx-1,h+1,cz-1);
+  },
+  buildWatchTower: function(ch,v){
+    var cx=v.cx, cz=v.cz, h=this.heightAt(cx,cz), TH=13, dx,dz,y;
+    for(y=0;y<TH;y++) for(dx=-2;dx<=2;dx++) for(dz=-2;dz<=2;dz++){ var edge=(Math.abs(dx)===2||Math.abs(dz)===2);
+      if(edge){ var win=(y>2 && y<TH-2 && y%3===0 && (dx===0||dz===0)); setW(ch,cx+dx,h+y,cz+dz, win?B.GLASS:((y%4===3)?B.BRASS_BLOCK:B.COBBLE)); }
+      else if(y===0){ setW(ch,cx+dx,h,cz+dz,B.COBBLE); }
+    }
+    setW(ch,cx,h+1,cz-2,B.AIR); setW(ch,cx,h+2,cz-2,B.AIR);          // door
+    for(dx=-2;dx<=2;dx++) for(dz=-2;dz<=2;dz++) setW(ch,cx+dx,h+TH,cz+dz,B.COBBLE);   // platform
+    for(var i=-2;i<=2;i+=2){ setW(ch,cx+i,h+TH+1,cz-2,B.COBBLE); setW(ch,cx+i,h+TH+1,cz+2,B.COBBLE); setW(ch,cx-2,h+TH+1,cz+i,B.COBBLE); setW(ch,cx+2,h+TH+1,cz+i,B.COBBLE); }
+    setW(ch,cx,h+TH+1,cz,B.LANTERN);
+    this.structLoot(ch,cx+1,h+1,cz+1);
+  },
+  buildPumpStation: function(ch,v){
+    var cx=v.cx, cz=v.cz, h=this.heightAt(cx,cz), dx,dz,y;
+    for(y=0;y<4;y++) for(dx=-2;dx<=2;dx++) for(dz=-2;dz<=2;dz++){ var edge=(Math.abs(dx)===2||Math.abs(dz)===2);
+      if(y===0) setW(ch,cx+dx,h,cz+dz,B.COBBLE);
+      else if(edge) setW(ch,cx+dx,h+y,cz+dz,(y===2)?B.BRASS_BLOCK:B.COBBLE);
+    }
+    setW(ch,cx,h+1,cz-2,B.AIR); setW(ch,cx,h+2,cz-2,B.AIR);
+    for(dx=-2;dx<=2;dx++) for(dz=-2;dz<=2;dz++) setW(ch,cx+dx,h+4,cz+dz,B.PLANKS);
+    setW(ch,cx,h+5,cz,B.BRASS_BLOCK);                                // boiler
+    setW(ch,cx-1,h+5,cz-1,B.BRASS_PIPE); setW(ch,cx-1,h+6,cz-1,B.BRASS_PIPE);
+    setW(ch,cx+1,h+5,cz+1,B.BRASS_PIPE); setW(ch,cx+1,h+6,cz+1,B.BRASS_PIPE); setW(ch,cx+1,h+7,cz+1,B.BRASS_PIPE);
+    for(var i2=-2;i2<=2;i2++){ setW(ch,cx+i2,h+5,cz-2,B.WOOD_FENCE); setW(ch,cx+i2,h+5,cz+2,B.WOOD_FENCE); }
+    setW(ch,cx-1,h+1,cz+2,B.LANTERN);
+    this.structLoot(ch,cx+1,h+1,cz-1);
+  },
+  buildBrassFoundry: function(ch,v){
+    var cx=v.cx, cz=v.cz, h=this.heightAt(cx,cz), dx,dz,y;
+    // 7x7 factory hall, height 5
+    for(y=0;y<5;y++) for(dx=-3;dx<=3;dx++) for(dz=-3;dz<=3;dz++){ var edge=(Math.abs(dx)===3||Math.abs(dz)===3);
+      if(y===0) setW(ch,cx+dx,h,cz+dz,B.COBBLE);
+      else if(edge){ var win=(y===2 && (dx===0||dz===0)); setW(ch,cx+dx,h+y,cz+dz, win?B.GLASS:((y===3)?B.BRASS_BLOCK:B.COBBLE)); }
+    }
+    setW(ch,cx,h+1,cz-3,B.AIR); setW(ch,cx,h+2,cz-3,B.AIR);                 // door
+    for(dx=-3;dx<=3;dx++) for(dz=-3;dz<=3;dz++) setW(ch,cx+dx,h+5,cz+dz,B.BRASS_BLOCK);   // brass roof
+    // two smokestacks
+    var st=[[-2,-2],[2,2]]; for(var si=0;si<2;si++){ var sx=cx+st[si][0], sz=cz+st[si][1]; for(y=6;y<=10;y++) setW(ch,sx,h+y,sz, (y===10)?B.BRASS_BLOCK:B.BRASS_PIPE); }
+    // interior: furnaces + brass boiler + machines feel
+    setW(ch,cx-2,h+1,cz+2,B.FURNACE); setTileW(ch,cx-2,h+1,cz+2,{type:'furnace',input:null,fuel:null,output:null,burn:0,burnMax:0,cook:0,front:4});
+    setW(ch,cx+2,h+1,cz+2,B.FURNACE); setTileW(ch,cx+2,h+1,cz+2,{type:'furnace',input:null,fuel:null,output:null,burn:0,burnMax:0,cook:0,front:4});
+    setW(ch,cx,h+1,cz+1,B.BRASS_BLOCK); setW(ch,cx,h+2,cz+1,B.BRASS_PIPE);
+    setW(ch,cx-2,h+3,cz-2,B.LANTERN); setW(ch,cx+2,h+3,cz+2,B.LANTERN);
+    this.structLoot(ch,cx+2,h+1,cz-2);
+  },
+  buildRailStation: function(ch,v){
+    var cx=v.cx, cz=v.cz, h=this.heightAt(cx,cz), dx,dz;
+    // raised stone platform 9x5
+    for(dx=-4;dx<=4;dx++) for(dz=-2;dz<=2;dz++) setW(ch,cx+dx,h,cz+dz,B.COBBLE);
+    for(dx=-4;dx<=4;dx++) for(dz=-2;dz<=2;dz++) setW(ch,cx+dx,h+1,cz+dz,B.BRASS_BLOCK);   // platform deck
+    // canopy on brass posts
+    for(var px=-3;px<=3;px+=3){ for(dz=-2;dz<=2;dz+=4){ setW(ch,cx+px,h+2,cz+dz,B.BRASS_PIPE); setW(ch,cx+px,h+3,cz+dz,B.BRASS_PIPE); } }
+    for(dx=-4;dx<=4;dx++) for(dz=-2;dz<=2;dz++) setW(ch,cx+dx,h+4,cz+dz,B.PLANKS);           // roof
+    // running boards (planks as 'rails') along the front edge
+    for(dx=-4;dx<=4;dx++){ setW(ch,cx+dx,h+1,cz-3,B.SPRUCE_PLANKS); setW(ch,cx+dx,h+1,cz+3,B.SPRUCE_PLANKS); }
+    setW(ch,cx-3,h+2,cz-2,B.LANTERN); setW(ch,cx+3,h+2,cz+2,B.LANTERN);
+    // ticket booth + loot
+    setW(ch,cx,h+2,cz,B.BRASS_BLOCK);
+    this.structLoot(ch,cx-3,h+2,cz+2);
+  },
   genStructures: function(ch){
     var cx=ch.cx, cz=ch.cz;
     if(this.dim==='underforge'){ this.genAshFortress(ch); return; }
     this.genVillage(ch);
+    this.genSteampunkStructures(ch);
     if(hash3(cx,101,cz,this.seed^0xB00B) > 0.035) return;
     var lx=5+(hash3(cx,102,cz,this.seed)*6|0), lz=5+(hash3(cx,103,cz,this.seed)*6|0);
     var wx=cx*CHUNK+lx, wz=cz*CHUNK+lz;
@@ -3358,6 +3466,7 @@ function blockBreakTime(blockId){
   if(gameMode==='creative') return 0.05;
   var b=blk(blockId); var hard=b.hard||1;
   var sp=miningSpeed(blockId);
+  if(b.log || isLogId(blockId)) sp*=rpgWoodSpeed(); else if(b.tool==='pickaxe') sp*=rpgMineSpeed();   // RPG skill speed
   var time = (hard/sp);
   if(!canHarvest(blockId)) time *= 3.5;
   return Math.max(0.05, time);
@@ -3409,6 +3518,9 @@ function tryHarvest(){
   else if(tl.crop==='tomato'){ giveItem('TOMATO',1+(hash3(hit.x,4,hit.z,World.seed)*3|0)); giveItem('TOMATO_SEEDS',1+(hash3(hit.x,5,hit.z,World.seed)*2|0)); }
   else if(tl.crop==='corn'){ giveItem('CORN',1+(hash3(hit.x,6,hit.z,World.seed)*2|0)); giveItem('CORN_SEEDS',1+(hash3(hit.x,7,hit.z,World.seed)*2|0)); }
   else { giveItem('POTATO',1+(hash3(hit.x,3,hit.z,World.seed)*3|0)); }
+  // RPG: Farming XP + extra-harvest perk
+  rpgAddXP('farming', 5);
+  if(Math.random()<rpgExtraCrop()){ var _mc={wheat:'WHEAT',carrot:'CARROT',potato:'POTATO',tomato:'TOMATO',corn:'CORN'}[tl.crop]||'WHEAT'; giveItem(_mc,1); }
   delete World.tiles[tk];
   var ch=World.getChunk(hit.x>>4,hit.z>>4,false); if(ch) buildPlantMesh(ch);
   sfxBreak(); triggerHandSwing(); return true;
@@ -3454,6 +3566,23 @@ function breakBlock(hit){
       for(var pe=0; pe<prospect; pe++){ if(Math.random()<0.45) spawnDrop(hit.x,hit.y,hit.z,dropKey,1); }
     }
     if(dropKey) spawnDrop(hit.x,hit.y,hit.z,dropKey,1);
+    // RPG: Mining / Woodcutting XP + perks (skip blocks you just placed, to kill place->break loops)
+    if(!rpgWasPlaced(hit.x,hit.y,hit.z)){
+      var _bk=BLOCKS[id].key||'';
+      if(b.log || isLogId(id)){
+        rpgAddXP('woodcutting', 3);
+        if(dropKey && Math.random()<rpgExtraLog()) spawnDrop(hit.x,hit.y,hit.z,dropKey,1);
+      } else if(b.tool==='pickaxe'){
+        var _ore=_bk.indexOf('_ORE')>=0;
+        rpgAddXP('mining', _ore?7:(b.hard>=3?2:1));
+        if(_ore) giveXP({COAL_ORE:1,IRON_ORE:2,COPPER_ORE:2,TIN_ORE:2,GOLD_ORE:3,REDSTONE_ORE:2,LAPIS_ORE:3,DIAMOND_ORE:5,EMERALD_ORE:5}[_bk]||1);   // XP orbs for mining ore
+        if(dropKey && _ore){
+          if(Math.random()<rpgDoubleOre()) spawnDrop(hit.x,hit.y,hit.z,dropKey,1);
+          if(Math.random()<rpgAutoSmelt()){ var _sm={IRON_ORE:'IRON_INGOT',GOLD_ORE:'GOLD_INGOT',COPPER_ORE:'COPPER_INGOT',TIN_ORE:'TIN_INGOT'}[dropKey]; if(_sm) spawnDrop(hit.x,hit.y,hit.z,_sm,1); }
+        }
+        if(Math.random()<rpgGemChance()) spawnDrop(hit.x,hit.y,hit.z, Math.random()<0.3?'DIAMOND':'EMERALD',1);
+      }
+    }
   } else if(gameMode!=='creative' && blk(id).tier && !canHarvest(id)){
     var need=['','','a Stone','an Iron/Bronze','a Diamond'][blk(id).tier]||'a better';
     toast('\u26cf Needs '+need+' pickaxe to collect this');
@@ -3781,7 +3910,7 @@ function doPlace(){
     if(!sup) return;
   }
   if(pid===B.RIFT_GATE){ buildPortal(nx,ny,nz); if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(pid); toast('\uD83C\uDF00 A rift portal tears open'); return; }
-  World.setBlock(nx,ny,nz,pid,true); forceTorchRescan();
+  World.setBlock(nx,ny,nz,pid,true); forceTorchRescan(); rpgMarkPlaced(nx,ny,nz);
   if(blk(pid).log){ World.tiles[World.ck(nx,ny,nz)]={axis: hit.ny!==0?'y':(hit.nx!==0?'x':'z')}; }
   if(pid===B.FURNACE) World.tiles[World.ck(nx,ny,nz)]={type:'furnace', input:null, fuel:null, output:null, burn:0, burnMax:0, cook:0, front:placeFrontFace()};
   if(pid===B.MACERATOR) World.tiles[World.ck(nx,ny,nz)]={type:'macerator', input:null, output:null, grind:0};
@@ -3889,7 +4018,7 @@ function tryEat(slot){
   if(Player.hunger>=Player.maxHunger) return false;
   var it=ITEMS[slot.key];
   Player.hunger=Math.min(Player.maxHunger, Player.hunger+(it.food||0));
-  Player.sat=Math.min(20, Player.sat+(it.food||0)*0.6);
+  Player.sat=Math.min(20, Player.sat+(it.food||0)*0.6*(1+rpgFoodBonus()));   // RPG cooking saturation perk
   if(it.heal) Player.hp=Math.min(Player.maxHp, Player.hp+it.heal);
   consumeSlot(slot,1); renderHotbar(); updateStats();
   sfxEat(); toast('Ate '+it.name); return true;
@@ -4539,7 +4668,7 @@ function invCount(key){ var a=inv.main.concat(inv.hotbar), n=0; for(var i=0;i<a.
 function recipeNeeds(r){ var need={}; if(r.type==='shaped'){ for(var y=0;y<r.rows.length;y++)for(var x=0;x<r.rows[y].length;x++){ var k=r.rows[y][x]; if(k) need[k]=(need[k]||0)+1; } } else { r.ing.forEach(function(g){ need[g.key]=(need[g.key]||0)+g.qty; }); } return need; }
 function canCraftR(r){ var need=recipeNeeds(r); for(var k in need) if(invCount(k)<need[k]) return false; return true; }
 function removeInv(key,n){ var arrs=[inv.hotbar,inv.main]; for(var a=0;a<arrs.length;a++){ var ar=arrs[a]; for(var i=0;i<ar.length;i++){ if(n<=0)break; if(ar[i]&&ar[i].key===key){ var t=Math.min(n,ar[i].qty); ar[i].qty-=t; n-=t; if(ar[i].qty<=0)ar[i]=null; } } } }
-function craftFromBook(r){ if(!canCraftR(r)) return false; var need=recipeNeeds(r); for(var k in need) removeInv(k,need[k]); giveItem(r.out,r.qty); sfxClick(); renderHotbar(); return true; }
+function craftFromBook(r){ if(!canCraftR(r)) return false; var need=recipeNeeds(r); for(var k in need) removeInv(k,need[k]); giveItem(r.out,r.qty); rpgAddXP('crafting',3); sfxClick(); renderHotbar(); return true; }
 function miniIcon(key, qty){ if(!key||!ITEMS[key]) return ''; var h='<img class="ic" src="'+iconFor(key)+'">'; if(qty>1) h+='<span class="qty">'+qty+'</span>'; return h; }
 function recipeRow(r){
   var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:8px;background:#b9b9b9;border:2px solid #2b2b2b;border-radius:0;padding:6px;box-shadow:inset 1px 1px 0 #e9e9e9,inset -1px -1px 0 #8b8b8b;';
@@ -4673,7 +4802,10 @@ function openTrade(){
     btn.addEventListener('click', function(){
       if(!tr.give.every(function(g){ return countItem(g.key)>=g.qty; })) return;
       tr.give.forEach(function(g){ takeItem(g.key,g.qty); });
-      giveItem(tr.get.key, tr.get.qty); sfxClick(); openTrade();
+      giveItem(tr.get.key, tr.get.qty);
+      var _cut=rpgTradeCut(); if(_cut>0 && tr.give[0]){ var _rb=Math.floor(tr.give[0].qty*_cut); if(_rb>0) giveItem(tr.give[0].key,_rb); }   // RPG trading discount (rebate)
+      rpgAddXP('trading', 6 + (tr.get.qty||1));                                                                                       // RPG trading XP
+      sfxClick(); openTrade();
     });
     row.appendChild(btn); p.appendChild(row);
   })(TRADES[i]); }
@@ -5029,9 +5161,10 @@ function tickFurnaces(dt){
       t.fuel.qty-=1; if(t.fuel.qty<=0) t.fuel=null;
     }
     if(outOK && (fpowered || t.burn>0)){
-      t.cook += dt*(fpowered?3:1);
+      t.cook += dt*(fpowered?3:1)*rpgSmeltSpeed();                     // RPG smithing smelt-speed perk
       if(t.cook>=4){ t.cook=0;
         if(!t.output) t.output={key:smeltTo,qty:1}; else t.output.qty+=1;
+        rpgAddXP((ITEMS[smeltTo]&&ITEMS[smeltTo].food)?'cooking':'smithing', 4);   // RPG cooking/smithing XP
         t.input.qty-=1; if(t.input.qty<=0) t.input=null;
       }
     } else { t.cook=0; }
@@ -5440,17 +5573,22 @@ function makeCreeper(){
   var g=new THREE.Group(); g.__mats=[];
   function part(w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex, side:THREE.DoubleSide}); var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
     mesh.position.set(x,y,z); m.__base=hex; g.__mats.push(m); g.add(mesh); return mesh; }
-  var CRV=[0x4f8f3a, 0x3a7d2e, 0x5fa0b0, 0x7a9a4a];   // classic, dark, charged-blue, swamp
-  var SKIN=CRV[(Math.random()*CRV.length)|0];
-  part(0.45,0.8,0.32, SKIN, 0,1.0,0);
-  part(0.44,0.44,0.44, SKIN, 0,1.62,0);
-  var faceM=new THREE.MeshBasicMaterial({color:0x0c1a0c});
+  function trim(w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex}); var mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); mesh.position.set(x,y,z); g.add(mesh); return mesh; }
+  var BRASS=0xb0894a, COPPER=0x9c6238, IRON=0x50525c, GLOW=0xff8a2a;
+  part(0.46,0.82,0.34, BRASS, 0,1.0,0);                                 // brass boiler body
+  trim(0.5,0.07,0.38, IRON, 0,1.28,0); trim(0.5,0.07,0.38, IRON, 0,0.78,0);   // iron boiler bands
+  trim(0.16,0.16,0.02, 0xf0d874, 0,1.06,0.185); trim(0.03,0.1,0.03, 0x201810, 0,1.06,0.2);  // pressure gauge + needle
+  trim(0.05,0.05,0.02, IRON, -0.17,1.24,0.18); trim(0.05,0.05,0.02, IRON, 0.17,1.24,0.18);  // rivets
+  trim(0.05,0.05,0.02, IRON, -0.17,0.82,0.18); trim(0.05,0.05,0.02, IRON, 0.17,0.82,0.18);
+  part(0.44,0.44,0.44, COPPER, 0,1.62,0);                               // copper head
+  trim(0.13,0.2,0.13, IRON, 0,1.95,0); trim(0.17,0.05,0.17, 0x26262c, 0,2.06,0);   // smokestack + rim
+  var faceM=new THREE.MeshBasicMaterial({color:GLOW});                  // glowing furnace face
   var f1=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.12,0.02),faceM); f1.position.set(-0.1,1.66,0.23); g.add(f1);
   var f2=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.12,0.02),faceM); f2.position.set(0.1,1.66,0.23); g.add(f2);
-  var f3=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.22,0.02),faceM); f3.position.set(0,1.5,0.23); g.add(f3);
+  var f3=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.2,0.02),faceM); f3.position.set(0,1.5,0.23); g.add(f3);
   var legGeo=0.16;
-  var l1=part(legGeo,0.62,legGeo, SKIN, -0.13,0.31,-0.13); var l2=part(legGeo,0.62,legGeo, SKIN, 0.13,0.31,-0.13);
-  var l3=part(legGeo,0.62,legGeo, SKIN, -0.13,0.31,0.13); var l4=part(legGeo,0.62,legGeo, SKIN, 0.13,0.31,0.13);
+  var l1=part(legGeo,0.62,legGeo, IRON, -0.13,0.31,-0.13); var l2=part(legGeo,0.62,legGeo, IRON, 0.13,0.31,-0.13);
+  var l3=part(legGeo,0.62,legGeo, IRON, -0.13,0.31,0.13); var l4=part(legGeo,0.62,legGeo, IRON, 0.13,0.31,0.13);
   g.userData.legs=[l1,l4]; // diagonal pairs for waddle
   return g;
 }
@@ -6228,6 +6366,8 @@ function castFishingRod(){
       else if(roll<0.88){ giveItem('STRING',1); toast('Reeled in some string'); }
       else if(roll<0.95){ giveItem('LEATHER',1); toast('Reeled in an old boot \u2014 leather'); }
       else { giveItem('BONE',1); toast('Reeled in a bone'); }
+      rpgAddXP('fishing',8);   // RPG fishing XP
+      if(Math.random()<rpgFishLuck()){ giveItem(Math.random()<0.25?'EMERALD':'RAW_FISH',1); toast('\u2728 Lucky catch!'); }   // RPG fishing luck perk
       giveXP(2); unlock('fisherman');
     } else { toast('Reeled in \u2014 nothing biting yet'); }
     if(fs.bob) scene.remove(fs.bob); Player.fishing=null; sfxClick(); damageHeld(); return;
@@ -6442,7 +6582,12 @@ function hitEntity(e){
   var dir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
   var tool=currentTool(); var dmg= (tool && tool.dmg)? tool.dmg : 1;
   dmg += 1.6*heldEnchLvl('honed');   // Honed enchant
+  dmg *= rpgCombatDmg();                                   // RPG combat damage perk
+  var _crit=false; if(Math.random()<rpgCritChance()){ dmg*=1.6; _crit=true; }   // RPG critical hit
   e.hp-=dmg; e.hurt=0.2;
+  if(_crit){ try{ tone(1200,0.05,'square',0.05); }catch(_){} }
+  if(rpgLifeSteal()>0 && Math.random()<rpgLifeSteal() && Player.hp<20){ Player.hp=Math.min(20,Player.hp+1); updateStats(); }   // RPG life steal
+  rpgAddXP('combat', e.hp<=0? 12 : 2);                    // RPG combat XP (kill bonus)
   if((e.kind==='bear'||e.kind==='boar') && !e.tamed){ e.provoked=true; e.aggroT=14; }   // neutral mobs fight back
   e.vel.x+=dir.x*6; e.vel.z+=dir.z*6; e.vel.y=4.4;
   if(tool && (tool.tool==='sword'||tool.tool==='battleaxe')) damageTool();
@@ -6531,6 +6676,7 @@ function breedCheck(e){
       var bx=(e.pos.x+o.pos.x)/2, bz=(e.pos.z+o.pos.z)/2;
       spawnEnemy(e.kind, bx, e.pos.y, bz);
       var baby=entities[entities.length-1]; baby.baby=true; baby.age=0; baby.mesh.scale.set(0.5,0.5,0.5);
+      rpgAddXP('animal',10);   // RPG animal handling XP
       e.love=0; o.love=0; e.loveCd=o.loveCd=30; giveXP(3); unlock('rancher');
       spawnHearts(baby,6);
       toast('\uD83D\uDC23 A baby '+e.kind+' was born!'); return;
@@ -6725,6 +6871,8 @@ function damagePlayer(amt){
   var def=Math.min(20, totalArmorDef());
   if(def>0){ amt = amt*(1 - def*0.04); if(amt<0.5) amt=0.5; damageArmor(); }
   if(inv.offhand[0] && inv.offhand[0].key==='SHIELD'){ amt*=0.45; }   // shield blocks ~half
+  amt *= (1 - rpgDefReduce());                                        // RPG defense damage reduction
+  rpgAddXP('defense', Math.max(1, Math.round(amt)));                  // RPG defense XP (taking hits trains it)
   Player.hp-=amt; Player.invul=0.5; Player.regenCd=4;
   flashDamage(); sfxHurtPlayer(); rumble(0.7,0.45,180); updateStats();
   if(Player.hp<=0) die();
@@ -6810,7 +6958,7 @@ function tickSurvival(dt){
 var lastY=null, fellFrom=null;
 function tickFallDamage(){
   if(Player.onGround){
-    if(fellFrom!=null){ var fall=fellFrom-Player.pos.y; if(fall>3.5 && !Player.inWater){ damagePlayer(Math.floor(fall-3)); } fellFrom=null; }
+    if(fellFrom!=null){ var fall=fellFrom-Player.pos.y; if(fall>3.5 && !Player.inWater){ damagePlayer(Math.max(1,Math.floor((fall-3)*(1-rpgFallReduce())))); } fellFrom=null; }
   } else {
     if(fellFrom==null || Player.pos.y>fellFrom) fellFrom=Player.pos.y;
   }
@@ -7260,7 +7408,7 @@ function saveGame(quiet){
       player:{ x:ppx,y:ppy,z:ppz, yaw:pyaw,pitch:ppitch,
         hp:Player.hp,hunger:Player.hunger,sat:Player.sat, sx:Player.spawn.x,sy:Player.spawn.y,sz:Player.spawn.z,
         xp:Player.xp, xpLevel:Player.xpLevel },
-      ach:unlocked, diff:difficulty,
+      ach:unlocked, diff:difficulty, skills:rpgSave(),
       griefing:mobGriefing, fireSpread:fireSpread, waypoints:waypoints,
       inv:{ hotbar:inv.hotbar, main:inv.main, armor:inv.armor, offhand:inv.offhand, bpack:inv.bpack }
     };
@@ -7324,6 +7472,7 @@ function startWorld(seed, save, mode){
     Player.hp=pl.hp; Player.hunger=pl.hunger; Player.sat=pl.sat||5;
     Player.xp=pl.xp||0; Player.xpLevel=pl.xpLevel||0; Player.air=Player.maxAir;
     unlocked = save.ach || {};
+    rpgLoad(save.skills); rpgLastBiome=null;   // restore RPG skills (and re-arm biome tracking)
     difficulty = save.diff || 'normal';
     Player.spawn.set(pl.sx!=null?pl.sx:pl.x, pl.sy!=null?pl.sy:pl.y, pl.sz!=null?pl.sz:pl.z);
     inv.hotbar = restoreInv(save.inv.hotbar,9); inv.main=restoreInv(save.inv.main,27);
@@ -7354,7 +7503,7 @@ function startWorld(seed, save, mode){
     }
     Player.pos.set(sx+0.5, top+1.1, sz+0.5); Player.vel.set(0,0,0); Player.spawn.copy(Player.pos);
     Player.yaw=0; Player.pitch=0; Player.hp=20; Player.hunger=20; Player.sat=5;
-    Player.xp=0; Player.xpLevel=0; Player.air=Player.maxAir; unlocked={}; sawNight=false;
+    Player.xp=0; Player.xpLevel=0; Player.air=Player.maxAir; unlocked={}; sawNight=false; rpgLoad(null); rpgLastBiome=null;
     inv.hotbar=newArray(9); inv.main=newArray(27); inv.armor=newArray(4); inv.offhand=newArray(1);
     // empty inventory - survive from nothing, like Minecraft
     if(gameMode==='creative'){
@@ -7429,6 +7578,176 @@ function exitToTitle(){ saveGame(true); closePause(); running=false;
 var toastT=null;
 function toast(msg){ var el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
   clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove('show'); }, 1600); }
+
+/* ============================ RPG SKILL SYSTEM ============================ */
+var RPG_SKILLS=[
+  {id:'mining',      name:'Mining',          ic:'\u26cf\ufe0f',       col:'#9aa4b2', act:'Mining ore & stone',     tiers:[[5,'+Mining speed'],[10,'Double-ore chance'],[20,'Fortune: bonus ore'],[30,'Rare gem finds'],[50,'Deeper hauls'],[75,'Auto-smelt chance'],[100,'Master Miner']]},
+  {id:'woodcutting', name:'Woodcutting',     ic:'\uD83E\uDE93',       col:'#b08050', act:'Chopping trees',         tiers:[[5,'+Axe speed'],[10,'Extra logs'],[20,'Rare bark drops'],[30,'Sapling bounty'],[50,'Seasoned cuts'],[75,'Critical chop'],[100,'Master Woodsman']]},
+  {id:'farming',     name:'Farming',         ic:'\uD83C\uDF3E',       col:'#7ec850', act:'Harvesting crops',       tiers:[[5,'+Crop yield'],[10,'Extra harvest'],[20,'Better seed returns'],[30,'Rare mutations'],[50,'Golden harvest'],[75,'Bountiful fields'],[100,'Master Farmer']]},
+  {id:'fishing',     name:'Fishing',         ic:'\uD83C\uDFA3',       col:'#4ba3d6', act:'Reeling in catches',     tiers:[[5,'Faster bites'],[10,'Rare fish'],[20,'Treasure chance'],[30,'Lucky lures'],[50,'Legendary catch'],[75,'Streak bonus'],[100,'Master Angler']]},
+  {id:'combat',      name:'Combat',          ic:'\u2694\ufe0f',       col:'#d85a5a', act:'Fighting monsters',      tiers:[[5,'+Damage'],[10,'Critical hits'],[20,'Combo bonus'],[30,'Execute low HP'],[50,'Life steal'],[75,'Weapon mastery'],[100,'Warlord']]},
+  {id:'defense',     name:'Defense',         ic:'\uD83D\uDEE1\ufe0f', col:'#6f86c9', act:'Taking & blocking hits', tiers:[[5,'Damage reduction'],[10,'Shield mastery'],[20,'Thorns chance'],[30,'Knockback resist'],[50,'Tough hide'],[75,'Bulwark'],[100,'Guardian']]},
+  {id:'athletics',   name:'Athletics',       ic:'\uD83C\uDFC3',       col:'#e0a040', act:'Sprinting',              tiers:[[5,'+Move speed'],[10,'Sprint efficiency'],[20,'Reduced hunger drain'],[30,'Endurance'],[50,'Second wind'],[75,'Fleet-footed'],[100,'Marathoner']]},
+  {id:'agility',     name:'Agility',         ic:'\uD83E\uDD38',       col:'#59c9a5', act:'Jumping & climbing',     tiers:[[5,'Reduced fall damage'],[10,'Nimble'],[20,'Sure-footed'],[30,'Soft landing'],[50,'Cat\u2019s grace'],[75,'Featherfall'],[100,'Acrobat']]},
+  {id:'swimming',    name:'Swimming',        ic:'\uD83C\uDFCA',       col:'#3fb4c4', act:'Swimming',               tiers:[[5,'Faster swim'],[10,'Longer breath'],[20,'Current sense'],[30,'Diver'],[50,'Deep lungs'],[75,'Merfolk grace'],[100,'Leviathan']]},
+  {id:'crafting',    name:'Crafting',        ic:'\uD83D\uDD28',       col:'#c99a6a', act:'Crafting items',         tiers:[[5,'Steady hands'],[10,'Quality craft'],[20,'Durable gear'],[30,'Masterwork chance'],[50,'Efficient builds'],[75,'Artisan'],[100,'Grandmaster Crafter']]},
+  {id:'smithing',    name:'Smithing',        ic:'\u2692\ufe0f',       col:'#a0a4ad', act:'Smelting metal',         tiers:[[5,'Faster smelt'],[10,'Fuel efficiency'],[20,'Bonus ingots'],[30,'Tempering'],[50,'Fine repairs'],[75,'Forgemaster'],[100,'Master Smith']]},
+  {id:'cooking',     name:'Cooking',         ic:'\uD83C\uDF73',       col:'#e08a4a', act:'Cooking food',           tiers:[[5,'+Saturation'],[10,'Food lasts longer'],[20,'Hearty meals'],[30,'Buff foods'],[50,'Feasts'],[75,'Gourmet'],[100,'Master Chef']]},
+  {id:'animal',      name:'Animal Handling', ic:'\uD83D\uDC3E',       col:'#b6874f', act:'Breeding & taming',      tiers:[[5,'Calmer beasts'],[10,'Better breeding'],[20,'Rare offspring'],[30,'Faster taming'],[50,'Mount bond'],[75,'Beast whisperer'],[100,'Beastmaster']]},
+  {id:'trading',     name:'Trading',         ic:'\uD83D\uDCB0',       col:'#d8c24a', act:'Trading with villagers', tiers:[[5,'Lower prices'],[10,'Haggler'],[20,'Bonus emeralds'],[30,'Rare trades'],[50,'Reputation'],[75,'Tycoon'],[100,'Master Merchant']]},
+  {id:'exploration', name:'Exploration',     ic:'\uD83E\uDDED',       col:'#7fc86a', act:'Discovering biomes',     tiers:[[5,'Pathfinder'],[10,'Biome lore'],[20,'Treasure sense'],[30,'Trailblazer'],[50,'Cartographer'],[75,'Wayfarer'],[100,'Grand Explorer']]}
+];
+var RPG_MAP={}; for(var _i=0;_i<RPG_SKILLS.length;_i++) RPG_MAP[RPG_SKILLS[_i].id]=RPG_SKILLS[_i];
+function rpgSkill(id){ return RPG_MAP[id]; }
+var rpgState={};
+var rpgSwimAcc=0, rpgAthAcc=0, rpgBiomeCd=0, rpgLastBiome=null, rpgSeenBiome={}, rpgLastJump=0;
+function rpgInit(){ for(var i=0;i<RPG_SKILLS.length;i++){ var id=RPG_SKILLS[i].id; if(!rpgState[id]) rpgState[id]={xp:0,lvl:1}; } }
+function rpgReq(l){ return Math.floor(60*Math.pow(l,1.55)); }          // xp needed to go l -> l+1 (long curve)
+function rpgLvl(id){ var s=rpgState[id]; return s?s.lvl:1; }
+function rpgSave(){ var o={}; for(var k in rpgState) o[k]={xp:rpgState[k].xp,lvl:rpgState[k].lvl}; return o; }
+function rpgLoad(o){ rpgState={}; if(o){ for(var k in o){ if(RPG_MAP[k]) rpgState[k]={xp:o[k].xp||0, lvl:Math.max(1,Math.min(100,o[k].lvl||1))}; } } rpgInit(); rpgRefreshUI(); }
+// --- anti-exploit: no XP in creative, and no XP for breaking a block you just placed (place->break loop) ---
+var rpgPlaced={};
+function rpgMarkPlaced(x,y,z){ rpgPlaced[x+','+y+','+z]=Date.now()+120000; if(Math.random()<0.03){ for(var k in rpgPlaced){ if(Date.now()>=rpgPlaced[k]) delete rpgPlaced[k]; } } }
+function rpgWasPlaced(x,y,z){ var k=x+','+y+','+z, e=rpgPlaced[k]; if(e!=null){ if(Date.now()<e) return true; delete rpgPlaced[k]; } return false; }
+function rpgAddXP(id, amt){
+  if(gameMode==='creative') return;                 // no creative-mode grinding
+  if(!(amt>0)) return;
+  var s=rpgState[id]; if(!s){ s=rpgState[id]={xp:0,lvl:1}; }
+  if(s.lvl>=100) return;
+  s.xp+=amt; rpgXpFlash(id, amt);
+  var leveled=false;
+  while(s.lvl<100 && s.xp>=rpgReq(s.lvl)){ s.xp-=rpgReq(s.lvl); s.lvl++; leveled=true; rpgOnLevel(id, s.lvl); }
+  if(leveled) rpgRefreshUI();
+}
+// --- perk accessors (all bounded & modest so no single skill is mandatory or overpowered) ---
+function rpgMineSpeed(){ var l=rpgLvl('mining');      return 1 + (l>=5?  Math.min(0.5,  (l-4)*0.006):0); }
+function rpgDoubleOre(){ var l=rpgLvl('mining');      return l>=10? Math.min(0.35, (l-9)*0.004):0; }
+function rpgGemChance(){ var l=rpgLvl('mining');      return l>=30? Math.min(0.06, (l-29)*0.0009):0; }
+function rpgAutoSmelt(){ var l=rpgLvl('mining');      return l>=75? Math.min(0.35, (l-74)*0.012):0; }
+function rpgWoodSpeed(){ var l=rpgLvl('woodcutting'); return 1 + (l>=5?  Math.min(0.5,  (l-4)*0.006):0); }
+function rpgExtraLog(){  var l=rpgLvl('woodcutting'); return l>=10? Math.min(0.45,(l-9)*0.005):0; }
+function rpgExtraCrop(){ var l=rpgLvl('farming');     return l>=10? Math.min(0.5, (l-9)*0.006):0; }
+function rpgCropGold(){  var l=rpgLvl('farming');     return l>=50? Math.min(0.15,(l-49)*0.003):0; }
+function rpgFishLuck(){  var l=rpgLvl('fishing');     return l>=10? Math.min(0.5, (l-9)*0.005):0; }
+function rpgCombatDmg(){ var l=rpgLvl('combat');      return 1 + Math.min(0.4, l*0.004); }
+function rpgCritChance(){var l=rpgLvl('combat');      return l>=10? Math.min(0.4, (l-9)*0.004):0; }
+function rpgLifeSteal(){ var l=rpgLvl('combat');      return l>=50? Math.min(0.2, (l-49)*0.004):0; }
+function rpgDefReduce(){ var l=rpgLvl('defense');     return Math.min(0.35, l*0.0035); }
+function rpgMoveSpeed(){ var l=rpgLvl('athletics');   return 1 + Math.min(0.25, l*0.0025); }
+function rpgFallReduce(){var l=rpgLvl('agility');     return Math.min(0.6, l*0.006); }
+function rpgFoodBonus(){ var l=rpgLvl('cooking');     return Math.min(0.5, l*0.005); }
+function rpgTradeCut(){  var l=rpgLvl('trading');     return Math.min(0.4, l*0.004); }
+function rpgSmeltSpeed(){var l=rpgLvl('smithing');    return 1 + Math.min(0.5, l*0.005); }
+// --- notifications ---
+var rpgCssDone=false;
+function rpgInjectCSS(){ if(rpgCssDone) return; rpgCssDone=true;
+  var st=document.createElement('style'); st.textContent=
+  '#rpgXp{position:fixed;left:10px;top:34%;z-index:46;display:flex;flex-direction:column;align-items:flex-start;gap:3px;pointer-events:none;}'
+  +'.rpgxp{background:rgba(12,18,28,.82);border:1px solid #2c3a52;border-radius:20px;padding:3px 12px;color:#dfe8f5;font-weight:700;font-size:13px;box-shadow:0 2px 8px #0007;animation:rpgxpA 1.5s ease forwards;white-space:nowrap;}'
+  +'@keyframes rpgxpA{0%{opacity:0;transform:translateX(-14px);}12%{opacity:1;transform:translateX(0);}75%{opacity:1;}100%{opacity:0;transform:translateX(-10px);}}'
+  +'#rpgBanner{position:fixed;left:50%;top:22%;transform:translateX(-50%);z-index:47;pointer-events:none;display:none;text-align:center;}'
+  +'.rpgban{background:linear-gradient(180deg,#1b2740ee,#0b1120f2);border:2px solid #f0c24a;border-radius:14px;padding:14px 30px;box-shadow:0 6px 30px #000a,0 0 22px #f0c24a44;animation:rpgbanA 2.4s ease forwards;}'
+  +'.rpgban .t{color:#f0c24a;font-weight:900;letter-spacing:2px;font-size:14px;text-transform:uppercase;}'
+  +'.rpgban .n{color:#fff;font-weight:900;font-size:30px;line-height:1.1;margin-top:2px;text-shadow:0 2px 0 #0008;}'
+  +'.rpgban .s{color:#bcd; font-size:12px;margin-top:3px;}'
+  +'@keyframes rpgbanA{0%{opacity:0;transform:translateX(-50%) scale(.8);}10%{opacity:1;transform:translateX(-50%) scale(1);}80%{opacity:1;}100%{opacity:0;transform:translateX(-50%) scale(1.04);}}'
+  +'#rpgUnlock{position:fixed;right:14px;top:calc(60px + var(--safe-t,0px));z-index:47;display:flex;flex-direction:column;gap:8px;pointer-events:none;}'
+  +'.rpgunl{background:linear-gradient(180deg,#22314fee,#0d1424f2);border:1px solid #7fd0ff;border-left:4px solid #7fd0ff;border-radius:10px;padding:9px 14px;box-shadow:0 4px 18px #0008;animation:rpgunlA 4s ease forwards;max-width:260px;}'
+  +'.rpgunl .h{color:#7fd0ff;font-weight:800;font-size:11px;letter-spacing:1px;text-transform:uppercase;}'
+  +'.rpgunl .b{color:#fff;font-weight:700;font-size:14px;margin-top:1px;}'
+  +'@keyframes rpgunlA{0%{opacity:0;transform:translateX(40px);}8%{opacity:1;transform:translateX(0);}85%{opacity:1;}100%{opacity:0;transform:translateX(30px);}}'
+  +'#rpgScreen{position:fixed;inset:0;z-index:60;background:radial-gradient(circle at 50% 30%,#141d2eF2,#070b12F8);display:none;flex-direction:column;padding:calc(14px + var(--safe-t,0px)) 14px calc(14px + var(--safe-b,0px));}'
+  +'#rpgScreen h2{color:#f0c24a;text-align:center;margin:4px 0 10px;font-size:20px;letter-spacing:1px;}'
+  +'#rpgList{overflow-y:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;padding-bottom:8px;}'
+  +'.rpgcard{background:#161f30;border:1px solid #2b3a54;border-radius:12px;padding:11px 12px;cursor:pointer;transition:border-color .15s;}'
+  +'.rpgcard:active{border-color:#f0c24a;}'
+  +'.rpgcard .row{display:flex;align-items:center;gap:9px;}'
+  +'.rpgcard .ic{font-size:22px;width:26px;text-align:center;}'
+  +'.rpgcard .nm{font-weight:800;color:#eaf0fa;font-size:15px;flex:1;}'
+  +'.rpgcard .lv{font-weight:900;color:#f0c24a;font-size:15px;}'
+  +'.rpgbar{height:8px;background:#0c1220;border-radius:6px;margin-top:8px;overflow:hidden;border:1px solid #26314a;}'
+  +'.rpgbar i{display:block;height:100%;border-radius:6px;}'
+  +'.rpgmeta{display:flex;justify-content:space-between;margin-top:5px;color:#8fa2bd;font-size:11px;}'
+  +'.rpgtiers{margin-top:8px;display:none;flex-direction:column;gap:3px;}'
+  +'.rpgtier{display:flex;gap:8px;align-items:center;font-size:12px;padding:2px 0;}'
+  +'.rpgtier .tl{width:34px;color:#8fa2bd;font-weight:700;text-align:right;}'
+  +'.rpgtier .tt{flex:1;}'
+  +'.rpgtier.on .tt{color:#8de29a;} .rpgtier.on .tl{color:#8de29a;} .rpgtier.off .tt{color:#5c6b82;}'
+  ;
+  document.head.appendChild(st);
+}
+function rpgEl(id){ return document.getElementById(id); }
+function rpgXpFlash(id, amt){
+  rpgInjectCSS(); var host=rpgEl('rpgXp'); if(!host){ host=document.createElement('div'); host.id='rpgXp'; document.body.appendChild(host); }
+  var sk=rpgSkill(id); var d=document.createElement('div'); d.className='rpgxp';
+  d.innerHTML='<span style="color:'+sk.col+'">'+sk.ic+' '+sk.name+'</span> +'+Math.round(amt);
+  host.appendChild(d); setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); }, 1550);
+  while(host.children.length>4) host.removeChild(host.firstChild);
+}
+function rpgLevelBanner(sk, lvl){
+  rpgInjectCSS(); var host=rpgEl('rpgBanner'); if(!host){ host=document.createElement('div'); host.id='rpgBanner'; document.body.appendChild(host); }
+  host.innerHTML='<div class="rpgban"><div class="t" style="color:'+sk.col+'">'+sk.ic+' '+sk.name+'</div><div class="n">Level '+lvl+'</div><div class="s">'+(lvl>=100?'MASTERED':'Keep it up!')+'</div></div>';
+  host.style.display='block'; clearTimeout(host._t); host._t=setTimeout(function(){ host.style.display='none'; }, 2400);
+}
+function rpgUnlockPopup(sk, text, lvl){
+  rpgInjectCSS(); var host=rpgEl('rpgUnlock'); if(!host){ host=document.createElement('div'); host.id='rpgUnlock'; document.body.appendChild(host); }
+  var d=document.createElement('div'); d.className='rpgunl'; d.style.borderLeftColor=sk.col;
+  d.innerHTML='<div class="h" style="color:'+sk.col+'">'+sk.ic+' '+sk.name+' \u2022 Lv '+lvl+'</div><div class="b">Unlocked: '+text+'</div>';
+  host.appendChild(d); setTimeout(function(){ if(d.parentNode) d.parentNode.removeChild(d); }, 4000);
+  toast('\u2728 '+sk.name+' Lv '+lvl+' \u2014 '+text);
+}
+function rpgOnLevel(id, lvl){
+  var sk=rpgSkill(id); rpgLevelBanner(sk, lvl);
+  try{ tone(660,0.09,'triangle',0.09); setTimeout(function(){ tone(880,0.11,'triangle',0.09); },90); }catch(e){}
+  for(var i=0;i<sk.tiers.length;i++){ if(sk.tiers[i][0]===lvl){ rpgUnlockPopup(sk, sk.tiers[i][1], lvl); try{ setTimeout(function(){ tone(1050,0.16,'square',0.06); },200); }catch(e){} } }
+}
+// --- skills screen UI ---
+function rpgBuildScreen(){
+  rpgInjectCSS();
+  if(rpgEl('rpgScreen')) return;
+  var sc=document.createElement('div'); sc.id='rpgScreen';
+  var head=document.createElement('div'); head.style.cssText='display:flex;align-items:center;gap:10px;';
+  var h=document.createElement('h2'); h.textContent='\uD83D\uDCD8 Skills'; h.style.flex='1';
+  var totalEl=document.createElement('div'); totalEl.id='rpgTotal'; totalEl.style.cssText='color:#bcd;font-weight:800;font-size:13px;';
+  var close=document.createElement('button'); close.className='mbtn'; close.textContent='Close'; close.style.cssText='width:auto;padding:8px 18px;margin:0;';
+  close.onclick=function(){ sc.style.display='none'; };
+  head.appendChild(h); head.appendChild(totalEl); head.appendChild(close);
+  var list=document.createElement('div'); list.id='rpgList';
+  sc.appendChild(head); sc.appendChild(list); document.body.appendChild(sc);
+  rpgRefreshUI();
+}
+function rpgRefreshUI(){
+  var list=rpgEl('rpgList'); if(!list) return;
+  list.innerHTML=''; var totLv=0;
+  for(var i=0;i<RPG_SKILLS.length;i++){ (function(sk){
+    var s=rpgState[sk.id]||{xp:0,lvl:1}; totLv+=s.lvl;
+    var pct = s.lvl>=100?100:Math.floor(100*s.xp/rpgReq(s.lvl));
+    var card=document.createElement('div'); card.className='rpgcard';
+    var tiers='';
+    for(var t=0;t<sk.tiers.length;t++){ var on=s.lvl>=sk.tiers[t][0];
+      tiers+='<div class="rpgtier '+(on?'on':'off')+'"><div class="tl">Lv '+sk.tiers[t][0]+'</div><div class="tt">'+(on?'\u2714 ':'\uD83D\uDD12 ')+sk.tiers[t][1]+'</div></div>'; }
+    card.innerHTML='<div class="row"><div class="ic">'+sk.ic+'</div><div class="nm">'+sk.name+'</div><div class="lv" style="color:'+sk.col+'">'+s.lvl+'</div></div>'
+      +'<div class="rpgbar"><i style="width:'+pct+'%;background:'+sk.col+'"></i></div>'
+      +'<div class="rpgmeta"><span>'+sk.act+'</span><span>'+(s.lvl>=100?'MAX':(s.xp+' / '+rpgReq(s.lvl)+' xp'))+'</span></div>'
+      +'<div class="rpgtiers">'+tiers+'</div>';
+    card.onclick=function(){ var tt=card.querySelector('.rpgtiers'); tt.style.display=(tt.style.display==='flex')?'none':'flex'; };
+    list.appendChild(card);
+  })(RPG_SKILLS[i]); }
+  var te=rpgEl('rpgTotal'); if(te) te.textContent='Total Level '+totLv+' / '+(RPG_SKILLS.length*100);
+}
+function openRpgSkills(){ rpgBuildScreen(); var sc=rpgEl('rpgScreen'); rpgRefreshUI(); sc.style.display='flex'; }
+// build UI + a Skills button in the pause menu, once
+(function rpgBootstrap(){
+  try{ rpgInit(); rpgInjectCSS();
+    var attach=function(){ var pe=document.getElementById('pExit'); if(pe && pe.parentNode && !document.getElementById('pSkills')){
+        var b=document.createElement('button'); b.className='mbtn'; b.id='pSkills'; b.innerHTML='\uD83D\uDCD8 Skills';
+        b.onclick=function(){ try{ if(typeof closePause==='function') closePause(); }catch(e){} openRpgSkills(); };
+        pe.parentNode.insertBefore(b, pe);
+    } };
+    if(document.readyState!=='loading') attach(); else document.addEventListener('DOMContentLoaded', attach);
+  }catch(e){}
+})();
 
 /* ----------------------------- MAIN LOOP -------------------------------- */
 var running=false, now=0, last=0, frame=0, acc=0;
@@ -7515,6 +7834,15 @@ function physics(dt){
   if(Player.riding && !riding) Player.riding=null;
   if(riding && (input.crouch || (!IS_MOBILE && (keys['ControlLeft']||keys['KeyC'])))){ dismountHorse(); riding=false; }
   var speed = ridingBoat?(Player.boatFloating?7.4:1.8):(riding?8.2:(Player.inWater?3.2:(Player.sneaking?2.4:(Player.sprinting?6.8:4.6))));
+  if(!ridingBoat && !riding) speed *= rpgMoveSpeed();                 // RPG athletics move-speed perk
+  var _hs=Math.hypot(Player.vel.x,Player.vel.z)*dt;                   // RPG athletics/swimming XP (distance-based; no AFK)
+  if(_hs>0.03 && !Player.flying){
+    if(Player.inWater){ rpgSwimAcc=(rpgSwimAcc||0)+_hs; if(rpgSwimAcc>=5){ rpgSwimAcc-=5; rpgAddXP('swimming',1); } }
+    else if(Player.sprinting){ rpgAthAcc=(rpgAthAcc||0)+_hs; if(rpgAthAcc>=6){ rpgAthAcc-=6; rpgAddXP('athletics',1); } }
+  }
+  rpgBiomeCd=(rpgBiomeCd||0)-dt;                                      // RPG exploration XP (new biomes)
+  if(rpgBiomeCd<=0){ rpgBiomeCd=1.0; var _bi=World.biomeAt(Math.floor(Player.pos.x),Math.floor(Player.pos.z));
+    if(_bi!==rpgLastBiome){ if(rpgLastBiome!=null){ if(!rpgSeenBiome[_bi]){ rpgSeenBiome[_bi]=1; rpgAddXP('exploration',30); } else rpgAddXP('exploration',3); } rpgLastBiome=_bi; } }
   Player.sneakGuard = Player.sneaking && grounded && !Player.flying;
   var accel = Player.onGround?40:8;
   Player.vel.x += (wishX*speed - Player.vel.x)*Math.min(1,accel*dt);
@@ -7559,7 +7887,7 @@ function physics(dt){
   }
   else if(!climbing && !Player.inWater){ Player.vel.y -= 24*dt; if(Player.vel.y<-40)Player.vel.y=-40; }   // water handles its own vertical motion; don't double-apply gravity or it cancels the swim-up
   // jump (boats don't jump)
-  if(!Player.flying && !ridingBoat && (input.jump||keys['Space']) && Player.onGround && !Player.inWater){ Player.vel.y=riding?9.8:8.2; Player.onGround=false; }
+  if(!Player.flying && !ridingBoat && (input.jump||keys['Space']) && Player.onGround && !Player.inWater){ Player.vel.y=riding?9.8:8.2; Player.onGround=false; rpgAddXP('agility',1); }
   // auto-jump (Bedrock-style): hop up 1-block steps while walking into them
   if(autoJump && !Player.flying && Player.onGround && !Player.inWater){
     var hsp=Math.hypot(Player.vel.x,Player.vel.z);
@@ -7877,8 +8205,11 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 107';
+var VERSION='Update 110';
 var CHANGELOG=[
+  { v:'Update 110', t:'Foundries, Stations & Loot', items:['\uD83D\uDCCD &lt;b&gt;Skill XP pop-ups moved&lt;/b&gt; out of the middle of the screen \u2014 they now slide in along the left edge, out of your way','\uD83C\uDFED Two new rare structures: the &lt;b&gt;Brass Foundry&lt;/b&gt; (a factory hall with working furnaces and twin smokestacks) and the &lt;b&gt;Rail Station&lt;/b&gt; (a covered brass platform)','\uD83D\uDCE6 &lt;b&gt;Every steampunk structure now hides a loot chest&lt;/b&gt; \u2014 brass, iron & copper ingots, gold, redstone and more \u2014 so exploring them actually pays off (and trains Exploration)'] },
+  { v:'Update 109', t:'Steampunk World & Ore XP', items:['\u26cf\uFE0F &lt;b&gt;Ores now drop XP&lt;/b&gt; when you mine them (coal a little, diamond & emerald a lot) \u2014 on top of the Mining skill XP','\uD83C\uDFED &lt;b&gt;Rare steampunk structures&lt;/b&gt; now generate out in the world: brass-capped &lt;b&gt;Windmills&lt;/b&gt; with turning sails, stone &lt;b&gt;Watch Towers&lt;/b&gt; with glass lookouts, and &lt;b&gt;Pumping Stations&lt;/b&gt; bristling with brass pipes. They\u2019re spread far apart, so finding one is a treat','\uD83E\uDD16 &lt;b&gt;Creepers got a steampunk makeover&lt;/b&gt; \u2014 brass boiler bodies, iron bands, a pressure gauge, a little smokestack and a glowing furnace face','This is the first wave of a larger steam-age build-out \u2014 more structures (foundries, rail stations, airship docks, factories) and a tech-progression arc are on the way'] },
+  { v:'Update 108', t:'RPG Skill System', items:['\uD83D\uDCD8 &lt;b&gt;15 skills that level up as you play&lt;/b&gt; \u2014 Mining, Woodcutting, Farming, Fishing, Combat, Defense, Athletics, Agility, Swimming, Crafting, Smithing, Cooking, Animal Handling, Trading and Exploration. No skill points to spend: you get better at what you actually do','\uD83C\uDF1F Each skill runs &lt;b&gt;1\u2013100&lt;/b&gt; with a long XP curve, live progress bars, XP pop-ups, level-up banners, sounds and unlock alerts. Open the &lt;b&gt;\uD83D\uDCD8 Skills&lt;/b&gt; menu (pause screen) to see every skill, its perks and your total level','\u2694\uFE0F &lt;b&gt;Real perks&lt;/b&gt; \u2014 mining/axe speed, double-ore, extra logs & crops, auto-smelt, crit hits, life steal, damage reduction, move speed, softer landings, fishing luck, faster smelting, tastier food, trade rebates and more \u2014 all bounded so no single skill is mandatory','\uD83D\uDEE1\uFE0F Anti-exploit: no XP in creative, no XP for breaking blocks you just placed, and sprint/swim XP is distance-based so you can\u2019t AFK it. Skills save with your world'] },
   { v:'Update 107', t:'Steam Harvester', items:['\uD83C\uDF3E &lt;b&gt;Steam Harvester&lt;/b&gt; \u2014 a powered auto-farm. Wire it to a generator with cable and it reaps every &lt;b&gt;ripe&lt;/b&gt; crop in a 9\u00d79 area around it, &lt;b&gt;replants&lt;/b&gt; each one so it regrows, and drops the harvest into an attached chest','\uD83D\uDD17 Pairs with brass pipes: park a chest on the Harvester, pipe it into sorted storage or straight into a furnace \u2014 hands-free bread and stew. Craft it from iron + a diamond + brass + redstone'] },
   { v:'Update 106', t:'Phantom Blocks, Sorting & Fixes', items:['\uD83D\uDC7B &lt;b&gt;Phantom terrain fixed at the source&lt;/b&gt; \u2014 when a chunk failed to redraw, the game was &lt;i&gt;keeping the old picture&lt;/i&gt; frozen over ground that had since changed, so you\u2019d see a hill and walk right through it. Failed redraws now clear the stale image and retry instead of freezing it, and one odd block can no longer abort a whole chunk','\uD83E\uDDFA &lt;b&gt;Recipe exploit fixed&lt;/b&gt; \u2014 Soul Lanterns (and any similar recipe) no longer craft for free; they properly require their ingredients now','\uD83E\uDEA7 &lt;b&gt;Underwater overlay&lt;/b&gt; \u2014 the blue tint and bubbles no longer stick on screen after you quit to the title','\uD83D\uDD00 &lt;b&gt;Pipe auto-sorting&lt;/b&gt; \u2014 brass pipes now route each item to a chest that already holds that type (drop one sample in a chest to make it a sorting bin), and feed machines before storage'] },
   { v:'Update 105', t:'Brass Pipes & Swim Fix', items:['\uD83C\uDFCA &lt;b&gt;Swimming up finally works&lt;/b&gt; \u2014 holding JUMP now lifts you through water reliably (gravity was quietly cancelling the swim-up every frame)','\uD83D\uDD27 &lt;b&gt;Brass Pipes \u2014 the start of automation!&lt;/b&gt; Craft them from brass (3 brass \u2192 8 pipes) and run a line of pipes between your machines and chests. Pipes automatically carry items from a &lt;b&gt;chest or a machine\u2019s output&lt;/b&gt; into the &lt;b&gt;next machine\u2019s input or a chest&lt;/b&gt; along the connected run. Build a Macerator \u2192 Furnace \u2192 chest line and watch ore process itself hands-free','\u2699\uFE0F This is the first piece of the steampunk factory system \u2014 sorting, extractors and more pipe tricks are coming next'] },
