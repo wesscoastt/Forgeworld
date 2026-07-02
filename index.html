@@ -2026,8 +2026,8 @@ function buildChunkGeometry(chunk){
     var transparent = b.transparent && (b.liquid || id===B.GLASS || b.shape==='pane');
     var P = transparent?tP:oP, C=transparent?tC:oC, L=transparent?tL:oL, U=transparent?tU:oU, D=transparent?tD:oD, I=transparent?tI:oI;
     var wx=cx*CHUNK+lx, wz=cz*CHUNK+lz;
-    if(b.thin){ emitTorch(P,C,L,U,D,I, lx,ly,lz); continue; }
-    if(b.shape){ emitShape(P,C,L,U,D,I, id,b, lx,ly,lz, wx,wz); continue; }
+    if(b.thin){ try{ emitTorch(P,C,L,U,D,I, lx,ly,lz); }catch(e){} continue; }
+    if(b.shape){ try{ emitShape(P,C,L,U,D,I, id,b, lx,ly,lz, wx,wz); }catch(e){} continue; }
     var surf=1.0;
     var logAx = b.log ? (World.tiles[World.ck(wx,ly,wz)]||{}).axis : null;
     var frontF = (isChest(id)||id===B.FURNACE) ? ((World.tiles[World.ck(wx,ly,wz)]||{}).front) : null;
@@ -2927,9 +2927,17 @@ function buildPlantMesh(ch){
 function rebuildChunkMesh(ch){
   var geo;
   try{ geo=buildChunkGeometry(ch); }
-  catch(err){ ch.dirty=false; ch.built=true;
-    try{ console.error('chunk build failed @'+ch.cx+','+ch.cz, err); if(typeof toast==='function') toast('ERR chunk '+ch.cx+','+ch.cz+': '+((err&&err.message)||err)); }catch(e){}
+  catch(err){
+    // Build failed. NEVER keep the old mesh — a stale mesh over changed block data is exactly the
+    // "phantom" you can see but walk through. Clear it and retry a few times; transient errors
+    // (e.g. a neighbour still loading) usually clear on the next pass.
+    if(ch.mesh){ scene.remove(ch.mesh); ch.mesh.geometry.dispose(); ch.mesh=null; }
+    if(ch.tmesh){ scene.remove(ch.tmesh); ch.tmesh.geometry.dispose(); ch.tmesh=null; }
+    ch.buildFails=(ch.buildFails||0)+1;
+    if(ch.buildFails<6){ ch.dirty=true; } else { ch.dirty=false; ch.built=true; }
+    try{ console.error('chunk build failed @'+ch.cx+','+ch.cz, err); if(ch.buildFails===1 && typeof toast==='function') toast('rebuilding chunk '+ch.cx+','+ch.cz+'\u2026'); }catch(e){}
     return; }
+  ch.buildFails=0;
   if(ch.mesh){ scene.remove(ch.mesh); ch.mesh.geometry.dispose(); ch.mesh=null; }
   if(ch.tmesh){ scene.remove(ch.tmesh); ch.tmesh.geometry.dispose(); ch.tmesh=null; }
   if(geo.opaque){ var m=new THREE.Mesh(geo.opaque, chunkMat); m.position.set(ch.cx*CHUNK,0,ch.cz*CHUNK); m.frustumCulled=true; scene.add(m); ch.mesh=m; }
@@ -3983,7 +3991,7 @@ shaped([['LEATHER','LEATHER','LEATHER'],['LEATHER','CHEST','LEATHER'],['LEATHER'
 shaped([[null,'IRON_INGOT',null],['IRON_INGOT','TORCH','IRON_INGOT'],[null,'IRON_INGOT',null]], 'LANTERN', 1);
 shaped([[null,'COPPER_INGOT',null],['COPPER_INGOT','TORCH','COPPER_INGOT'],[null,'COPPER_INGOT',null]], 'COPPER_LANTERN', 1);
 shaped([[null,'GOLD_INGOT',null],['GOLD_INGOT','TORCH','GOLD_INGOT'],[null,'GOLD_INGOT',null]], 'GOLD_LANTERN', 1);
-shapeless(['LANTERN','TIN_INGOT'], 'SOUL_LANTERN', 1);
+shapeless([{key:'LANTERN',qty:1},{key:'TIN_INGOT',qty:1}], 'SOUL_LANTERN', 1);
 shaped([['IRON_INGOT','IRON_INGOT','IRON_INGOT'],['IRON_INGOT','STICK','IRON_INGOT'],[null,'STICK',null]], 'IRON_BATTLEAXE', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],[null,'IRON_INGOT',null]], 'BUCKET', 1);
 shaped([['PLANKS','PLANKS','PLANKS'],['PLANKS','IRON_INGOT','PLANKS'],[null,'PLANKS',null]], 'SHIELD', 1);
@@ -5108,19 +5116,31 @@ function pipeCanAccept(t, key){
   return false;
 }
 function pipeAt(x,y,z){ return World.getBlock(x,y,z)===B.BRASS_PIPE; }
+// A sink is scored so the network routes intelligently: a chest that already holds this item is a
+// "sort target" (seed a chest with one sample and matching items pile into it); machines get fed before
+// storage; and a chest source never dumps into a plain chest (that would just bounce back).
+function pipeSinkScore(tt, key, srcIsChest){
+  if(!pipeCanAccept(tt,key)) return 0;
+  if(tt.type==='chest'){
+    for(var i=0;i<tt.items.length;i++){ if(tt.items[i] && tt.items[i].key===key) return 3; }  // already sorts this item
+    return srcIsChest ? 0 : 1;                                                                 // machine output -> general storage
+  }
+  return 2;   // furnace / macerator / compressor / generator input
+}
 function findPipeSink(port, sx,sy,sz, key, srcIsChest){
   var seen={}, q=[[port.x,port.y,port.z]], head=0, cap=240;
   seen[port.x+','+port.y+','+port.z]=1;
+  var best=null, bestScore=0;
   while(head<q.length && head<cap){ var c=q[head++], cx=c[0],cy=c[1],cz=c[2];
     for(var d=0;d<6;d++){ var nx=cx+PDIRS[d][0],ny=cy+PDIRS[d][1],nz=cz+PDIRS[d][2];
       if(pipeAt(nx,ny,nz)){ var pk=nx+','+ny+','+nz; if(!seen[pk]){ seen[pk]=1; q.push([nx,ny,nz]); } continue; }
       if(nx===sx&&ny===sy&&nz===sz) continue;                 // never feed back into the source
       var tt=World.tiles[World.ck(nx,ny,nz)]; if(!tt) continue;
-      if(srcIsChest && tt.type==='chest') continue;           // no chest->chest bounce in this first version
-      if(pipeCanAccept(tt,key)) return tt;
+      var sc=pipeSinkScore(tt,key,srcIsChest);
+      if(sc>bestScore){ bestScore=sc; best=tt; if(sc>=3) return best; }   // 3 = perfect sort target, take it
     }
   }
-  return null;
+  return best;
 }
 var pipeCd=0;
 function tickPipes(dt){
@@ -7356,6 +7376,8 @@ function exitToTitle(){ saveGame(true); closePause(); running=false;
   stopRainSound(); weather='clear'; rainAmt=0; weatherTimer=80+Math.random()*120;
   if(musicTimer){ clearInterval(musicTimer); musicTimer=null; } playMenuTheme();
   document.getElementById('hud').classList.add('hidden'); document.getElementById('touch').classList.add('hidden');
+  var wo=document.getElementById('waterOverlay'); if(wo) wo.style.display='none';       // clear the underwater tint
+  var bb=document.getElementById('bubbles'); if(bb) bb.style.display='none';            // and the air bubbles
   var bd=document.getElementById('btnDown'); if(bd) bd.classList.add('hidden');
   showScreen('menu');
 }
@@ -7811,8 +7833,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 105';
+var VERSION='Update 106';
 var CHANGELOG=[
+  { v:'Update 106', t:'Phantom Blocks, Sorting & Fixes', items:['\uD83D\uDC7B &lt;b&gt;Phantom terrain fixed at the source&lt;/b&gt; \u2014 when a chunk failed to redraw, the game was &lt;i&gt;keeping the old picture&lt;/i&gt; frozen over ground that had since changed, so you\u2019d see a hill and walk right through it. Failed redraws now clear the stale image and retry instead of freezing it, and one odd block can no longer abort a whole chunk','\uD83E\uDDFA &lt;b&gt;Recipe exploit fixed&lt;/b&gt; \u2014 Soul Lanterns (and any similar recipe) no longer craft for free; they properly require their ingredients now','\uD83E\uDEA7 &lt;b&gt;Underwater overlay&lt;/b&gt; \u2014 the blue tint and bubbles no longer stick on screen after you quit to the title','\uD83D\uDD00 &lt;b&gt;Pipe auto-sorting&lt;/b&gt; \u2014 brass pipes now route each item to a chest that already holds that type (drop one sample in a chest to make it a sorting bin), and feed machines before storage'] },
   { v:'Update 105', t:'Brass Pipes & Swim Fix', items:['\uD83C\uDFCA &lt;b&gt;Swimming up finally works&lt;/b&gt; \u2014 holding JUMP now lifts you through water reliably (gravity was quietly cancelling the swim-up every frame)','\uD83D\uDD27 &lt;b&gt;Brass Pipes \u2014 the start of automation!&lt;/b&gt; Craft them from brass (3 brass \u2192 8 pipes) and run a line of pipes between your machines and chests. Pipes automatically carry items from a &lt;b&gt;chest or a machine\u2019s output&lt;/b&gt; into the &lt;b&gt;next machine\u2019s input or a chest&lt;/b&gt; along the connected run. Build a Macerator \u2192 Furnace \u2192 chest line and watch ore process itself hands-free','\u2699\uFE0F This is the first piece of the steampunk factory system \u2014 sorting, extractors and more pipe tricks are coming next'] },
   { v:'Update 104', t:'Crops Grow & Livelier Villages', items:['\uD83C\uDF3E &lt;b&gt;Crops now grow in visible stages&lt;/b&gt; \u2014 sprout \u2192 young \u2192 tall \u2192 ripe. You can tell at a glance what\u2019s ready: wheat turns golden when it\u2019s time to harvest. Only ripe crops give a full yield (plant \u2192 grow \u2192 harvest wheat \u2192 craft &amp; eat bread)','\uD83C\uDFD8\uFE0F &lt;b&gt;Villages sit properly on the land&lt;/b&gt; \u2014 houses and farms now follow the local ground instead of floating or burying on slopes','\uD83C\uDFE1 &lt;b&gt;Roadside lamp posts&lt;/b&gt; light the paths between buildings at night (and keep mobs off the streets)','\u2692\uFE0F Every village now has a &lt;b&gt;blacksmith&lt;/b&gt; \u2014 an outdoor forge and a chest with metal loot (ingots, tools materials, the occasional gem)'] },
   { v:'Update 103', t:'Phantom Blocks & Eating Fixes', items:['\uD83D\uDC7B Fixed &lt;b&gt;phantom blocks&lt;/b&gt; \u2014 trees and terrain that rendered but weren\u2019t really there (you walked straight through them). A chunk unloaded while queued for a redraw was rebuilding a ghost mesh with no world behind it; it now skips any chunk that\u2019s no longer loaded','\uD83C\uDF56 Fixed &lt;b&gt;hit-or-miss eating&lt;/b&gt; \u2014 you can now eat no matter where you\u2019re looking. Before, food only worked if you happened to be aiming at a nearby block; equip food and tap use to eat anywhere'] },
@@ -7952,7 +7975,7 @@ function openGuide(){
     '<h3>\uD83D\uDD28 Crafting & Smelting</h3>',
     '<p>Open <b>Inventory</b> for the 2\u00d72 grid, or place &amp; tap a <b>Crafting Table</b> for the full 3\u00d73. Tap the <b>\uD83D\uDCD6 Recipe Book</b> button to browse every recipe. Build a <b>Furnace</b> to smelt ore into ingots and cook food (fuel = coal, wood, planks).</p>',
     '<h3>\u2699 Machines & Metals</h3>',
-    '<ul><li><b>Macerator</b> \u2014 grinds ore into 2\u00d7 dust; smelt the dust for double ingots.</li><li><b>Generator</b> \u2014 burns fuel into power. Run <b>Energy Cables</b> (copper) from it to power a Macerator or Furnace a few blocks away.</li><li><b>Powered machines</b> \u2014 a cabled Macerator grinds ~3.5\u00d7 faster; a cabled Furnace smelts 3\u00d7 faster with no coal.</li><li><b>Solar Panel</b> \u2014 free power in daylight when open to the sky; wire it in with cables.</li><li><b>Compressor</b> - presses ingots into <b>metal plates</b> (and crushes cobble back into stone, gravel into cobble). Plates build the advanced machines. Faster when cabled to power.</li><li><b>Wind Turbine</b> - makes power from open sky day and night; the <b>higher you build it</b>, the more wind it catches. Needs iron plates.</li><li><b>Advanced Energy Cell</b> - stores 4x the power of a normal Energy Cell. Built from plates + an Energy Cell + a diamond.</li><li><b>Mining Drill</b> - an electric tier-4 pickaxe that mines even faster than diamond. Built from iron plates + an Energy Cell + a diamond.</li><li><b>Bronze</b> \u2014 alloy 3 copper + 1 tin \u2192 bronze ingots \u2192 an iron-level tool set.</li><li><b>Brass</b> \u2014 2 copper + 1 gold ore \u2192 brass ingots (steampunk building + portal parts).</li><li><b>Steel</b> \u2014 iron + coal.</li></ul>',
+    '<ul><li><b>Macerator</b> \u2014 grinds ore into 2\u00d7 dust; smelt the dust for double ingots.</li><li><b>Generator</b> \u2014 burns fuel into power. Run <b>Energy Cables</b> (copper) from it to power a Macerator or Furnace a few blocks away.</li><li><b>Powered machines</b> \u2014 a cabled Macerator grinds ~3.5\u00d7 faster; a cabled Furnace smelts 3\u00d7 faster with no coal.</li><li><b>Solar Panel</b> \u2014 free power in daylight when open to the sky; wire it in with cables.</li><li><b>Compressor</b> - presses ingots into <b>metal plates</b> (and crushes cobble back into stone, gravel into cobble). Plates build the advanced machines. Faster when cabled to power.</li><li><b>Wind Turbine</b> - makes power from open sky day and night; the <b>higher you build it</b>, the more wind it catches. Needs iron plates.</li><li><b>Advanced Energy Cell</b> - stores 4x the power of a normal Energy Cell. Built from plates + an Energy Cell + a diamond.</li><li><b>Mining Drill</b> - an electric tier-4 pickaxe that mines even faster than diamond. Built from iron plates + an Energy Cell + a diamond.</li><li><b>Brass Pipes</b> - lay a connected run to move items automatically: from a chest or a machine\u2019s output into the next machine\u2019s input or a chest. <b>Auto-sorting:</b> drop one sample of an item into a storage chest and matching items pipe themselves into it; machines get fed before storage. (3 brass \u2192 8 pipes)</li><li><b>Bronze</b> \u2014 alloy 3 copper + 1 tin \u2192 bronze ingots \u2192 an iron-level tool set.</li><li><b>Brass</b> \u2014 2 copper + 1 gold ore \u2192 brass ingots (steampunk building + portal parts).</li><li><b>Steel</b> \u2014 iron + coal.</li></ul>',
     '<h3>\uD83D\uDCA7 World Tools</h3>',
     '<ul><li><b>Bucket</b> (3 iron) scoops &amp; places water. Water flows and settles like real liquid.</li><li><b>Boat</b> (5 planks) \u2014 place on water and tap to sail; SNEAK to exit, SNEAK+tap to pick up.</li><li><b>Torch</b> \u2014 lights the area with a warm flicker. Put one in your <b>Off-Hand</b> slot to carry light in your left hand while you mine.</li><li><b>Shield</b> (planks + iron) in the off-hand blocks about half of incoming damage.</li><li><b>Shears</b> (2 iron) \u2014 tap a sheep for 1\u20133 wool; it goes naked and regrows its coat in time.</li><li><b>Bed</b> (3 wool + 3 planks) \u2014 tap at night to skip to morning and set your respawn point.</li><li><b>Map</b> (8 planks + redstone) \u2014 hold and tap to see a top-down view of explored land; add named <b>waypoints</b> at your spot.</li><li><b>Compass</b> (4 iron + redstone) \u2014 hold it for the heading and distance back to spawn.</li></ul>',
     '<h3>\uD83C\uDF31 Farming</h3>',
