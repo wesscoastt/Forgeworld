@@ -263,7 +263,7 @@
     <div class="prow"><span>View</span><button class="tog" id="pView">1st Person</button></div>
     <div class="prow"><span>Sensitivity</span><input type="range" id="pSens" min="40" max="200" value="100"></div>
     <div class="prow"><span>FOV <b id="pFovV"></b></span><input type="range" id="pFov" min="60" max="110" value="72"></div>
-    <div class="prow"><span>View Distance <b id="pDistV"></b></span><input type="range" id="pDist" min="3" max="10" value="7"></div>
+    <div class="prow"><span>View Distance <b id="pDistV"></b></span><input type="range" id="pDist" min="3" max="16" value="7"></div>
     <div class="prow"><span>Auto Jump</span><button class="tog on" id="pAutoJump">On</button></div>
     <div class="prow"><span>Mob Griefing</span><button class="tog on" id="pGrief">On</button></div>
     <div class="prow"><span>Fire Spread</span><button class="tog on" id="pFire">On</button></div>
@@ -357,8 +357,9 @@
     <div class="prow"><span>Music</span><button class="tog on" id="sMusic">On</button></div>
     <div class="prow"><span>Sound</span><button class="tog on" id="sSound">On</button></div>
     <div class="prow"><span>Sensitivity</span><input type="range" id="sSens" min="40" max="200" value="100"></div>
-    <div class="prow"><span>View Distance <b id="sDistV"></b></span><input type="range" id="sDist" min="3" max="10" value="7"></div>
+    <div class="prow"><span>View Distance <b id="sDistV"></b></span><input type="range" id="sDist" min="3" max="16" value="7"></div>
     <div class="prow"><span>Auto Jump</span><button class="tog on" id="sAutoJump">On</button></div>
+    <div class="prow"><span>Fullscreen</span><button class="tog" id="sFullscreen">Off</button></div>
     <button class="mbtn" id="btnSettingsBack">Back</button>
   </div>
 </div>
@@ -418,7 +419,7 @@ defBlock({key:'WATER', name:'Water', col:[46,104,170], top:[74,152,196], side:[3
 defBlock({key:'LOG', name:'Oak Log', col:[102,76,44], top:[160,128,82], side:[96,72,42], solid:true, tool:'axe', hard:1.2 , log:true });
 defBlock({key:'LEAVES', name:'Oak Leaves', col:[54,118,46], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'PLANKS', name:'Oak Planks', col:[176,140,86], top:[182,146,92], solid:true, tool:'axe', hard:1.0 });
-defBlock({key:'GLASS', name:'Glass', col:[200,225,235], solid:true, transparent:true, hard:0.4 });
+defBlock({key:'GLASS', name:'Glass', col:[218,236,244], top:[228,244,250], side:[206,228,240], solid:true, transparent:true, hard:0.4 });
 defBlock({key:'COAL_ORE', name:'Coal Ore', col:[60,60,64], spec:[26,26,28], solid:true, tool:'pickaxe', tier:1, hard:2.2, drop:'COAL' });
 defBlock({key:'IRON_ORE', name:'Iron Ore', col:[140,128,118], spec:[206,170,140], solid:true, tool:'pickaxe', tier:2, hard:2.6 });
 defBlock({key:'GOLD_ORE', name:'Gold Ore', col:[140,132,96], spec:[226,196,84], solid:true, tool:'pickaxe', tier:3, hard:2.8 });
@@ -520,6 +521,9 @@ defBlock({key:'HARVESTER', name:'Steam Harvester', col:[120,150,96], top:[196,17
 defBlock({key:'BLAST_FURNACE', name:'Blast Furnace', col:[74,70,72], top:[120,96,70], side:[64,60,64], solid:true, tool:'pickaxe', tier:1, hard:3.4 });
 defBlock({key:'SPAWNER', name:'Monster Spawner', col:[42,38,46], top:[52,48,58], side:[38,34,42], solid:true, tool:'pickaxe', tier:1, hard:5.0, light:2 });
 defBlock({key:'SPRINKLER', name:'Mechanical Sprinkler', col:[92,140,150], top:[150,192,205], side:[80,120,140], solid:true, tool:'pickaxe', tier:1, hard:2.8 });
+defBlock({key:'ANVIL', name:'Anvil', col:[66,68,78], top:[92,94,104], side:[54,56,64], solid:true, tool:'pickaxe', tier:1, hard:5.0 });
+defBlock({key:'SWAMP_GRASS', name:'Swamp Grass', col:[72,92,52], top:[82,104,56], side:[74,66,48], solid:true, hard:0.5 });
+defBlock({key:'SWAMP_WATER', name:'Swamp Water', col:[54,88,66], top:[70,104,80], side:[44,72,56], solid:false, transparent:true, liquid:true });
 
 function blk(id){ return BLOCKS[id] || BLOCKS[0]; }
 function isSolid(id){ return blk(id).solid; }
@@ -554,6 +558,8 @@ mat('BONE_MEAL','Bone Meal',[238,238,226]);
 mat('IRON_INGOT','Iron Ingot',[214,196,178]);
 mat('BUCKET','Bucket',[176,182,194],{stack:16});
 mat('WATER_BUCKET','Water Bucket',[64,118,200],{stack:1});
+mat('MILK_BUCKET','Milk Bucket',[242,242,246],{stack:1, food:6, heal:3});
+mat('NAME_TAG','Name Tag',[224,214,182],{stack:16});
 mat('BOAT','Boat',[154,106,58],{stack:1});
 mat('PROPELLER','Propeller',[205,208,216],{stack:16});
 mat('WOODEN_PLANE','Wooden Plane',[176,140,86],{stack:1});
@@ -1137,6 +1143,7 @@ var World = {
           id = ofr<0.06?B.PRISMARINE : ofr<0.095?B.CORAL_PINK : ofr<0.125?B.CORAL_BLUE : ofr<0.155?B.CORAL_YELLOW : ofr<0.160?B.SEA_LANTERN : B.SAND; }
         else if(h<=SEA) id=B.SAND;
         else if(biome===8) id=B.DRY_GRASS;
+        else if(biome===12) id=B.SWAMP_GRASS;
         else id=B.GRASS;
       }
       // caves (3D) - carve STONE only, and keep a 4-block solid surface cap (so stone/rock surfaces never get holes you fall through)
@@ -1149,7 +1156,7 @@ var World = {
       // deepslate in the lowest layers (noisy transition band ~y17-22)
       if(id===B.STONE && y < 22 - (hash3(wx,0,wz,this.seed^0xDEE9)*5|0)){ id=B.DEEPSLATE; }
       // water fill
-      if(id===B.AIR && y<=SEA && y>h){ id=B.WATER; }
+      if(id===B.AIR && y<=SEA && y>h){ id=(biome===12)?B.SWAMP_WATER:B.WATER; }
       // lava: deep sea + occasional cave pools
       if(id===B.AIR && y>0 && y<=4){ id=B.LAVA; }
       else if(id===B.AIR && y>0 && y<=11 && isSolid(blocks[idx(lx,y-1,lz)]) && hash3(wx,y,wz,this.seed^0x1a7a)<0.05){ id=B.LAVA; }
@@ -1230,6 +1237,7 @@ var World = {
       else if(biome===6){ logT=B.CHERRY_LOG; leafT=B.CHERRY_LEAVES; dens=0.024; }
       else if(biome===8){ dens=0.008; }                                           // savanna: sparse oak
       else if(biome===9){ logT=B.SPRUCE_LOG; leafT=B.SPRUCE_LEAVES; dens=0.02; spruce=true; } // snowy
+      else if(biome===12){ dens=0.013; }                                            // swamp: scattered oaks
       else if(biome===10){ leafT=B.JUNGLE_LEAVES; dens=0.05; jungle=true; }        // jungle: dense, tall
       else if(biome===11){ logT=B.LOG; leafT=B.MAPLE_LEAVES; dens=0.03; }            // maple woods: dense autumn oaks
       else if(biome===12){ dens=0.01; }                                             // wetland: sparse oak on the islands
@@ -1571,6 +1579,12 @@ var World = {
     function R(n){ return hash3(v.cx, 600+n, v.cz, seed); }
     var N=5+(R(0)*4|0), i;
     var bsIdx=(R(5)*N)|0;   // one of the houses is the village blacksmith
+    var F=2+(R(60)*2|0);
+    for(i=0;i<F;i++){       // farms FIRST, so a house is never carved through by a farm's tilling
+      var a2=(i/F)*6.2832 + 0.7 + R(70+i)*0.8, r2=16 + R(80+i)*9;
+      var fx=v.cx+Math.round(Math.cos(a2)*r2), fz=v.cz+Math.round(Math.sin(a2)*r2);
+      this.vFarm(ch, v, fx, fz, 3+(R(90+i)*1.99|0), 2+(R(95+i)*1.99|0), pal);
+    }
     for(i=0;i<N;i++){
       var ang=(i/N)*6.2832 + (R(10+i)-0.5)*0.7;
       var rad=12 + R(20+i)*14;
@@ -1578,13 +1592,6 @@ var World = {
       var big=R(30+i)<0.42, rr=big?(3+(R(40+i)*1.99|0)):(2+(R(45+i)*1.99|0));
       this.vPath(ch, v, v.cx, v.cz, bx, bz);
       this.vHouse(ch, v, bx, bz, rr, big, pal, i, (i===bsIdx?'smith':null));
-    }
-    var F=2+(R(60)*2|0);
-    for(i=0;i<F;i++){
-      var a2=(i/F)*6.2832 + 0.7 + R(70+i)*0.8, r2=16 + R(80+i)*9;
-      var fx=v.cx+Math.round(Math.cos(a2)*r2), fz=v.cz+Math.round(Math.sin(a2)*r2);
-      this.vPath(ch, v, v.cx, v.cz, fx, fz);
-      this.vFarm(ch, v, fx, fz, 3+(R(90+i)*1.99|0), 2+(R(95+i)*1.99|0), pal);
     }
     this.vWell(ch, v, pal);   // last, so the central well sits on top of the paths
   },
@@ -2185,7 +2192,9 @@ function buildChunkGeometry(chunk){
     var face=FACES[f]; var n=face.dir;
     var nx=cx*CHUNK+lx, ny=ly, nz=cz*CHUNK+lz;
     var shade=SHADE[face.cat];
-    var bvar = 0.90 + hash3(nx,ny,nz,4242)*0.18; // per-block variation
+    var jr = 0.87 + hash3(nx,ny,nz,4242)*0.24;   // per-block hue+brightness variation (texture feel)
+    var jg = 0.89 + hash3(nx,ny,nz,7331)*0.20;
+    var jb = 0.90 + hash3(nx,ny,nz,1517)*0.16;
     var start=P.length/3;
     for(var v=0; v<4; v++){
       var co=face.corners[v];
@@ -2194,8 +2203,8 @@ function buildChunkGeometry(chunk){
       var aoF = [0.45,0.62,0.80,1.0][ao];
       var vvar = 0.93 + hash3(nx*2+co[0], ny*2+co[1], nz*2+co[2], 99)*0.14;
       P.push(vx, vy, vz);
-      var k = shade*aoF*bvar*vvar;
-      C.push(baseCol[0]/255*k, baseCol[1]/255*k, baseCol[2]/255*k);
+      var k = shade*aoF*vvar;
+      C.push(baseCol[0]/255*k*jr, baseCol[1]/255*k*jg, baseCol[2]/255*k*jb);
       L.push(light.sky/15, light.blk/15);
       U.push(UVC[v][0], UVC[v][1]); D.push(decor);
     }
@@ -2645,6 +2654,7 @@ var rainGeo=new THREE.BufferGeometry(); rainGeo.setAttribute('position', new THR
 var rainMat=new THREE.LineBasicMaterial({ color:0x9fc2e6, transparent:true, opacity:0, fog:false });
 var rainMesh=new THREE.LineSegments(rainGeo, rainMat); rainMesh.frustumCulled=false; rainMesh.visible=false; scene.add(rainMesh);
 var weather='clear', weatherTimer=70+Math.random()*120, rainAmt=0;
+var stormy=false, snowing=false;
 var ashStorm=0, ashStormTimer=30, ashStormOn=false, dimStash={};
 var rainSrc=null, rainGainNode=null, rainFilter=null, rainNoiseBuf=null, thunderCd=18+Math.random()*24;
 function getRainNoise(){ if(rainNoiseBuf||!actx) return rainNoiseBuf; var a=actx, n=Math.floor(a.sampleRate*3.4); rainNoiseBuf=a.createBuffer(1,n,a.sampleRate);
@@ -2803,18 +2813,19 @@ function tickFire(dt){
   for(;i<FIRE_MAX;i++) fireSprites[i].visible=false;
 }
 function tickRain(dt){
-  rainMat.opacity = 0.5*rainAmt; rainMesh.visible = rainAmt>0.02;
+  rainMat.opacity = (snowing?0.75:0.5)*rainAmt; rainMesh.visible = rainAmt>0.02;
   if(rainGainNode) rainGainNode.gain.value = sfxOn? rainAmt*0.09*(1+0.28*Math.sin(now*0.0017)) : 0;   // gentle variation
   if(rainFilter) rainFilter.frequency.value = 1850 + 750*Math.sin(now*0.0009);
   if(!rainMesh.visible) return;
   if(actx && !rainSrc) startRainSound();
-  var cx=camera.position.x, cy=camera.position.y, cz=camera.position.z, fall=24*dt, p=rainPos;
+  var cx=camera.position.x, cy=camera.position.y, cz=camera.position.z, fall=(snowing?8:24)*dt, slen=(snowing?0.18:0.9), p=rainPos;
   for(var i=0;i<RAIN_N;i++){ var o=i*6;
     p[o+1]-=fall; p[o+4]-=fall;
+    if(snowing){ var drift=Math.sin(now*0.003+i)*0.012; p[o]+=drift; p[o+3]+=drift; }   // snow sways
     var dx=p[o]-cx, dz=p[o+2]-cz;
     if(p[o+1] < cy-12 || dx*dx+dz*dz > 22*22){
       var nx=cx+(Math.random()-0.5)*38, nz=cz+(Math.random()-0.5)*38, ny=cy+14+Math.random()*10;
-      p[o]=nx; p[o+1]=ny; p[o+2]=nz; p[o+3]=nx; p[o+4]=ny-0.9; p[o+5]=nz;
+      p[o]=nx; p[o+1]=ny; p[o+2]=nz; p[o+3]=nx; p[o+4]=ny-slen; p[o+5]=nz;
     }
   }
   rainGeo.attributes.position.needsUpdate=true;
@@ -2830,16 +2841,21 @@ function tickWeather(dt){
     tickRain(dt);
     return;
   }
-  rainMat.color.setHex(0x9fc2e6);
+  var bh=World.biomeAt(Math.floor(Player.pos.x),Math.floor(Player.pos.z));
+  var cold=(bh===4||bh===9)||Player.pos.y>SEA+28;
   weatherTimer-=dt;
   if(weatherTimer<=0){
-    if(weather==='clear'){ weather='rain'; weatherTimer=30+Math.random()*55; thunderCd=8+Math.random()*16; if(actx) startRainSound(); }
+    if(weather==='clear'){ weather='rain'; stormy=Math.random()<0.4; weatherTimer=(stormy?25:40)+Math.random()*45; thunderCd=(stormy?4:12)+Math.random()*10; if(actx) startRainSound();
+      if(running) toast(stormy?'\u26C8\uFE0F A thunderstorm rolls in\u2026':(cold?'\uD83C\uDF28\uFE0F Snow begins to fall\u2026':'\uD83C\uDF27\uFE0F Rain begins to fall')); }
     else { weather='clear'; weatherTimer=120+Math.random()*180; }
   }
-  var target = (weather==='rain')?1:0;
+  snowing = (weather==='rain') && cold;
+  rainMat.color.setHex(snowing?0xffffff:0x9fc2e6);
+  var target = (weather==='rain')?(stormy?1.0:0.66):0;
   rainAmt += (target-rainAmt)*Math.min(1,dt*0.5);
   if(rainAmt<0.01 && weather==='clear') stopRainSound();
-  if(weather==='rain' && rainAmt>0.45){ thunderCd-=dt; if(thunderCd<=0){ thunderCd=14+Math.random()*30; thunder(); lightningFlash(); maybeLightningFire(); } }
+  var thunderThresh = stormy?0.4:0.85;
+  if(weather==='rain' && !snowing && rainAmt>thunderThresh){ thunderCd-=dt; if(thunderCd<=0){ thunderCd=(stormy?8:22)+Math.random()*20; thunder(); lightningFlash(); maybeLightningFire(); } }
   tickRain(dt);
 }
 function tickSky(){
@@ -2983,7 +2999,7 @@ function chunkFrag(alpha, grain){
   return ['precision highp float;',
     'varying vec3 vColor; varying float vFog; varying vec3 vWorld; varying vec2 vUV; varying float vDecor;',
     'uniform vec3 uFogColor; uniform vec4 uTorch[16]; uniform int uTorchN; uniform float uTorchFlk;'].concat(grain?['uniform vec3 uCamPos;']:['uniform float uTime;']).concat([
-    'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.0048,0.0,1.0); f=f*f; tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.4); vec3 warm=vec3(0.95,0.58,0.26); return col*(1.0+warm*tl*0.5)+warm*tl*0.22; }'
+    'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.0038,0.0,1.0); f=f*f; tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.0); vec3 warm=vec3(1.0,0.74,0.5); return col*(1.0+warm*tl*0.42)+warm*tl*0.12; }'
     ]).concat(helpers).concat([
     'void main(){']).concat(body).concat([' gl_FragColor=vec4(c,'+alpha+');','}']).join('\n');
 }
@@ -3043,7 +3059,7 @@ function showCrack(bx,by,bz, nx,ny,nz, stage){
 
 /* ------------------------- CHUNK MANAGEMENT ----------------------------- */
 var buildQueue=[];
-var plantAtlasMat=null, PLANT_N=16;
+var plantAtlasMat=null, PLANT_N=17;
 function makePlantAtlas(){
   var c=16, cv=document.createElement('canvas'); cv.width=c*PLANT_N; cv.height=c; var x=cv.getContext('2d'); x.clearRect(0,0,cv.width,c);
   function stem(o,col){ x.fillStyle=col||'#3f8a30'; x.fillRect(o+7,7,2,9); }
@@ -3080,6 +3096,8 @@ function makePlantAtlas(){
   o=224; x.fillStyle='#6b4a2a'; x.fillRect(o+7,9,2,7); x.fillStyle='#e89bc0'; x.fillRect(o+4,3,8,7); x.fillStyle='#f4b9d6'; x.fillRect(o+6,1,4,4);
   // 15 ripe wheat (golden, full heads)
   o=240; for(var i=0;i<5;i++){ var bx=(o+2+i*2.6)|0; x.fillStyle='#b79a3e'; x.fillRect(bx,8,2,7); x.fillStyle='#f0d264'; x.fillRect(bx,1,2,8); x.fillStyle='#fce7a0'; x.fillRect(bx,1,2,2); }
+  // 16 lilypad (top-down disc with a notch + tiny bloom)
+  o=256; x.fillStyle='#3d7539'; x.fillRect(o+3,4,10,8); x.fillRect(o+4,3,8,10); x.fillStyle='#4f9146'; x.fillRect(o+5,5,6,6); x.clearRect(o+11,7,3,3); x.fillStyle='#f2e884'; x.fillRect(o+7,7,2,2);
   var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; return t;
 }
 function ensurePlantMats(){ if(plantAtlasMat) return;
@@ -3090,6 +3108,11 @@ function pushCross(pos,uv,ix,ref, cx,by,cz,half,h, cell){
   for(var q=0;q<2;q++){ var a=quads[q], v=ref.v;
     pos.push(a[0],y0,a[1], a[2],y0,a[3], a[2],y1,a[3], a[0],y1,a[1]);
     uv.push(u0,0, u1,0, u1,1, u0,1); ix.push(v,v+1,v+2, v,v+2,v+3); ref.v+=4; }
+}
+function pushFlat(pos,uv,ix,ref, cx,by,cz,half,cell){   // a single horizontal quad (lilypads etc.)
+  var u0=cell/PLANT_N, u1=(cell+1)/PLANT_N;
+  pos.push(cx-half,by,cz-half, cx+half,by,cz-half, cx+half,by,cz+half, cx-half,by,cz+half);
+  uv.push(u0,0, u1,0, u1,1, u0,1); ix.push(ref.v,ref.v+1,ref.v+2, ref.v,ref.v+2,ref.v+3); ref.v+=4;
 }
 function cropStage(tl){
   if(tl.mature) return 3;
@@ -3122,6 +3145,17 @@ function buildPlantMesh(ch){
       var cell=(tl.crop==='wheat'||tl.crop==='corn')?2:(tl.crop==='carrot'||tl.crop==='tomato')?3:4;
       if(st>=3 && (tl.crop==='wheat'||tl.crop==='corn')) cell=15;   // golden ripe heads — readable across a field
       pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, CROP_H[st], cell); }
+  }
+  // lilypads floating on swamp water
+  for(var llx=0;llx<CHUNK;llx++) for(var llz=0;llz<CHUNK;llz++){
+    var lwx=ch.cx*CHUNK+llx, lwz=ch.cz*CHUNK+llz;
+    for(var wy=SEA+3; wy>=SEA-2; wy--){ var bid=ch.blocks[idx(llx,wy,llz)];
+      if(bid===B.SWAMP_WATER && ch.blocks[idx(llx,wy+1,llz)]===B.AIR){
+        if(hash3(lwx,71,lwz,World.seed^333)<0.10) pushFlat(p,u,ix,ref, llx+0.5, wy+1.03, llz+0.5, 0.45, 16);
+        break;
+      }
+      if(isSolid(bid)) break;
+    }
   }
   if(p.length){ var g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(p,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(u,2)); g.setIndex(ix);
     var m=new THREE.Mesh(g,plantAtlasMat); m.position.set(ch.cx*CHUNK,0,ch.cz*CHUNK); scene.add(m); ch.pmesh=m; }
@@ -3602,6 +3636,7 @@ function tickMining(dt){
 // quick tap: attack mob / open block / eat / place block (Minecraft-mobile style)
 function tapAction(){
   if(uiOpen) return;
+  if(tryFeedAnimal(inv.hotbar[hotbarSel])) return;   // feed / tame / milk takes priority over punching
   if(attackEntities()) return;
   if(harvestTuft()) return;
   if(harvestFlower()) return;
@@ -3863,6 +3898,12 @@ function doPlace(){
   if(hit.id===B.FURNACE){ openFurnace(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.MACERATOR){ openMacerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.BLAST_FURNACE){ openBlastFurnace(World.ck(hit.x,hit.y,hit.z)); return; }
+  if(hit.id===B.ANVIL){ var _hs=inv.hotbar[hotbarSel];
+    if(_hs && _hs.key==='NAME_TAG'){ var nm=(typeof prompt==='function')?prompt('Name this tag, then use it on a mob:', _hs.name||''):null;
+      if(nm!=null){ nm=(''+nm).slice(0,24).trim(); if(nm){ _hs.name=nm; sfxClick(); toast('Name Tag set to \u201C'+nm+'\u201D \u2014 tap a mob with it'); } } }
+    else { toast('Hold a Name Tag to inscribe it at the anvil'); }
+    return;
+  }
   if(hit.id===B.COMPRESSOR){ openCompressor(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.WIND_TURBINE){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.MFSU){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
@@ -4227,6 +4268,8 @@ shaped([['IRON_PLATE','DIAMOND','IRON_PLATE'],['IRON_PLATE','ENERGY_CELL','IRON_
 shaped([['IRON_INGOT',null,'IRON_INGOT'],['IRON_INGOT','CHEST','IRON_INGOT'],[null,'IRON_INGOT',null]], 'HOPPER', 1);
 shaped([['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT']], 'BRASS_PIPE', 8);
 shaped([[null,'BRASS_PIPE',null],['IRON_INGOT','BRASS_BLOCK','IRON_INGOT'],[null,'IRON_INGOT',null]], 'SPRINKLER', 1);
+shapeless([{key:'STRING',qty:1},{key:'IRON_INGOT',qty:1}], 'NAME_TAG', 1);
+shaped([['IRON_INGOT','IRON_INGOT','IRON_INGOT'],[null,'IRON_INGOT',null],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'ANVIL', 1);
 shaped([['IRON_INGOT','DIAMOND','IRON_INGOT'],['BRASS_INGOT','REDSTONE','BRASS_INGOT'],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'HARVESTER', 1);
 shaped([['LEATHER','LEATHER','LEATHER'],['LEATHER','CHEST','LEATHER'],['LEATHER','LEATHER','LEATHER']], 'BACKPACK', 1);
 shaped([[null,'IRON_INGOT',null],['IRON_INGOT','TORCH','IRON_INGOT'],[null,'IRON_INGOT',null]], 'LANTERN', 1);
@@ -5794,9 +5837,10 @@ function makeCreeper(){
   var eyeM=new THREE.MeshBasicMaterial({color:v.eye});                    // glowing angry eyes
   var e1=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.1,0.02),eyeM); e1.position.set(-0.11,1.7,0.24); e1.rotation.z=0.35; g.add(e1);
   var e2=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.1,0.02),eyeM); e2.position.set(0.11,1.7,0.24); e2.rotation.z=-0.35; g.add(e2);
-  var mouthM=new THREE.MeshBasicMaterial({color:0x1a0f08});
-  var mo=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.16,0.02),mouthM); mo.position.set(0,1.52,0.24); g.add(mo);
-  trim(0.04,0.05,0.02, v.eye, -0.06,1.55,0.25); trim(0.04,0.05,0.02, v.eye, 0.03,1.57,0.25); trim(0.04,0.05,0.02, v.eye, 0.09,1.55,0.25);  // glowing teeth
+  var mouthM=new THREE.MeshBasicMaterial({color:0x140b06});
+  var mo=new THREE.Mesh(new THREE.BoxGeometry(0.24,0.15,0.02),mouthM); mo.position.set(0,1.5,0.235); g.add(mo);   // dark grille mouth
+  var teethM=new THREE.MeshBasicMaterial({color:v.eye});
+  for(var ti=-1;ti<=1;ti++){ var tt=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.11,0.02),teethM); tt.position.set(ti*0.075,1.5,0.245); g.add(tt); }   // 3 even glowing bars
   var legGeo=0.15;                                                        // 4 splayed pipe legs (spidery stance)
   var l1=part(legGeo,0.64,legGeo, v.iron, -0.17,0.32,-0.15); l1.rotation.z=0.12;
   var l2=part(legGeo,0.64,legGeo, v.iron, 0.17,0.32,-0.15); l2.rotation.z=-0.12;
@@ -6250,6 +6294,7 @@ function spawnEnemy(kind, x,y,z){
     onGround:false, atkCd:0, hurt:0, fuse:0, wcd:0, wdir:Math.random()*6.283, moving:false,
     passive:!!d.passive, width:d.w, height:d.h, speed:d.sp, dmg:d.dmg };
   if(difficulty==='easy' && !d.passive){ e.hp=Math.max(1,Math.round(d.hp*0.7)); }   // easy: hostiles are frailer
+  e.maxHp=e.hp;
   if(kind==='skeleton') e.atkCd=1.4+Math.random()*1.4;
   entities.push(e);
 }
@@ -6767,7 +6812,7 @@ function tickEntities(dt){
       else if(rr<0.5){ giveItem('STICK',1); }
       continue;
     }
-    if(e.pos.y< -5 || dist>80){ scene.remove(e.mesh); entities.splice(i,1); continue; }
+    if(e.pos.y< -5 || (dist>80 && !e.named)){ scene.remove(e.mesh); entities.splice(i,1); continue; }
   }
 }
 function mobInFront(maxd){
@@ -6798,7 +6843,8 @@ function hitEntity(e){
   dmg += 1.6*heldEnchLvl('honed');   // Honed enchant
   dmg *= rpgCombatDmg();                                   // RPG combat damage perk
   var _crit=false; if(Math.random()<rpgCritChance()){ dmg*=1.6; _crit=true; }   // RPG critical hit
-  e.hp-=dmg; e.hurt=0.2;
+  e.hp-=dmg; e.hurt=0.2; e.barT=3.0;
+  spawnDmgNumber(e, Math.max(1,Math.round(dmg)), _crit);
   if(_crit){ try{ tone(1200,0.05,'square',0.05); }catch(_){} }
   if(rpgLifeSteal()>0 && Math.random()<rpgLifeSteal() && Player.hp<20){ Player.hp=Math.min(20,Player.hp+1); updateStats(); }   // RPG life steal
   rpgAddXP('combat', e.hp<=0? 12 : 2);                    // RPG combat XP (kill bonus)
@@ -6933,6 +6979,53 @@ function tickSteam(dt){ for(var i=steamParticles.length-1;i>=0;i--){ var s=steam
   if(s.mesh.material) s.mesh.material.opacity=Math.max(0, s.life*0.5);
   if(s.life<=0){ scene.remove(s.mesh); if(s.mesh.material) s.mesh.material.dispose(); steamParticles.splice(i,1); } } }
 function clearSteam(){ for(var i=0;i<steamParticles.length;i++) scene.remove(steamParticles[i].mesh); steamParticles=[]; }
+// ---- MMO-style mob health bars + floating damage numbers (DOM overlays projected from 3D) ----
+var _tmpV=new THREE.Vector3(), dmgNums=[], mobBarPool=[];
+function dmgLayer(){ var h=document.getElementById('dmgLayer'); if(!h){ h=document.createElement('div'); h.id='dmgLayer'; h.style.cssText='position:fixed;inset:0;z-index:20;pointer-events:none;overflow:hidden;'; document.body.appendChild(h); } return h; }
+function barLayer(){ var h=document.getElementById('barLayer'); if(!h){ h=document.createElement('div'); h.id='barLayer'; h.style.cssText='position:fixed;inset:0;z-index:19;pointer-events:none;overflow:hidden;'; document.body.appendChild(h); } return h; }
+function spawnDmgNumber(e, amount, crit){
+  var d=document.createElement('div'); d.textContent=(crit?'\u2762':'')+amount;
+  d.style.cssText='position:absolute;font-weight:900;font-family:ui-monospace,monospace;font-size:'+(crit?23:16)+'px;color:'+(crit?'#ffdc4a':'#ff7060')+';text-shadow:0 2px 2px #000,0 0 5px #000;transform:translate(-50%,-50%);white-space:nowrap;';
+  dmgLayer().appendChild(d);
+  dmgNums.push({el:d, e:e, ox:(Math.random()-0.5)*0.5, oy:(e.height||1.4)+0.4, life:0.85, vy:1.1});
+  if(dmgNums.length>40){ var o=dmgNums.shift(); if(o.el.parentNode) o.el.parentNode.removeChild(o.el); }
+}
+function tickDmgNumbers(dt){
+  for(var i=dmgNums.length-1;i>=0;i--){ var n=dmgNums[i]; n.life-=dt; n.oy+=n.vy*dt; n.vy*=0.94;
+    if(n.life<=0){ if(n.el.parentNode) n.el.parentNode.removeChild(n.el); dmgNums.splice(i,1); continue; }
+    _tmpV.set(n.e.pos.x+n.ox, n.e.pos.y+n.oy, n.e.pos.z); _tmpV.project(camera);
+    if(_tmpV.z>1){ n.el.style.display='none'; continue; }
+    n.el.style.display='block';
+    n.el.style.left=((_tmpV.x*0.5+0.5)*window.innerWidth)+'px';
+    n.el.style.top=((1-(_tmpV.y*0.5+0.5))*window.innerHeight)+'px';
+    n.el.style.opacity=Math.max(0, Math.min(1, n.life*1.6));
+  }
+}
+function updateMobBars(dt){
+  var host=barLayer(), used=0;
+  for(var i=0;i<entities.length;i++){ var e=entities[i]; if(!e || e.hp<=0) continue;
+    if(e.barT>0) e.barT-=dt;
+    var dx=e.pos.x-Player.pos.x, dz=e.pos.z-Player.pos.z, d2=dx*dx+dz*dz;
+    var show = e.name || (e.barT>0) || (!e.passive && d2<196);   // named, recently hit, or a nearby hostile
+    if(!show || d2>30*30) continue;
+    _tmpV.set(e.pos.x, e.pos.y+(e.height||1.4)+0.35, e.pos.z); _tmpV.project(camera);
+    if(_tmpV.z>1) continue;
+    var bar=mobBarPool[used];
+    if(!bar){ bar=document.createElement('div'); bar.style.cssText='position:absolute;width:46px;height:6px;background:rgba(0,0,0,.55);border:1px solid rgba(0,0,0,.7);border-radius:3px;transform:translate(-50%,-50%);overflow:visible;box-shadow:0 1px 3px #0007;';
+      var nm=document.createElement('div'); nm.style.cssText='position:absolute;left:50%;bottom:9px;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 2px #000,0 0 3px #000;'; bar.appendChild(nm); bar.__nm=nm;
+      var fill=document.createElement('i'); fill.style.cssText='display:block;height:100%;border-radius:2px;'; bar.appendChild(fill); bar.__fill=fill; host.appendChild(bar); mobBarPool.push(bar); }
+    bar.style.display='block';
+    bar.style.left=((_tmpV.x*0.5+0.5)*window.innerWidth)+'px';
+    bar.style.top=((1-(_tmpV.y*0.5+0.5))*window.innerHeight)+'px';
+    if(e.name){ bar.__nm.textContent=e.name; bar.__nm.style.display='block'; } else bar.__nm.style.display='none';
+    var mx=e.maxHp||e.hp, frac=Math.max(0,Math.min(1,e.hp/mx));
+    bar.__fill.style.width=(frac*100)+'%';
+    bar.__fill.style.background = frac>0.5?'#5cc85c':(frac>0.25?'#e6b23a':'#e0432e');
+    used++;
+  }
+  for(var j=used;j<mobBarPool.length;j++) mobBarPool[j].style.display='none';
+}
+function clearMobUI(){ for(var i=0;i<dmgNums.length;i++){ if(dmgNums[i].el.parentNode) dmgNums[i].el.parentNode.removeChild(dmgNums[i].el); } dmgNums=[]; for(var j=0;j<mobBarPool.length;j++) mobBarPool[j].style.display='none'; }
 // ---------------- The Watcher (insomnia apparition) ----------------
 var nightsAwake=0, _nightCounted=false, watcher=null, watcherCd=18, watcherStare=0;
 function makeWatcherMesh(){
@@ -6998,6 +7091,7 @@ function sfxWatcherAppear(){ tone(70,0.9,'sine',0.05,52); noiseBurst(0.5,0.018,1
 function sfxWatcherBlink(){ tone(150,0.16,'sawtooth',0.06,40); noiseBurst(0.12,0.05,2400); }
 function tryFeedAnimal(slot){
   if(!slot) return false; var k=slot.key;
+  if(k==='NAME_TAG' && slot.name){ var nt=mobInFront(3.2); if(nt && nt.kind!=='villager'){ nt.name=slot.name; nt.named=true; consumeSlot(slot,1); renderHotbar(); sfxClick(); spawnHearts(nt); toast('Named \u201C'+slot.name+'\u201D'); return true; } }
   if(k==='HONEY'){ var ht=mobInFront(3.2); if(ht && ht.kind==='bear'){ consumeSlot(slot,1); renderHotbar(); sfxClick(); ht.provoked=false;
       if(!ht.tamed){ ht.tameProg=(ht.tameProg||0)+1; if(Math.random()<0.4||ht.tameProg>=3){ ht.tamed=true; ht.love=8; spawnHearts(ht); toast('\uD83D\uDC3B Befriended the bear!'); unlock('rancher'); } else toast('\uD83C\uDF6F'); }
       else if(!ht.baby){ ht.love=12; spawnHearts(ht); breedCheck(ht); } return true; } }
@@ -7009,6 +7103,7 @@ function tryFeedAnimal(slot){
     var cF=(tameT.kind==='cat'&&(k==='RAW_FISH'||k==='COOKED_FISH'||k==='CRAB_MEAT'));
     if(hF||dF||cF){ consumeSlot(slot,1); renderHotbar(); sfxClick(); tameT.tameProg=(tameT.tameProg||0)+1;
       if(Math.random()<0.34||tameT.tameProg>=4){ tameT.tamed=true; tameT.love=8; spawnHearts(tameT); toast('\u2764 Tamed the '+tameT.kind+'!'); unlock('rancher'); } else toast('\u2764'); return true; } }
+  if(k==='BUCKET'){ var ct=mobInFront(3.2); if(ct && ct.kind==='cow'){ if(slot.qty>1){ slot.qty--; giveItem('MILK_BUCKET',1); } else { slot.key='MILK_BUCKET'; } renderHotbar(); sfxClick(); toast('\uD83E\uDD5B Milked the cow'); return true; } }
   if(k==='SEEDS'||k==='WHEAT'||k==='CARROT'){ var tgt=mobInFront(3.2);
     if(tgt && tgt.passive && !tgt.baby && !(tgt.loveCd>0)){ consumeSlot(slot,1); renderHotbar(); tgt.love=12; sfxClick(); spawnHearts(tgt); breedCheck(tgt); return true; } }
   return false;
@@ -7130,7 +7225,7 @@ function respawn(){
   if(World.dim!=='overworld'){ travelDim('overworld'); }
   Player.hp=Player.maxHp; Player.hunger=Player.maxHunger; Player.sat=5; Player.invul=3; Player.riding=null;
   if(Player.fishing){ if(Player.fishing.bob) scene.remove(Player.fishing.bob); Player.fishing=null; }
-  clearHearts(); clearSteam(); despawnWatcher(); clearPortals();
+  clearHearts(); clearSteam(); clearMobUI(); despawnWatcher(); clearPortals();
   Player.pos.copy(Player.spawn); Player.vel.set(0,0,0);
   // clear hostiles near the spawn so you don't get jumped, and pause spawning briefly
   for(var i=entities.length-1;i>=0;i--){ var e=entities[i];
@@ -8401,7 +8496,7 @@ function loop(t){
   updateHand();
   if(frame%4===0){ var ce=document.getElementById('coords');
     if(ce){ var bi9=World.biomeAt(Math.floor(Player.pos.x),Math.floor(Player.pos.z));
-      var bn=(World.dim==='underforge')?(bi9===101?'Cinder Wastes':'Ash Desert'):(['Plains','Forest','Mountains','Desert','Taiga','Birch Forest','Cherry Grove','Ocean','Savanna','Snowy Plains','Jungle'][bi9]||'');
+      var bn=(World.dim==='underforge')?(bi9===101?'Cinder Wastes':'Ash Desert'):(['Plains','Forest','Mountains','Desert','Taiga','Birch Forest','Cherry Grove','Ocean','Savanna','Snowy Plains','Jungle','Maple Forest','Swamp'][bi9]||'');
       var txt='XYZ: '+Math.floor(Player.pos.x)+' '+Math.floor(Player.pos.y)+' '+Math.floor(Player.pos.z)+'   '+bn;
       var hs=inv.hotbar[hotbarSel];
       if(hs && hs.key==='COMPASS' && World.dim==='overworld'){
@@ -8426,6 +8521,7 @@ function loop(t){
   } else { selBox.visible=false; crackDecal.visible=false; }
   // damage flash via fog tint? simple overlay using clear color blend skipped; use crosshair? keep minimal
   renderer.autoClear=true;
+  updateMobBars(dt); tickDmgNumbers(dt);
   renderer.render(scene,camera);
   updateWaypointHud();
   if(viewMode===0 && running){
@@ -8475,8 +8571,12 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 118';
+var VERSION='Update 122';
 var CHANGELOG=[
+  { v:'Update 122', t:'Swamp Biome', items:['\uD83D\uDC38 &lt;b&gt;New Swamp biome&lt;/b&gt; \u2014 low, wet lowlands with murky dark-green grass, &lt;b&gt;muddy green water&lt;/b&gt;, scattered oaks and &lt;b&gt;lilypads&lt;/b&gt; floating on the surface. Best seen in a fresh world','This kicks off the biome-content pass \u2014 &lt;b&gt;frogs&lt;/b&gt; in the swamp, plus jungle life (vines, monkeys, banana trees) and beach coconut palms, are coming next'] },
+  { v:'Update 121', t:'Name Tags, Anvils & Fixes', items:['\uD83C\uDFF7\uFE0F &lt;b&gt;Name Tags &amp; Anvils&lt;/b&gt; \u2014 craft a Name Tag (string + iron), inscribe it at an &lt;b&gt;Anvil&lt;/b&gt;, then tap a mob to name it. Named mobs show a floating name and &lt;b&gt;never despawn&lt;/b&gt;, so you can keep your favourites','\uD83C\uDFE1 &lt;b&gt;Fixed village houses&lt;/b&gt; getting their bottoms carved out by neighbouring wheat farms (farms now generate first, so houses always win)','\uD83E\uDE9F &lt;b&gt;clearer glass&lt;/b&gt;: brighter and more window-like'] },
+  { v:'Update 120', t:'Combat UI, Weather, Texture & Light', items:['\u2694\uFE0F &lt;b&gt;Enemy health bars &amp; floating damage numbers&lt;/b&gt; \u2014 hits now pop MMO-style damage numbers (crits in gold), and mobs you\u2019re fighting show a colored health bar above them','\u26C8\uFE0F &lt;b&gt;Real weather&lt;/b&gt; \u2014 calm rain now differs from full &lt;b&gt;thunderstorms&lt;/b&gt; (heavy rain, frequent lightning), and it &lt;b&gt;snows in cold biomes and on mountaintops&lt;/b&gt; instead of raining','\uD83C\uDF31 &lt;b&gt;Richer block textures&lt;/b&gt; \u2014 grass, stone, dirt and other natural blocks now have per-block colour variation so the world looks less flat','\uD83D\uDCA1 &lt;b&gt;Nicer lighting&lt;/b&gt; \u2014 torches and lanterns are a warmer white instead of harsh yellow, and no longer wash out to orange when several are close together'] },
+  { v:'Update 119', t:'Feeding, Milk, Fullscreen & Fixes', items:['\uD83D\uDC04 &lt;b&gt;Feeding animals works now&lt;/b&gt; \u2014 holding seeds/wheat/carrot and tapping an animal feeds it instead of punching it (feeding takes priority)','\uD83E\uDD5B &lt;b&gt;Milk cows&lt;/b&gt; \u2014 hold a Bucket and tap a cow to get a Milk Bucket you can drink','\uD83D\uDDA5\uFE0F &lt;b&gt;Fullscreen toggle&lt;/b&gt; in Settings (great on desktop Chrome), and &lt;b&gt;View Distance now goes up to 16&lt;/b&gt; for powerful devices','\uD83E\uDD16 &lt;b&gt;Fixed the creeper\u2019s messed-up teeth&lt;/b&gt; \u2014 a clean, symmetric glowing grille now'] },
   { v:'Update 118', t:'Land Dungeons & Light Range', items:['\uD83D\uDCA1 &lt;b&gt;Lights show from farther away&lt;/b&gt; \u2014 torches and lanterns used to only light up once you were almost on top of them; their glow now reaches much farther, so lit structures read from a distance','\uD83D\uDD70\uFE0F New surface landmark: the &lt;b&gt;Clock Tower&lt;/b&gt; \u2014 a tall brass-banded tower with a glass clock face, a belfry, a skeleton-guarded interior and two loot stashes','\uD83D\uDEA2 New surface landmark: the &lt;b&gt;Broken Airship&lt;/b&gt; \u2014 a crashed steampunk hull with exposed ribs, a gondola cabin, a busted propeller and salvage loot (zombie-guarded)','Both are &lt;b&gt;land dungeons&lt;/b&gt;: they have monster spawners and trigger the \u201CDungeon discovered\u201D notice + Exploration XP when you find them'] },
   { v:'Update 117', t:'Creepers, Sleep & Sprinklers', items:['\uD83E\uDD16 &lt;b&gt;Creepers overhauled&lt;/b&gt; \u2014 meaner faces with glowing angry eyes, horns and splayed pipe legs, and &lt;b&gt;steam now hisses from their stacks&lt;/b&gt;. They come in four variants: brass, copper, rusted and a rare charged blue','\uD83D\uDECF\uFE0F &lt;b&gt;Sleep animation&lt;/b&gt; \u2014 climbing into a bed now fades the screen to a \u201CSleeping\u2026\u201D night before you wake at dawn','\uD83D\uDCA7 New farming machine: the &lt;b&gt;Mechanical Sprinkler&lt;/b&gt; \u2014 wire it to power and it speeds up growth of every crop in range (with a fine mist). Pair it with the Harvester for a self-running farm'] },
   { v:'Update 116', t:'More Dungeons', items:['\u26EA Two new buried dungeons: the &lt;b&gt;Brass Cathedral&lt;/b&gt; (brass pillars, stained-glass windows and a lantern-lit altar) and the &lt;b&gt;Abandoned Factory&lt;/b&gt; (derelict machines, overhead pipe runs and salvage loot)','That\u2019s &lt;b&gt;six dungeon types&lt;/b&gt; now \u2014 Boiler Room, Cog Forge, Steam Lab, Mining Complex, Brass Cathedral and Abandoned Factory \u2014 each with its own themed spawner, loot and discovery notice'] },
@@ -8720,6 +8820,16 @@ document.getElementById('sSound').addEventListener('click', function(){ toggleSo
 document.getElementById('sSens').addEventListener('input', function(){ lookSens=(+this.value)/100; });
 document.getElementById('sDist').addEventListener('input', function(){ var n=+this.value; setRenderDist(n); document.getElementById('sDistV').textContent=n; });
 document.getElementById('sAutoJump').addEventListener('click', function(){ autoJump=!autoJump; this.textContent=autoJump?'On':'Off'; this.classList.toggle('on',autoJump); });
+(function(){ var sf=document.getElementById('sFullscreen'); if(!sf) return;
+  function fsOn(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
+  function sync(){ sf.textContent=fsOn()?'On':'Off'; sf.classList.toggle('on',fsOn()); }
+  sf.addEventListener('click', function(){
+    try{ if(!fsOn()){ var el=document.documentElement; (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el); }
+         else { (document.exitFullscreen||document.webkitExitFullscreen||function(){}).call(document); } }catch(e){}
+    setTimeout(sync,150);
+  });
+  document.addEventListener('fullscreenchange', sync); document.addEventListener('webkitfullscreenchange', sync);
+})();
 
 // attack on left-click tap for entities (desktop: also mine). We give a quick attack on mousedown if pointing at entity.
 canvas.addEventListener('mousedown', function(e){ if(!uiOpen && pointerLocked && e.button===0){ attackEntities(); } });
