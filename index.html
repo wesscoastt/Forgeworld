@@ -360,6 +360,7 @@
     <div class="prow"><span>View Distance <b id="sDistV"></b></span><input type="range" id="sDist" min="3" max="16" value="7"></div>
     <div class="prow"><span>Auto Jump</span><button class="tog on" id="sAutoJump">On</button></div>
     <div class="prow"><span>Fullscreen</span><button class="tog" id="sFullscreen">Off</button></div>
+    <div class="prow"><span>Mob Health Bars</span><button class="tog on" id="sMobBars">On</button></div>
     <button class="mbtn" id="btnSettingsBack">Back</button>
   </div>
 </div>
@@ -505,22 +506,24 @@ defBlock({key:'PURPLE_WOOL', name:'Purple Wool', col:[140,86,176], solid:true, h
 defBlock({key:'PINK_WOOL', name:'Pink Wool', col:[226,140,176], solid:true, hard:0.8 });
 defBlock({key:'DRY_GRASS', name:'Savanna Grass', col:[150,140,70], top:[166,158,84], side:[124,98,58], solid:true, tool:'shovel', hard:0.7, drop:'DIRT' });
 defBlock({key:'JUNGLE_LEAVES', name:'Jungle Leaves', col:[42,104,34], solid:true, leaf:true, hard:0.3 });
-defBlock({key:'MACERATOR', name:'Macerator', col:[110,112,120], top:[138,140,150], side:[96,98,108], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
-defBlock({key:'GENERATOR', name:'Generator', col:[92,96,104], top:[150,120,60], side:[80,84,92], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
+defBlock({key:'MACERATOR', name:'Macerator', col:[104,108,118], top:[70,72,80], side:[120,124,134], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
+defBlock({key:'GENERATOR', name:'Generator', col:[86,80,74], top:[40,38,40], side:[92,70,44], spec:[255,150,40], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
 defBlock({key:'AETHER_FORGE', name:'Aether Forge', col:[181,143,68], top:[120,235,245], side:[150,118,55], spec:[150,205,232], solid:true, tool:'pickaxe', tier:2, hard:3.4 });
 defBlock({key:'CABLE', name:'Energy Cable', col:[202,128,52], solid:true, tool:'pickaxe', hard:0.4, shape:'cable' });
-defBlock({key:'SOLAR_PANEL', name:'Solar Panel', col:[40,52,110], top:[26,38,98], side:[92,96,104], solid:true, tool:'pickaxe', tier:1, hard:2.2 });
-defBlock({key:'ENERGY_CELL', name:'Energy Cell', col:[58,64,80], top:[86,150,214], side:[52,58,74], solid:true, tool:'pickaxe', tier:1, hard:3.0 });
+defBlock({key:'SOLAR_PANEL', name:'Solar Panel', col:[40,52,110], top:[24,32,86], side:[120,124,132], spec:[90,150,220], solid:true, tool:'pickaxe', tier:1, hard:2.2 });
+defBlock({key:'ENERGY_CELL', name:'Energy Cell', col:[58,64,80], top:[86,180,224], side:[48,54,70], spec:[90,200,255], solid:true, tool:'pickaxe', tier:1, hard:3.0 });
 defBlock({key:'QUARRY', name:'Quarry', col:[210,176,44], top:[44,46,52], side:[210,176,44], solid:true, tool:'pickaxe', tier:2, hard:3.4 });
-defBlock({key:'COMPRESSOR', name:'Compressor', col:[96,104,116], top:[150,156,168], side:[84,92,104], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
-defBlock({key:'WIND_TURBINE', name:'Wind Turbine', col:[214,220,228], top:[150,160,175], side:[226,230,236], solid:true, tool:'pickaxe', tier:1, hard:2.6 });
+defBlock({key:'COMPRESSOR', name:'Compressor', col:[92,100,112], top:[60,150,170], side:[100,108,120], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
+defBlock({key:'WIND_TURBINE', name:'Wind Turbine', col:[226,230,236], top:[120,126,134], side:[236,238,242], solid:true, tool:'pickaxe', tier:1, hard:2.6 });
 defBlock({key:'MFSU', name:'Advanced Energy Cell', col:[60,46,92], top:[150,86,224], side:[52,40,82], solid:true, tool:'pickaxe', tier:2, hard:3.2 });
 defBlock({key:'HOPPER', name:'Hopper', col:[64,66,74], top:[40,42,48], side:[72,74,82], solid:true, tool:'pickaxe', tier:1, hard:2.6 });
 defBlock({key:'BRASS_PIPE', name:'Brass Pipe', col:[178,140,72], top:[206,170,96], side:[150,116,58], solid:true, tool:'pickaxe', tier:1, hard:1.2 });
 defBlock({key:'HARVESTER', name:'Steam Harvester', col:[120,150,96], top:[196,170,90], side:[108,120,96], solid:true, tool:'pickaxe', tier:1, hard:3.0 });
-defBlock({key:'BLAST_FURNACE', name:'Blast Furnace', col:[74,70,72], top:[120,96,70], side:[64,60,64], solid:true, tool:'pickaxe', tier:1, hard:3.4 });
+defBlock({key:'BLAST_FURNACE', name:'Blast Furnace', col:[70,66,68], top:[44,42,46], side:[60,56,60], spec:[255,120,30], solid:true, tool:'pickaxe', tier:1, hard:3.4 });
 defBlock({key:'SPAWNER', name:'Monster Spawner', col:[42,38,46], top:[52,48,58], side:[38,34,42], solid:true, tool:'pickaxe', tier:1, hard:5.0, light:2 });
-defBlock({key:'SPRINKLER', name:'Mechanical Sprinkler', col:[92,140,150], top:[150,192,205], side:[80,120,140], solid:true, tool:'pickaxe', tier:1, hard:2.8 });
+defBlock({key:'SPRINKLER', name:'Mechanical Sprinkler', col:[92,140,150], top:[60,120,140], side:[150,192,205], spec:[120,200,230], solid:true, tool:'pickaxe', tier:1, hard:2.8 });
+defBlock({key:'ASH_LOG', name:'Ash Log', col:[128,124,118],  top:[150,146,140], side:[118,114,108], solid:true, tool:'axe', hard:1.2, log:true });
+defBlock({key:'ASH_PLANKS', name:'Ash Planks', col:[150,146,138], solid:true, tool:'axe', hard:1.2 });
 defBlock({key:'ANVIL', name:'Anvil', col:[66,68,78], top:[92,94,104], side:[54,56,64], solid:true, tool:'pickaxe', tier:1, hard:5.0 });
 defBlock({key:'SWAMP_GRASS', name:'Swamp Grass', col:[72,92,52], top:[82,104,56], side:[74,66,48], solid:true, hard:0.5 });
 defBlock({key:'SWAMP_WATER', name:'Swamp Water', col:[54,88,66], top:[70,104,80], side:[44,72,56], solid:false, transparent:true, liquid:true });
@@ -560,6 +563,22 @@ mat('BUCKET','Bucket',[176,182,194],{stack:16});
 mat('WATER_BUCKET','Water Bucket',[64,118,200],{stack:1});
 mat('MILK_BUCKET','Milk Bucket',[242,242,246],{stack:1, food:6, heal:3});
 mat('NAME_TAG','Name Tag',[224,214,182],{stack:16});
+mat('CLOCK','Clock',[240,200,90],{stack:1});
+/* ============================ HATS / COSMETICS ============================ */
+function hatBox(g,w,h,d,c,x,y,z){ var m=new THREE.MeshBasicMaterial({color:c}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); g.add(me); return me; }
+var HATS={
+  crown:{name:'Golden Crown', col:[245,197,66], build:function(g){ hatBox(g,0.56,0.12,0.56,0xf5c542,0,0.06,0); for(var i=0;i<4;i++){ var a=i*Math.PI/2; hatBox(g,0.1,0.16,0.1,0xf5c542,Math.cos(a)*0.22,0.18,Math.sin(a)*0.22); } hatBox(g,0.09,0.09,0.09,0xff4a4a,0,0.13,0.29); }},
+  tophat:{name:'Top Hat', col:[26,26,30], build:function(g){ hatBox(g,0.64,0.05,0.64,0x1a1a1e,0,0.03,0); hatBox(g,0.42,0.36,0.42,0x1a1a1e,0,0.23,0); hatBox(g,0.44,0.06,0.44,0xaa2222,0,0.11,0); }},
+  wizard:{name:'Wizard Hat', col:[72,56,160], build:function(g){ hatBox(g,0.66,0.05,0.66,0x342659,0,0.03,0); hatBox(g,0.36,0.2,0.36,0x4838a0,0,0.17,0); hatBox(g,0.24,0.2,0.24,0x4838a0,0,0.35,0); hatBox(g,0.12,0.2,0.12,0x4838a0,0,0.53,0); hatBox(g,0.06,0.06,0.06,0xffe66a,0.08,0.24,0.16); hatBox(g,0.05,0.05,0.05,0xffe66a,-0.1,0.38,0.12); }},
+  pirate:{name:'Pirate Tricorn', col:[23,23,23], build:function(g){ hatBox(g,0.74,0.06,0.42,0x171717,0,0.06,0); hatBox(g,0.42,0.18,0.36,0x171717,0,0.16,0); hatBox(g,0.09,0.09,0.02,0xf0f0f0,0,0.16,0.19); }},
+  party:{name:'Party Hat', col:[255,90,160], build:function(g){ hatBox(g,0.28,0.22,0.28,0xff5aa0,0,0.12,0); hatBox(g,0.18,0.2,0.18,0x5ad2ff,0,0.31,0); hatBox(g,0.1,0.16,0.1,0xffe14a,0,0.47,0); hatBox(g,0.08,0.08,0.08,0xffffff,0,0.58,0); }},
+  chef:{name:'Chef Toque', col:[246,246,246], build:function(g){ hatBox(g,0.48,0.16,0.48,0xf0f0f0,0,0.08,0); hatBox(g,0.56,0.26,0.56,0xfbfbfb,0,0.3,0); }},
+  cowboy:{name:'Cowboy Hat', col:[154,103,51], build:function(g){ hatBox(g,0.8,0.05,0.62,0x8a5a2a,0,0.05,0); hatBox(g,0.42,0.24,0.42,0x9a6733,0,0.18,0); hatBox(g,0.44,0.06,0.44,0x5a3818,0,0.11,0); }},
+  viking:{name:'Viking Helm', col:[154,160,168], build:function(g){ hatBox(g,0.58,0.3,0.58,0x9aa0a8,0,0.15,0); hatBox(g,0.12,0.22,0.16,0xf0ece0,-0.34,0.3,0); hatBox(g,0.12,0.22,0.16,0xf0ece0,0.34,0.3,0); hatBox(g,0.1,0.34,0.1,0x7f858c,0,0.36,0); }},
+  halo:{name:'Angel Halo', col:[255,236,140], build:function(g){ for(var i=0;i<10;i++){ var a=i*Math.PI/5; hatBox(g,0.08,0.05,0.08,0xffe86a,Math.cos(a)*0.3,0.4,Math.sin(a)*0.3); } }},
+  beanie:{name:'Propeller Beanie', col:[220,70,70], build:function(g){ hatBox(g,0.56,0.22,0.56,0xdc4646,0,0.11,0); hatBox(g,0.58,0.06,0.58,0xf0f0f0,0,0.02,0); hatBox(g,0.06,0.06,0.06,0xffd23f,0,0.26,0); hatBox(g,0.32,0.04,0.06,0x4fc3f7,0,0.3,0); hatBox(g,0.06,0.04,0.32,0x4fc3f7,0,0.3,0); }}
+};
+(function(){ for(var id in HATS){ mat('HAT_'+id, HATS[id].name, HATS[id].col, {stack:1, hat:id}); } })();
 mat('BOAT','Boat',[154,106,58],{stack:1});
 mat('PROPELLER','Propeller',[205,208,216],{stack:16});
 mat('WOODEN_PLANE','Wooden Plane',[176,140,86],{stack:1});
@@ -1164,7 +1183,7 @@ var World = {
     }
   },
   genAshColumn: function(blocks, lx,lz, wx,wz, hmap){
-    var biome=this.biomeAt(wx,wz), h=this.heightAt(wx,wz); hmap[lx*CHUNK+lz]=h;
+    var biome=this.biomeAt(wx,wz), h=this.heightAt(wx,wz); hmap[lx*CHUNK+lz]=h; this.genAshTrees(blocks,lx,lz,wx,wz,biome,h);
     var LAVA_LEVEL=SEA-3;
     for(var y=0;y<WORLD_H;y++){
       var id=B.AIR;
@@ -1510,6 +1529,14 @@ var World = {
     if(surf+1<WORLD_H) setLocal(ch.blocks, ex, surf+1, ez, B.AIR);
     // register the city so dwarves move in
     var sk=cx+','+cz; if(!dwarfSiteSet[sk]){ dwarfSiteSet[sk]=1; dwarfSites.push({x:cx*16+8+0.5, y:floorY+1, z:cz*16+8+0.5}); }
+  },
+  genAshTrees: function(blocks, lx,lz, wx,wz, biome, h){
+    if(biome!==100 || h<=SEA-2) return;
+    if(hash3(wx,777,wz,this.seed^0xA5)>=0.008) return;
+    var th=4+(hash3(wx,778,wz,this.seed)*3|0);   // gaunt, dead ash trees
+    for(var ty=1;ty<=th;ty++){ if(h+ty<WORLD_H-1) blocks[idx(lx,h+ty,lz)]=B.ASH_LOG; }
+    if(lx>0 && h+th-1<WORLD_H-1) blocks[idx(lx-1,h+th-1,lz)]=B.ASH_LOG;              // bare branch stubs
+    if(lz<CHUNK-1 && h+th<WORLD_H-1) blocks[idx(lx,h+th,lz+1)]=B.ASH_LOG;
   },
   genAshFortress: function(ch){
     var cx=ch.cx, cz=ch.cz;
@@ -2503,6 +2530,33 @@ var playerAvatar=(function(){ var g=new THREE.Group();
   avatarLimbs.legR=limb(0.2,0.74,0.24,PANTS,0.12,0.68,0);
   g.visible=false; return g; })();
 scene.add(playerAvatar);
+var playerHat=null; try{ playerHat=localStorage.getItem('fw_hat')||null; }catch(e){}
+var _avatarHat=null;
+function applyPlayerHat(){ if(_avatarHat){ playerAvatar.remove(_avatarHat); _avatarHat=null; }
+  if(playerHat && HATS[playerHat]){ _avatarHat=new THREE.Group(); HATS[playerHat].build(_avatarHat); _avatarHat.position.y=1.9; playerAvatar.add(_avatarHat); } }
+applyPlayerHat();
+function openWardrobe(){
+  var ov=document.getElementById('wardrobeOv');
+  if(!ov){ ov=document.createElement('div'); ov.id='wardrobeOv'; ov.style.cssText='position:fixed;inset:0;z-index:61;background:radial-gradient(circle at 50% 30%,#141d2eF2,#070b12F8);display:flex;align-items:center;justify-content:center;padding:16px;'; document.body.appendChild(ov); }
+  ov.style.display='flex';
+  var owned={}; for(var q=0;q<inv.hotbar.length;q++){ var h=inv.hotbar[q]; if(h&&h.key.indexOf('HAT_')===0) owned[h.key.slice(4)]=1; }
+  for(var q2=0;q2<inv.main.length;q2++){ var h2=inv.main[q2]; if(h2&&h2.key.indexOf('HAT_')===0) owned[h2.key.slice(4)]=1; }
+  if(playerHat) owned[playerHat]=1;
+  var ids=Object.keys(HATS), cards='';
+  var noneSel=!playerHat;
+  cards+='<div class="wcard'+(noneSel?' on':'')+'" data-hat="">No Hat</div>';
+  for(var i=0;i<ids.length;i++){ var id=ids[i], have=!!owned[id], sel=(playerHat===id);
+    cards+='<div class="wcard'+(sel?' on':'')+(have?'':' locked')+'" data-hat="'+(have?id:'')+'">'+HATS[id].name+(have?'':' \uD83D\uDD12')+'</div>';
+  }
+  ov.innerHTML='<style>.wcard{background:#182133;border:1px solid #2b3a54;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:700;color:#dfe8f5;text-align:center;cursor:pointer;transition:border-color .15s}.wcard.on{border-color:#f0c24a;color:#f0c24a}.wcard.locked{opacity:.4;cursor:default}</style>'
+    +'<div style="max-width:560px;width:100%;max-height:88vh;overflow-y:auto;background:#0f1622;border:1px solid #ffffff22;border-radius:14px;padding:18px">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><div style="font-size:22px;font-weight:800;flex:1">Wardrobe</div><button class="mbtn" id="wardClose" style="width:auto;padding:8px 18px;margin:0">Close</button></div>'
+    +'<div class="small" style="opacity:.75;margin-bottom:12px">Hats drop from mobs wearing them \u2014 hunt them to collect. Locked hats you haven\u2019t found yet.</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px">'+cards+'</div></div>';
+  document.getElementById('wardClose').onclick=function(){ ov.style.display='none'; };
+  var cs=ov.querySelectorAll('.wcard');
+  for(var c=0;c<cs.length;c++){ cs[c].onclick=function(){ if(this.classList.contains('locked')) return; var hid=this.getAttribute('data-hat'); playerHat=hid||null; try{ localStorage.setItem('fw_hat', playerHat||''); }catch(e){} applyPlayerHat(); try{ sfxClick(); }catch(e){} openWardrobe(); }; }
+}
 // held item shown in the avatar's right hand (3rd person)
 var avHeldMats=[]; for(var _av=0;_av<6;_av++) avHeldMats.push(new THREE.MeshBasicMaterial({color:0x8a7a5a}));
 var avHeldBlock=new THREE.Mesh(new THREE.BoxGeometry(0.24,0.24,0.24), avHeldMats); avHeldBlock.visible=false;
@@ -3908,8 +3962,11 @@ function doPlace(){
   if(hit.id===B.WIND_TURBINE){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.MFSU){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.QUARRY){ var qt=World.tiles[World.ck(hit.x,hit.y,hit.z)];
-    if(qt){ if(qt.done) toast('\u26CF\uFE0F Quarry: finished (hit bedrock)'); else { var dep=(qt.cy==null)?0:Math.max(0,(hit.y-1)-qt.cy); toast('\u26CF\uFE0F Quarry mining \u2014 depth '+dep+(drawPower(hit.x,hit.y,hit.z,0)?'':' (no power: connect a generator by cable)')); } }
-    return; }
+    if(qt){ if(qt.done) toast('Quarry: finished (hit bedrock)');
+      else if(!peekPower(hit.x,hit.y,hit.z,7)) toast('Quarry idle \u2014 needs power. Wire a fuelled Generator to it with cable.');
+      else { var dep=(qt.cy==null)?0:Math.max(0,hit.y-qt.cy); toast('Quarry mining \u2014 depth '+dep+' blocks'); } }
+    return;
+  }
   if(hit.id===B.GENERATOR){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.AETHER_FORGE){ openAetherForge(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.SOLAR_PANEL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
@@ -4228,6 +4285,7 @@ function shapeless(ing, out, outQty){ RECIPES.push({type:'shapeless', ing:ing, o
 shapeless([{key:'LOG',qty:1}],'PLANKS',4);
 shapeless([{key:'SPRUCE_LOG',qty:1}],'SPRUCE_PLANKS',4);
 shapeless([{key:'BIRCH_LOG',qty:1}],'BIRCH_PLANKS',4);
+shapeless([{key:'ASH_LOG',qty:1}],'ASH_PLANKS',4);
 shapeless([{key:'CHERRY_LOG',qty:1}],'CHERRY_PLANKS',4);
 shaped([['SPRUCE_PLANKS',null],['SPRUCE_PLANKS',null]], 'STICK', 4);
 shaped([['BIRCH_PLANKS',null],['BIRCH_PLANKS',null]], 'STICK', 4);
@@ -4270,6 +4328,7 @@ shaped([['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT']], 'BRASS_PIPE', 8);
 shaped([[null,'BRASS_PIPE',null],['IRON_INGOT','BRASS_BLOCK','IRON_INGOT'],[null,'IRON_INGOT',null]], 'SPRINKLER', 1);
 shapeless([{key:'STRING',qty:1},{key:'IRON_INGOT',qty:1}], 'NAME_TAG', 1);
 shaped([['IRON_INGOT','IRON_INGOT','IRON_INGOT'],[null,'IRON_INGOT',null],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'ANVIL', 1);
+shaped([[null,'GOLD_INGOT',null],['GOLD_INGOT','REDSTONE','GOLD_INGOT'],[null,'GOLD_INGOT',null]], 'CLOCK', 1);
 shaped([['IRON_INGOT','DIAMOND','IRON_INGOT'],['BRASS_INGOT','REDSTONE','BRASS_INGOT'],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'HARVESTER', 1);
 shaped([['LEATHER','LEATHER','LEATHER'],['LEATHER','CHEST','LEATHER'],['LEATHER','LEATHER','LEATHER']], 'BACKPACK', 1);
 shaped([[null,'IRON_INGOT',null],['IRON_INGOT','TORCH','IRON_INGOT'],[null,'IRON_INGOT',null]], 'LANTERN', 1);
@@ -4553,7 +4612,7 @@ function renderCrafting(panel, width){
   var arrow=document.createElement('div'); arrow.className='arrow'; arrow.textContent='➜';
   var outWrap=document.createElement('div');
   var outSlot=document.createElement('div'); outSlot.className='gslot out'; outSlot.id='craftOut';
-  outSlot.addEventListener('mousedown', function(e){ e.preventDefault(); takeCraftOutput(width); });
+  outSlot.addEventListener('mousedown', function(e){ e.preventDefault(); if(e.button && e.button!==0) return; takeCraftOutput(width); });
   outSlot.addEventListener('touchstart', function(e){ e.preventDefault(); takeCraftOutput(width); });
   outWrap.appendChild(outSlot);
   wrap.appendChild(cg); wrap.appendChild(arrow); wrap.appendChild(outWrap);
@@ -4621,7 +4680,7 @@ function machineLayout(p, widget){
 }
 function spacer(h){ var d=document.createElement('div'); d.style.height=h+'px'; return d; }
 
-function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
+function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
 var palNameEl=null, invNameEl=null, lastSlotName='Tap an item to see its name';
 function makeAvatarPreview(){
   var box=document.createElement('div'); box.style.cssText='width:80px;height:178px;background:linear-gradient(#10202e,#0a0e16);border:2px solid #0007;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;';
@@ -5235,7 +5294,6 @@ function rebuildFurniture(){
     scene.add(m); furnMeshes[tk]=m;
   }
 }
-function invCount(key){ var n=0,i; for(i=0;i<inv.hotbar.length;i++){ if(inv.hotbar[i]&&inv.hotbar[i].key===key) n+=inv.hotbar[i].qty; } for(i=0;i<inv.main.length;i++){ if(inv.main[i]&&inv.main[i].key===key) n+=inv.main[i].qty; } return n; }
 function invTake(key,qty){ var i; for(i=0;i<inv.hotbar.length&&qty>0;i++){ var s=inv.hotbar[i]; if(s&&s.key===key){ var t=Math.min(qty,s.qty); s.qty-=t; qty-=t; if(s.qty<=0) inv.hotbar[i]=null; } } for(i=0;i<inv.main.length&&qty>0;i++){ var s2=inv.main[i]; if(s2&&s2.key===key){ var t2=Math.min(qty,s2.qty); s2.qty-=t2; qty-=t2; if(s2.qty<=0) inv.main[i]=null; } } }
 var FURN_RECIPES=[
   {item:'WOOD_CHAIR', cost:{PLANKS:4}}, {item:'WOOD_STOOL', cost:{PLANKS:3}},
@@ -5288,25 +5346,31 @@ function openMapScreen(){
   var hint=document.createElement('div'); hint.className='small'; hint.style.cssText='text-align:center;opacity:0.8;margin-top:6px;';
   hint.textContent='North \u2191  \u00b7  centered on you  \u00b7  '+px+', '+pz;
   p.appendChild(hint);
-  var addB=document.createElement('button'); addB.className='mbtn'; addB.textContent='\uD83D\uDCCD Add Waypoint Here';
+  var addB=document.createElement('button'); addB.className='mbtn'; addB.textContent='Add Waypoint Here';
   addB.style.cssText='margin-top:10px'; addB.onclick=function(){ var nm=prompt('Waypoint name:', 'Point '+(waypoints.length+1)); if(nm===null) return;
-    var cols=['#ffd23f','#4fc3f7','#81c784','#ff8a65','#ba68c8','#fff']; waypoints.push({name:(nm||'Waypoint').slice(0,24), x:px, z:pz, color:cols[waypoints.length%cols.length]});
+    var cols=['#ffd23f','#4fc3f7','#81c784','#ff8a65','#ba68c8','#fff'];
+    waypoints.push({name:(nm||'Waypoint').slice(0,24), x:px, z:pz, color:cols[waypoints.length%cols.length], icon:WP_ICONS[waypoints.length%WP_ICONS.length], hidden:false});
     saveGame(true); openMapScreen(); };
   p.appendChild(addB);
-  if(waypoints.length){ var wl=document.createElement('div'); wl.style.cssText='margin-top:10px;max-height:24vh;overflow:auto;text-align:left;';
+  if(waypoints.length){ var wl=document.createElement('div'); wl.style.cssText='margin-top:10px;max-height:26vh;overflow:auto;text-align:left;';
     for(var li=0; li<waypoints.length; li++){ (function(idx){ var w=waypoints[idx];
       var dxw=w.x-px, dzw=w.z-pz, dd=Math.round(Math.sqrt(dxw*dxw+dzw*dzw));
-      var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 8px;background:#0006;border-radius:6px;margin-bottom:5px;';
-      var dot=document.createElement('span'); dot.style.cssText='width:11px;height:11px;border-radius:2px;transform:rotate(45deg);flex:0 0 auto;background:'+(w.color||'#ffd23f');
-      var tx=document.createElement('span'); tx.style.cssText='flex:1;font-size:13px;'; tx.textContent=w.name+'  \u00b7  '+w.x+', '+w.z+'  ('+dd+'m)';
+      var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:6px;padding:5px 8px;background:#0006;border-radius:6px;margin-bottom:5px;';
+      var ic=document.createElement('button'); ic.className='tog'; ic.style.cssText='padding:2px 9px;font-size:16px;line-height:1;color:'+(w.color||'#ffd23f'); ic.textContent=w.icon||'\u25C6'; ic.title='Tap to change icon & colour';
+      ic.onclick=function(){ var cols=['#ffd23f','#4fc3f7','#81c784','#ff8a65','#ba68c8','#fff']; var ii=(WP_ICONS.indexOf(w.icon)+1)%WP_ICONS.length; w.icon=WP_ICONS[ii]; w.color=cols[ii%cols.length]; saveGame(true); openMapScreen(); };
+      var tx=document.createElement('span'); tx.style.cssText='flex:1;font-size:13px;cursor:pointer;'; tx.textContent=w.name+'  \u00b7  '+w.x+', '+w.z+'  ('+dd+'m)'; tx.title='Tap to rename';
+      tx.onclick=function(){ var nn=prompt('Rename waypoint:', w.name); if(nn!=null){ w.name=(nn||w.name).slice(0,24); saveGame(true); openMapScreen(); } };
+      var vis=document.createElement('button'); vis.className='tog'+(w.hidden?'':' on'); vis.textContent=w.hidden?'Hidden':'Shown'; vis.style.cssText='padding:2px 8px;font-size:11px;'; vis.title='Show marker in the world';
+      vis.onclick=function(){ w.hidden=!w.hidden; saveGame(true); openMapScreen(); };
       var del=document.createElement('button'); del.className='tog'; del.textContent='\u2715'; del.style.cssText='padding:2px 9px;';
-      del.onclick=function(){ waypoints.splice(idx,1); saveGame(true); openMapScreen(); };
-      row.appendChild(dot); row.appendChild(tx); row.appendChild(del); wl.appendChild(row);
+      del.onclick=function(){ if(confirm('Delete waypoint "'+w.name+'"?')){ waypoints.splice(idx,1); saveGame(true); openMapScreen(); } };
+      row.appendChild(ic); row.appendChild(tx); row.appendChild(vis); row.appendChild(del); wl.appendChild(row);
     })(li); }
     p.appendChild(wl);
   }
   p.appendChild(closeBtn(0)); screenEl.appendChild(p); bindScreenBg();
 }
+var WP_ICONS=['\u25C6','\u25CF','\u25B2','\u2605','\u2726','\u2691','\u2302','\u271A','\u2756','\u25BC'];
 var wpHud=null, wpEls=[];
 function updateWaypointHud(){
   if(!running || uiOpen || !waypoints || !waypoints.length || World.dim==='underforge'){ if(wpHud) wpHud.style.display='none'; return; }
@@ -5323,6 +5387,7 @@ function updateWaypointHud(){
   while(wpEls.length>waypoints.length){ var ex=wpEls.pop(); ex.remove(); }
   var W=window.innerWidth, H=window.innerHeight, v=new THREE.Vector3(), m=26;
   for(var i=0;i<waypoints.length;i++){ var w=waypoints[i], el=wpEls[i];
+    if(w.hidden){ el.style.display='none'; continue; }
     var ddx=w.x+0.5-camera.position.x, ddz=w.z+0.5-camera.position.z, dist=Math.sqrt(ddx*ddx+ddz*ddz);
     if(dist<3.5){ el.style.display='none'; continue; } el.style.display='';
     v.set(w.x+0.5, Player.pos.y+1.0, w.z+0.5); v.project(camera);
@@ -5330,7 +5395,7 @@ function updateWaypointHud(){
     var sx=(v.x*0.5+0.5)*W, sy=(-v.y*0.5+0.5)*H;
     sx=Math.max(m,Math.min(W-m,sx)); sy=Math.max(m,Math.min(H-m,sy));
     el.style.left=sx+'px'; el.style.top=sy+'px';
-    el.__d.textContent='\u25C6'; el.__d.style.color=w.color||'#ffd23f';
+    el.__d.textContent=w.icon||'\u25C6'; el.__d.style.color=w.color||'#ffd23f';
     el.__n.textContent=w.name; el.__s.textContent=Math.round(dist)+'m';
   }
 }
@@ -5369,6 +5434,19 @@ function drawPower(x,y,z,amt,skipCell){
       if(seen[key]) continue; seen[key]=1;
       var t=World.tiles[key];
       if(t && t.type==='generator' && !(skipCell&&t.cell) && (t.energy||0)>=amt){ t.energy-=amt; return true; }
+      if(blk(World.getBlock(nx,ny,nz)).shape==='cable') q.push([nx,ny,nz]);
+    }
+  }
+  return false;
+}
+function peekPower(x,y,z,amt){   // like drawPower but does NOT drain — for status readouts
+  var seen={}, q=[[x,y,z]], steps=0; seen[World.ck(x,y,z)]=1;
+  while(q.length && steps<160){ steps++;
+    var c=q.shift();
+    for(var i=0;i<6;i++){ var d=PDIRS[i], nx=c[0]+d[0],ny=c[1]+d[1],nz=c[2]+d[2], key=World.ck(nx,ny,nz);
+      if(seen[key]) continue; seen[key]=1;
+      var t=World.tiles[key];
+      if(t && t.type==='generator' && (t.energy||0)>=amt) return true;
       if(blk(World.getBlock(nx,ny,nz)).shape==='cable') q.push([nx,ny,nz]);
     }
   }
@@ -6060,9 +6138,19 @@ function makeVillager(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,
   p(0.16,0.6,0.22,SHIRT,-0.33,1.14,0); p(0.16,0.6,0.22,SHIRT,0.33,1.14,0); // upper sleeves
   p(0.15,0.26,0.21,SKIN,-0.33,0.78,0); p(0.15,0.26,0.21,SKIN,0.33,0.78,0); // forearms (skin)
   var l1=p(0.21,0.66,0.24,PANTS,-0.12,0.33,0), l2=p(0.21,0.66,0.24,PANTS,0.12,0.33,0); // legs
+  if(Math.random()<0.5){ p(0.54,0.42,0.1,HAIR,0,1.46,-0.24); p(0.56,0.46,0.34,SHIRT,0,0.6,0); }   // female villagers: long hair + dress
   var rh=Math.random();
   if(rh<0.3){ p(0.56,0.1,0.56,[0x6a4a2a,0x3a2a1a,0x222428][Math.random()*3|0],0,1.92,0); p(0.36,0.16,0.36,0x4a3320,0,2.0,0); } // brimmed hat
   else if(rh<0.5){ p(0.54,0.2,0.54,[0x8a3a3a,0x3a5a8a,0x4a6a3a][Math.random()*3|0],0,1.96,0); }                              // cap/beanie
+  g.userData.legs=[l1,l2]; return g; }
+function makeCinderkin(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
+  var ASHC=0x5a5450, DARK=0x37312d, EMBER=0xff7a2a;
+  p(0.5,0.5,0.5,ASHC,0,1.6,0);
+  p(0.1,0.08,0.02,EMBER,-0.11,1.64,0.26); p(0.1,0.08,0.02,EMBER,0.11,1.64,0.26);   // ember eyes
+  p(0.54,0.66,0.3,DARK,0,1.02,0);
+  p(0.1,0.4,0.04,EMBER,0,1.02,0.16);                                                // glowing chest seam
+  p(0.16,0.6,0.22,DARK,-0.35,1.05,0); p(0.16,0.6,0.22,DARK,0.35,1.05,0);
+  var l1=p(0.2,0.64,0.22,ASHC,-0.12,0.32,0), l2=p(0.2,0.64,0.22,ASHC,0.12,0.32,0);
   g.userData.legs=[l1,l2]; return g; }
 function makeForgewright(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   var COAT=0x2a2620, BRASS=0xc09a45, COPPER=0xb5703a, SKIN=0xc8a07a, DARK=0x1a1814;
@@ -6269,7 +6357,8 @@ var MOBDEF={
   plane:{hp:80,w:1.6,h:1.0,sp:0,dmg:0,passive:true},
   villager:{hp:20,w:0.6,h:1.9,sp:1.1,dmg:0,passive:true,villager:true},
   dwarf:{hp:20,w:0.6,h:1.3,sp:1.2,dmg:0,passive:true},
-  forgewright:{hp:26,w:0.6,h:1.9,sp:0.7,dmg:0,passive:true}
+  forgewright:{hp:26,w:0.6,h:1.9,sp:0.7,dmg:0,passive:true},
+  cinderkin:{hp:22,w:0.6,h:1.8,sp:2.2,dmg:4,passive:true,neutral:true}
 };
 function meshFor(kind){ switch(kind){
   case 'spooler':return makeSpooler(); case 'skeleton':return makeSkeleton(); case 'creeper':return makeCreeper();
@@ -6286,6 +6375,7 @@ function meshFor(kind){ switch(kind){
   case 'villager':return makeVillager();
   case 'dwarf':return makeDwarf();
   case 'forgewright':return makeForgewright();
+  case 'cinderkin':return makeCinderkin();
   default:return makeZombie(); } }
 function spawnEnemy(kind, x,y,z){
   var d=MOBDEF[kind]||MOBDEF.zombie;
@@ -6295,6 +6385,8 @@ function spawnEnemy(kind, x,y,z){
     passive:!!d.passive, width:d.w, height:d.h, speed:d.sp, dmg:d.dmg };
   if(difficulty==='easy' && !d.passive){ e.hp=Math.max(1,Math.round(d.hp*0.7)); }   // easy: hostiles are frailer
   e.maxHp=e.hp;
+  var HAT_HEADY={zombie:1.9,skeleton:1.9,villager:1.95,dwarf:1.4,forgewright:2.0,cinderkin:1.95,creeper:2.0,pig:0.95,cow:1.35,sheep:1.15,rabbit:0.55,fox:0.75};
+  if(HAT_HEADY[kind]!=null && Math.random()<0.05){ var _hids=Object.keys(HATS); e.hat=_hids[(Math.random()*_hids.length)|0]; var _hg=new THREE.Group(); HATS[e.hat].build(_hg); _hg.position.y=HAT_HEADY[kind]; mesh.add(_hg); }
   if(kind==='skeleton') e.atkCd=1.4+Math.random()*1.4;
   entities.push(e);
 }
@@ -6587,7 +6679,7 @@ function playerShootArrow(){
 }
 function arrowHitEntity(e,dmg,dir){
   e.hp-=dmg; e.hurt=0.3;
-  if((e.kind==='bear'||e.kind==='boar') && !e.tamed){ e.provoked=true; e.aggroT=14; }
+  if((e.kind==='bear'||e.kind==='boar'||e.kind==='cinderkin') && !e.tamed){ e.provoked=true; e.aggroT=14; }
   if(e.vel){ e.vel.x+=dir.x*4.5; e.vel.z+=dir.z*4.5; e.vel.y=3.0; }
   sfxHurtMob(e.kind);
 }
@@ -6657,6 +6749,7 @@ function tickFishing(dt){
 function tickEntities(dt){
   var pp=Player.pos;
   for(var i=entities.length-1;i>=0;i--){ var e=entities[i];
+    if(e && e.hp!=null && e.hp<=0 && e.hat && !e._hd){ e._hd=1; giveItem('HAT_'+e.hat,1); toast('Collected: '+(ITEMS['HAT_'+e.hat]?ITEMS['HAT_'+e.hat].name:'Hat')+'!'); }
     if(e===Player.riding){
       if(e.kind==='plane'){
         e.pos.x=pp.x; e.pos.z=pp.z; e.pos.y=pp.y+0.3;
@@ -6848,7 +6941,7 @@ function hitEntity(e){
   if(_crit){ try{ tone(1200,0.05,'square',0.05); }catch(_){} }
   if(rpgLifeSteal()>0 && Math.random()<rpgLifeSteal() && Player.hp<20){ Player.hp=Math.min(20,Player.hp+1); updateStats(); }   // RPG life steal
   rpgAddXP('combat', e.hp<=0? 12 : 2);                    // RPG combat XP (kill bonus)
-  if((e.kind==='bear'||e.kind==='boar') && !e.tamed){ e.provoked=true; e.aggroT=14; }   // neutral mobs fight back
+  if((e.kind==='bear'||e.kind==='boar'||e.kind==='cinderkin') && !e.tamed){ e.provoked=true; e.aggroT=14; }   // neutral mobs fight back
   e.vel.x+=dir.x*6; e.vel.z+=dir.z*6; e.vel.y=4.4;
   if(tool && (tool.tool==='sword'||tool.tool==='battleaxe')) damageTool();
   sfxHurtMob(e.kind); rumble(0.4,0.28,80);
@@ -6981,6 +7074,7 @@ function tickSteam(dt){ for(var i=steamParticles.length-1;i>=0;i--){ var s=steam
 function clearSteam(){ for(var i=0;i<steamParticles.length;i++) scene.remove(steamParticles[i].mesh); steamParticles=[]; }
 // ---- MMO-style mob health bars + floating damage numbers (DOM overlays projected from 3D) ----
 var _tmpV=new THREE.Vector3(), dmgNums=[], mobBarPool=[];
+var showMobBars=true; try{ if(localStorage.getItem('fw_mobBars')==='0') showMobBars=false; }catch(e){}
 function dmgLayer(){ var h=document.getElementById('dmgLayer'); if(!h){ h=document.createElement('div'); h.id='dmgLayer'; h.style.cssText='position:fixed;inset:0;z-index:20;pointer-events:none;overflow:hidden;'; document.body.appendChild(h); } return h; }
 function barLayer(){ var h=document.getElementById('barLayer'); if(!h){ h=document.createElement('div'); h.id='barLayer'; h.style.cssText='position:fixed;inset:0;z-index:19;pointer-events:none;overflow:hidden;'; document.body.appendChild(h); } return h; }
 function spawnDmgNumber(e, amount, crit){
@@ -7003,10 +7097,11 @@ function tickDmgNumbers(dt){
 }
 function updateMobBars(dt){
   var host=barLayer(), used=0;
+  if(!showMobBars){ for(var z=0;z<mobBarPool.length;z++) mobBarPool[z].style.display='none'; return; }
   for(var i=0;i<entities.length;i++){ var e=entities[i]; if(!e || e.hp<=0) continue;
     if(e.barT>0) e.barT-=dt;
     var dx=e.pos.x-Player.pos.x, dz=e.pos.z-Player.pos.z, d2=dx*dx+dz*dz;
-    var show = e.name || (e.barT>0) || (!e.passive && d2<196);   // named, recently hit, or a nearby hostile
+    var show = e.name || (e.barT>0) || (!e.passive && (e.dmg||0)>0 && d2<196);   // named, recently hit, or a real threat closing in
     if(!show || d2>30*30) continue;
     _tmpV.set(e.pos.x, e.pos.y+(e.height||1.4)+0.35, e.pos.z); _tmpV.project(camera);
     if(_tmpV.z>1) continue;
@@ -7026,6 +7121,37 @@ function updateMobBars(dt){
   for(var j=used;j<mobBarPool.length;j++) mobBarPool[j].style.display='none';
 }
 function clearMobUI(){ for(var i=0;i<dmgNums.length;i++){ if(dmgNums[i].el.parentNode) dmgNums[i].el.parentNode.removeChild(dmgNums[i].el); } dmgNums=[]; for(var j=0;j<mobBarPool.length;j++) mobBarPool[j].style.display='none'; }
+// ---- Wind turbine rotors: a real spinning 3-blade rotor mounted on placed turbine blocks ----
+var turbineRotors={};   // ck -> {group, spin}
+function makeTurbineRotor(){
+  var g=new THREE.Group();
+  var hubM=new THREE.MeshBasicMaterial({color:0x2b2f36});
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(0.22,0.22,0.22), hubM));
+  var bladeM=new THREE.MeshBasicMaterial({color:0xeef2f6, side:THREE.DoubleSide});
+  for(var b=0;b<3;b++){ var blade=new THREE.Mesh(new THREE.BoxGeometry(0.09,1.15,0.24), bladeM);
+    blade.position.set(0,0.62,0); var pv=new THREE.Group(); pv.add(blade); pv.rotation.z=b*(Math.PI*2/3); g.add(pv); }
+  return g;
+}
+function updateTurbineRotors(dt){
+  if(!scene) return;
+  var px=Player.pos.x, py=Player.pos.y, pz=Player.pos.z, R=34, seen={};
+  for(var tk in World.tiles){ var t=World.tiles[tk]; if(!t) continue;
+    var isWind = (t.type==='generator' && t.wind);
+    var active = (t.type==='generator' && (t.energy||0)>0.5) || (t.type==='blastfurnace' && (t.cook||0)>0) || (t.type==='macerator' && (t.grind||0)>0);
+    if(!isWind && !active) continue;
+    var pa=tk.split(','), x=+pa[0], y=+pa[1], z=+pa[2];
+    var dx=x-px, dz=z-pz; if(dx*dx+dz*dz>R*R || Math.abs(y-py)>40) continue;
+    if(isWind){
+      if(World.getBlock(x,y,z)!==B.WIND_TURBINE) continue;
+      seen[tk]=1; var r=turbineRotors[tk];
+      if(!r){ var grp=makeTurbineRotor(); grp.position.set(x+0.5, y+1.15, z+0.5); scene.add(grp); r=turbineRotors[tk]={group:grp}; }
+      var windy = (typeof weather!=='undefined' && weather==='rain') ? 2.2 : 1.0;
+      r.group.rotation.z += dt*1.3*windy;
+    }
+    if(active && Math.random()<0.5*dt*6){ spawnSteam(x+0.5+(Math.random()-0.5)*0.4, y+1.05, z+0.5+(Math.random()-0.5)*0.4, 0xdfe6ee); }   // working machines vent steam
+  }
+  for(var k in turbineRotors){ if(!seen[k]){ scene.remove(turbineRotors[k].group); delete turbineRotors[k]; } }
+}
 // ---------------- The Watcher (insomnia apparition) ----------------
 var nightsAwake=0, _nightCounted=false, watcher=null, watcherCd=18, watcherStare=0;
 function makeWatcherMesh(){
@@ -7180,6 +7306,11 @@ function maybeSpawnWisp(){
     if(isSolid(World.getBlockLoaded(x,y,z)) && !isSolid(World.getBlockLoaded(x,y+1,z)) && !isSolid(World.getBlockLoaded(x,y+2,z))){ cy=y+1; break; } }
   if(cy<0) return;
   spawnEnemy('forgewright', x+0.5, cy, z+0.5);
+  entities[entities.length-1].name='Forgewright';   // floating label so players know it's interactable
+  var ck=0; for(var ci2=0;ci2<entities.length;ci2++) if(entities[ci2].kind==='cinderkin') ck++;   // cinderkin roam in small groups
+  if(ck<4){ for(var cs2=0;cs2<2;cs2++){ var ca=Math.random()*6.283, cd2=4+Math.random()*5, cx2=Math.floor(x+Math.cos(ca)*cd2), cz2=Math.floor(z+Math.sin(ca)*cd2), cy2=-1;
+    for(var yy2=cy+6; yy2>cy-8; yy2--){ if(isSolid(World.getBlockLoaded(cx2,yy2,cz2)) && !isSolid(World.getBlockLoaded(cx2,yy2+1,cz2)) && !isSolid(World.getBlockLoaded(cx2,yy2+2,cz2))){ cy2=yy2+1; break; } }
+    if(cy2>=0) spawnEnemy('cinderkin', cx2+0.5, cy2, cz2+0.5); } }
   toast('\u2699\uFE0F A Forgewright wanders the UnderForge nearby\u2026');
 }
 
@@ -7226,6 +7357,7 @@ function respawn(){
   Player.hp=Player.maxHp; Player.hunger=Player.maxHunger; Player.sat=5; Player.invul=3; Player.riding=null;
   if(Player.fishing){ if(Player.fishing.bob) scene.remove(Player.fishing.bob); Player.fishing=null; }
   clearHearts(); clearSteam(); clearMobUI(); despawnWatcher(); clearPortals();
+  for(var _tk in turbineRotors){ scene.remove(turbineRotors[_tk].group); delete turbineRotors[_tk]; }
   Player.pos.copy(Player.spawn); Player.vel.set(0,0,0);
   // clear hostiles near the spawn so you don't get jumped, and pause spawning briefly
   for(var i=entities.length-1;i>=0;i--){ var e=entities[i];
@@ -7903,7 +8035,8 @@ function exitToTitle(){ saveGame(true); closePause(); running=false;
 
 /* ----------------------------- TOAST ------------------------------------ */
 var toastT=null;
-function toast(msg){ var el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+function stripEmoji(sv){ try{ return String(sv).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{26FF}\u{2728}\u{FE0F}\u{2620}]/gu,'').replace(/^\s+|\s+$/g,'').replace(/\s{2,}/g,' '); }catch(e){ return sv; } }
+function toast(msg){ var el=document.getElementById('toast'); el.textContent=stripEmoji(msg); el.classList.add('show');
   clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove('show'); }, 1600); }
 
 /* ============================ RPG SKILL SYSTEM ============================ */
@@ -8103,6 +8236,7 @@ function openRpgSkills(){ rpgBuildScreen(); var sc=rpgEl('rpgScreen'); rpgRefres
   try{ rpgInit(); rpgInjectCSS();
     var attach=function(){ var pe=document.getElementById('pExit'); if(pe && pe.parentNode && !document.getElementById('pSkills')){
         var b=document.createElement('button'); b.className='mbtn'; b.id='pSkills'; b.innerHTML='Skills';
+        var wb=document.createElement('button'); wb.className='mbtn'; wb.id='pWardrobe'; wb.innerHTML='Wardrobe'; wb.onclick=function(){ try{ if(typeof closePause==='function') closePause(); }catch(e){} openWardrobe(); }; pe.parentNode.insertBefore(wb, pe);
         b.onclick=function(){ try{ if(typeof closePause==='function') closePause(); }catch(e){} openRpgSkills(); };
         pe.parentNode.insertBefore(b, pe);
     } };
@@ -8128,7 +8262,8 @@ function updateTorchLights(dt){
   _torchPx=px; _torchPy=py; _torchPz=pz; _torchForce=0.6;
   var dayDim = 1 - 0.6*Math.max(0, Math.min(1, (sunU.value-0.3)/0.7));   // torches barely tint daylight, full glow at night
   var found=[];
-  for(var dx=-20;dx<=20;dx++) for(var dz=-20;dz<=20;dz++) for(var dy=-6;dy<=8;dy++){
+  var _TR=IS_MOBILE?15:22, _TRD=dayDim>0.01?_TR:12;   // scan a smaller box on mobile / in bright daylight
+  for(var dx=-_TRD;dx<=_TRD;dx++) for(var dz=-_TRD;dz<=_TRD;dz++) for(var dy=-6;dy<=8;dy++){
     var x=px+dx, y=py+dy, z=pz+dz; if(y<1||y>=WORLD_H) continue;
     var bId=World.getBlock(x,y,z), lit=false, lpow=0.95;
     if(bId===B.TORCH){ lit=true; }
@@ -8373,8 +8508,8 @@ function gpUITick(bt, ax, pressed, dt){
     } else gpMoveFocus(navx,navy,cont);
   }
   if(pressed(0)) gpActivate();
-  if(pressed(2)){   // X / square - split half (or place one) on the focused slot
-    if(gpFocusEl && (gpFocusEl.classList.contains('gslot')||gpFocusEl.classList.contains('slot'))) gpSlotClick(gpFocusEl, 2);
+  if(pressed(2)){   // X / square - split half (or place one) on the focused slot (not on output slots)
+    if(gpFocusEl && (gpFocusEl.classList.contains('gslot')||gpFocusEl.classList.contains('slot')) && !gpFocusEl.classList.contains('out')) gpSlotClick(gpFocusEl, 2);
   }
   if(pressed(3)){   // Y / triangle - quick-move the focused slot to the other inventory
     if(gpFocusEl && (gpFocusEl.classList.contains('gslot')||gpFocusEl.classList.contains('slot'))){
@@ -8502,8 +8637,9 @@ function loop(t){
       if(hs && hs.key==='COMPASS' && World.dim==='overworld'){
         var dxs=Player.spawn.x-Player.pos.x, dzs=Player.spawn.z-Player.pos.z, dist=Math.sqrt(dxs*dxs+dzs*dzs);
         var ang=Math.atan2(dxs,-dzs), di=((Math.round(ang/(Math.PI/4))%8)+8)%8;
-        txt += '    \uD83E\uDDED '+['N','NE','E','SE','S','SW','W','NW'][di]+' '+Math.round(dist)+'m';
+        txt += '    Spawn '+['N','NE','E','SE','S','SW','W','NW'][di]+' '+Math.round(dist)+'m';
       }
+      if(World.dim==='overworld' && countItem('CLOCK')>0){ var th24=(timeOfDay*24)%24, hh2=Math.floor(th24), mm2=Math.floor((th24%1)*60); txt += '    '+(hh2<10?'0':'')+hh2+':'+(mm2<10?'0':'')+mm2; }   // carried clock shows game time
       ce.textContent=txt; } }
   // chunks
   if(frame%6===0) updateChunks(Player.pos.x, Player.pos.z);
@@ -8522,6 +8658,7 @@ function loop(t){
   // damage flash via fog tint? simple overlay using clear color blend skipped; use crosshair? keep minimal
   renderer.autoClear=true;
   updateMobBars(dt); tickDmgNumbers(dt);
+  updateTurbineRotors(dt);
   renderer.render(scene,camera);
   updateWaypointHud();
   if(viewMode===0 && running){
@@ -8571,8 +8708,12 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 122';
+var VERSION='Update 126';
 var CHANGELOG=[
+  { v:'Update 126', t:'Hats, Machine FX & Wiki', items:['<b>Hat system!</b> Mobs now sometimes spawn wearing a hat \u2014 kill them to collect it. Ten hats to find (Crown, Top Hat, Wizard, Pirate Tricorn, Party, Chef, Cowboy, Viking Helm, Halo, Propeller Beanie). Equip them in the new <b>Wardrobe</b> (pause menu) and your hat shows on your character in 3rd-person view','<b>Machines came alive</b> \u2014 running Generators, Blast Furnaces and Macerators now vent <b>steam</b>, on top of the new spinning wind-turbine rotors','<b>New wiki walkthrough</b> \u2014 \u201CYour First Factory (Step by Step)\u201D teaches a brand-new player the exact order to build the machine chain, from first iron to a fully automated base. The whole wiki is also now emoji-free'] },
+  { v:'Update 125', t:'Waypoints, Turbines & Quarry', items:['<b>Waypoints upgraded</b> \u2014 in the Map you can now rename a waypoint (tap its name), pick from 10 icons &amp; colours (tap the icon), and toggle whether each one shows in the world (Shown/Hidden). Delete now asks first','<b>Wind turbines actually spin</b> \u2014 placed turbines now have a real 3-blade rotor mounted on top that turns (and spins faster in wind/storms), instead of being a plain white block','<b>Quarry status fixed</b> \u2014 it no longer just says \u201Cdepth 0\u201D. It now correctly reports when it is idle for lack of power, and shows the true depth once mining','<b>Machine makeover</b> \u2014 generators, macerators, compressors, solar panels, energy cells, the blast furnace and sprinkler now have distinct, more fitting colours so they read apart at a glance'] },
+  { v:'Update 124', t:'Big Batch: UnderForge Life & More', items:['<b>Cinderkin</b> now roam the UnderForge in small groups \u2014 ash-grey wanderers with ember eyes. They are peaceful until you hit one\u2026 then the whole grudge is yours','The <b>Forgewright</b> now shows a floating name so you know it can be interacted with \u2014 tap it with the use action and it opens the Aether Forge to upgrade your held tool','<b>Dead ash trees</b> with grey <b>Ash Log / Ash Planks</b> wood now grow in the UnderForge ash flats','<b>Craft a Clock</b> (gold + redstone) and carry it to see the in-game time under your coordinates','<b>No more Apple emojis</b> \u2014 system messages and the changelog are now emoji-free for a cleaner ForgeWorld identity','<b>Water block removed from creative</b> \u2014 scoop water with a bucket and place it, like Minecraft','<b>Female villagers</b> \u2014 villages now have long-haired villagers in dresses alongside the rest'] },
+  { v:'Update 123', t:'Fixes & Performance', items:['<b>Health bars fixed</b> \u2014 they no longer appear over harmless fish; bars now only show on real threats near you, anything you recently hit, or named mobs. Plus a new <b>Mob Health Bars</b> toggle in Settings','<b>Controller crafting fixed</b> \u2014 pressing X on a crafted item no longer flings it into the armor slot; X now only splits stacks on normal slots','<b>Performance</b> \u2014 lighter light-scanning on phones and in bright daylight for smoother frame rates','<b>What\u2019s New cleaned up</b> \u2014 the stray &amp;lt;b&amp;gt; tags are gone, and the Close button moved to the top so you don\u2019t have to scroll'] },
   { v:'Update 122', t:'Swamp Biome', items:['\uD83D\uDC38 &lt;b&gt;New Swamp biome&lt;/b&gt; \u2014 low, wet lowlands with murky dark-green grass, &lt;b&gt;muddy green water&lt;/b&gt;, scattered oaks and &lt;b&gt;lilypads&lt;/b&gt; floating on the surface. Best seen in a fresh world','This kicks off the biome-content pass \u2014 &lt;b&gt;frogs&lt;/b&gt; in the swamp, plus jungle life (vines, monkeys, banana trees) and beach coconut palms, are coming next'] },
   { v:'Update 121', t:'Name Tags, Anvils & Fixes', items:['\uD83C\uDFF7\uFE0F &lt;b&gt;Name Tags &amp; Anvils&lt;/b&gt; \u2014 craft a Name Tag (string + iron), inscribe it at an &lt;b&gt;Anvil&lt;/b&gt;, then tap a mob to name it. Named mobs show a floating name and &lt;b&gt;never despawn&lt;/b&gt;, so you can keep your favourites','\uD83C\uDFE1 &lt;b&gt;Fixed village houses&lt;/b&gt; getting their bottoms carved out by neighbouring wheat farms (farms now generate first, so houses always win)','\uD83E\uDE9F &lt;b&gt;clearer glass&lt;/b&gt;: brighter and more window-like'] },
   { v:'Update 120', t:'Combat UI, Weather, Texture & Light', items:['\u2694\uFE0F &lt;b&gt;Enemy health bars &amp; floating damage numbers&lt;/b&gt; \u2014 hits now pop MMO-style damage numbers (crits in gold), and mobs you\u2019re fighting show a colored health bar above them','\u26C8\uFE0F &lt;b&gt;Real weather&lt;/b&gt; \u2014 calm rain now differs from full &lt;b&gt;thunderstorms&lt;/b&gt; (heavy rain, frequent lightning), and it &lt;b&gt;snows in cold biomes and on mountaintops&lt;/b&gt; instead of raining','\uD83C\uDF31 &lt;b&gt;Richer block textures&lt;/b&gt; \u2014 grass, stone, dirt and other natural blocks now have per-block colour variation so the world looks less flat','\uD83D\uDCA1 &lt;b&gt;Nicer lighting&lt;/b&gt; \u2014 torches and lanterns are a warmer white instead of harsh yellow, and no longer wash out to orange when several are close together'] },
@@ -8653,15 +8794,15 @@ function openWhatsNew(){
   if(!ov){ ov=document.createElement('div'); ov.id='whatsnew';
     ov.style.cssText='position:fixed;inset:0;z-index:60;background:rgba(8,12,20,0.86);display:flex;align-items:center;justify-content:center;padding:18px;'; document.body.appendChild(ov); }
   var rows=CHANGELOG.map(function(c,i){
-    var lis=c.items.map(function(it){ return '<li style="margin:3px 0;line-height:1.35">'+it+'</li>'; }).join('');
+    var lis=c.items.map(function(it){ return '<li style="margin:3px 0;line-height:1.35">'+stripEmoji(String(it).replace(/&lt;/g,'<').replace(/&gt;/g,'>'))+'</li>'; }).join('');
     var badge=(i===0)?' <span style="background:#5cc24a;color:#06210a;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;vertical-align:middle">NEW</span>':'';
     return '<div style="margin-bottom:14px"><div style="font-weight:700;font-size:15px;color:#ffd86b">'+c.v+' \u2014 '+c.t+badge+'</div><ul style="margin:4px 0 0 0;padding-left:20px;font-size:13px;opacity:.92">'+lis+'</ul></div>';
   }).join('');
   ov.innerHTML='<div style="max-width:520px;width:100%;max-height:86vh;overflow-y:auto;background:#141b27;border:1px solid #ffffff22;border-radius:14px;padding:20px 22px;box-shadow:0 10px 40px #000a">'
-    +'<div style="font-size:22px;font-weight:800;text-align:center;margin-bottom:2px">\u2728 What\u2019s New</div>'
-    +'<div class="small" style="text-align:center;opacity:.7;margin-bottom:14px">ForgeWorld \u00b7 '+VERSION+'</div>'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:2px"><div style="font-size:22px;font-weight:800;flex:1;text-align:left">What\u2019s New</div><button class="mbtn primary" id="wnClose" style="width:auto;padding:8px 20px;margin:0">Close</button></div>'
+    +'<div class="small" style="opacity:.7;margin-bottom:14px">ForgeWorld \u00b7 '+VERSION+'</div>'
     +rows
-    +'<button class="mbtn primary" id="wnClose" style="width:100%;margin-top:6px">Close</button></div>';
+    +'</div>';
   ov.style.display='flex';
   document.getElementById('wnClose').addEventListener('click', function(){ ov.style.display='none'; sfxClick(); });
   try{ localStorage.setItem('fw_seenVer', VERSION); }catch(e){}
@@ -8730,6 +8871,21 @@ function openGuide(){
     '<p>Open <b>Inventory</b> for the 2\u00d72 grid, or place &amp; tap a <b>Crafting Table</b> for the full 3\u00d73. Tap the <b>\uD83D\uDCD6 Recipe Book</b> button to browse every recipe. Build a <b>Furnace</b> to smelt ore into ingots and cook food (fuel = coal, wood, planks).</p>',
     '<h3>\u2699 Machines & Metals</h3>',
     '<ul><li><b>Macerator</b> \u2014 grinds ore into 2\u00d7 dust; smelt the dust for double ingots.</li><li><b>Generator</b> \u2014 burns fuel into power. Run <b>Energy Cables</b> (copper) from it to power a Macerator or Furnace a few blocks away.</li><li><b>Powered machines</b> \u2014 a cabled Macerator grinds ~3.5\u00d7 faster; a cabled Furnace smelts 3\u00d7 faster with no coal.</li><li><b>Solar Panel</b> \u2014 free power in daylight when open to the sky; wire it in with cables.</li><li><b>Compressor</b> - presses ingots into <b>metal plates</b> (and crushes cobble back into stone, gravel into cobble). Plates build the advanced machines. Faster when cabled to power.</li><li><b>Wind Turbine</b> - makes power from open sky day and night; the <b>higher you build it</b>, the more wind it catches. Needs iron plates.</li><li><b>Advanced Energy Cell</b> - stores 4x the power of a normal Energy Cell. Built from plates + an Energy Cell + a diamond.</li><li><b>Mining Drill</b> - an electric tier-4 pickaxe that mines even faster than diamond. Built from iron plates + an Energy Cell + a diamond.</li><li><b>Brass Pipes</b> - lay a connected run to move items automatically: from a chest or a machine\u2019s output into the next machine\u2019s input or a chest. <b>Auto-sorting:</b> drop one sample of an item into a storage chest and matching items pipe themselves into it; machines get fed before storage. (3 brass \u2192 8 pipes)</li><li><b>Blast Furnace</b> - a powered smelter that turns ore into <b>2× ingots</b> (ore doubling) and runs fast on cable power. Pipe ore in, pipe ingots out.</li><li><b>Steam Harvester</b> - a powered auto-farm: wire it to a generator and it reaps <b>ripe</b> crops nearby, <b>replants</b> them, and drops the yield into an attached chest (pipe it onward to auto-sort).</li><li><b>Mechanical Sprinkler</b> - wire it to a generator to speed up growth of nearby crops (with a fine mist). Pairs perfectly with the Harvester.</li><li><b>Bronze</b> \u2014 alloy 3 copper + 1 tin \u2192 bronze ingots \u2192 an iron-level tool set.</li><li><b>Brass</b> \u2014 2 copper + 1 gold ore \u2192 brass ingots (steampunk building + portal parts).</li><li><b>Steel</b> \u2014 iron + coal.</li></ul>',
+    '<h3>Your First Factory (Step by Step)</h3>',
+    '<p>New here? Follow this order and you will have an automated base humming along:</p>',
+    '<ol>'
+    +'<li><b>Get iron.</b> Mine coal and iron ore with a stone pickaxe, then smelt the iron in a <b>Furnace</b>. Make an iron pickaxe so you can mine everything else.</li>'
+    +'<li><b>Build a Generator.</b> Craft a <b>Generator</b> and put coal or wood in it as fuel \u2014 it makes and stores power. This is the heart of your factory.</li>'
+    +'<li><b>Run cables.</b> Craft <b>Energy Cables</b> (copper) and connect the Generator to your machines. Any machine touching the powered cable line will run.</li>'
+    +'<li><b>Double your ore.</b> Place a <b>Macerator</b> on the cable line: ore in makes 2 dust, and smelting dust gives <b>double ingots</b>. (Or build a <b>Blast Furnace</b> \u2014 ore in, 2 ingots out, skipping the dust step.)</li>'
+    +'<li><b>Free daytime power.</b> Add <b>Solar Panels</b> (open to the sky) and a <b>Wind Turbine</b> built up high, wired in, so your Generator burns less fuel.</li>'
+    +'<li><b>Store power.</b> Wire an <b>Energy Cell</b> into the line so spare power is saved for when the Generator runs dry.</li>'
+    +'<li><b>Make plates.</b> A <b>Compressor</b> presses ingots into <b>metal plates</b> \u2014 the ingredient for advanced machines (Wind Turbine, Advanced Energy Cell, Mining Drill).</li>'
+    +'<li><b>Automate with pipes.</b> Lay <b>Brass Pipes</b> from a chest into a machine input and from its output onward. Put one sample item in a storage chest and matching items auto-sort into it.</li>'
+    +'<li><b>Automate farming.</b> A <b>Steam Harvester</b> reaps and replants ripe crops into a chest; a <b>Mechanical Sprinkler</b> beside the field speeds up growth. Pipe the harvest into storage.</li>'
+    +'<li><b>Auto-mine.</b> Drop a <b>Quarry</b>, wire it to a fuelled Generator, and it digs a shaft to bedrock on its own, dropping everything into an adjacent chest.</li>'
+    +'</ol>',
+    '<p><b>Golden rule:</b> a machine only works if it can trace a cable path back to a power source (Generator, Solar Panel or Wind Turbine) that currently has power. If a machine seems dead, check the cable connection and that your Generator has fuel.</p>',
     '<h3>\uD83D\uDCA7 World Tools</h3>',
     '<ul><li><b>Bucket</b> (3 iron) scoops &amp; places water. Water flows and settles like real liquid.</li><li><b>Boat</b> (5 planks) \u2014 place on water and tap to sail; SNEAK to exit, SNEAK+tap to pick up.</li><li><b>Torch</b> \u2014 lights the area with a warm flicker. Put one in your <b>Off-Hand</b> slot to carry light in your left hand while you mine.</li><li><b>Shield</b> (planks + iron) in the off-hand blocks about half of incoming damage.</li><li><b>Shears</b> (2 iron) \u2014 tap a sheep for 1\u20133 wool; it goes naked and regrows its coat in time.</li><li><b>Bed</b> (3 wool + 3 planks) \u2014 tap at night to skip to morning and set your respawn point.</li><li><b>Map</b> (8 planks + redstone) \u2014 hold and tap to see a top-down view of explored land; add named <b>waypoints</b> at your spot.</li><li><b>Compass</b> (4 iron + redstone) \u2014 hold it for the heading and distance back to spawn.</li></ul>',
     '<h3>\uD83C\uDF31 Farming</h3>',
@@ -8772,7 +8928,7 @@ function openGuide(){
   srch.style.cssText='width:100%;box-sizing:border-box;padding:9px;margin-bottom:10px;font-size:14px;border-radius:7px;border:1px solid #7a6a4a;background:#1c1812;color:#eee;';
   b.appendChild(srch);
   var holder=document.createElement('div');
-  var html=secs.join(''); var parts=html.split(/(?=<h3)/);
+  var html=stripEmoji(secs.join('')); var parts=html.split(/(?=<h3)/);
   for(var pi=0; pi<parts.length; pi++){ var pp=parts[pi]; if(!pp || !pp.replace(/\s/g,'')) continue;
     var d=document.createElement('div'); d.className='wikiSec'; d.style.cssText='margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.06);'; d.innerHTML=pp; holder.appendChild(d); }
   b.appendChild(holder);
@@ -8820,6 +8976,8 @@ document.getElementById('sSound').addEventListener('click', function(){ toggleSo
 document.getElementById('sSens').addEventListener('input', function(){ lookSens=(+this.value)/100; });
 document.getElementById('sDist').addEventListener('input', function(){ var n=+this.value; setRenderDist(n); document.getElementById('sDistV').textContent=n; });
 document.getElementById('sAutoJump').addEventListener('click', function(){ autoJump=!autoJump; this.textContent=autoJump?'On':'Off'; this.classList.toggle('on',autoJump); });
+(function(){ var mb=document.getElementById('sMobBars'); if(!mb) return; function sy(){ mb.textContent=showMobBars?'On':'Off'; mb.classList.toggle('on',showMobBars); } sy();
+  mb.addEventListener('click', function(){ showMobBars=!showMobBars; try{ localStorage.setItem('fw_mobBars', showMobBars?'1':'0'); }catch(e){} sy(); }); })();
 (function(){ var sf=document.getElementById('sFullscreen'); if(!sf) return;
   function fsOn(){ return !!(document.fullscreenElement||document.webkitFullscreenElement); }
   function sync(){ sf.textContent=fsOn()?'On':'Off'; sf.classList.toggle('on',fsOn()); }
