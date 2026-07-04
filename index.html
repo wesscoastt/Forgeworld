@@ -292,7 +292,7 @@
 <div id="menu">
   <div id="panorama"></div>
   <div id="charPreview" style="position:absolute;right:18px;bottom:18px;z-index:5;display:flex;flex-direction:column;align-items:center;gap:6px;">
-    <canvas id="charCanvas" width="150" height="210" style="background:rgba(10,14,22,.55);border:1px solid #ffffff22;border-radius:12px;"></canvas>
+    <canvas id="charCanvas" width="150" height="210" style="width:150px;height:210px;background:rgba(10,14,22,.55);border:1px solid #ffffff22;border-radius:12px;"></canvas>
     <button class="mbtn" id="btnCustomize" style="width:150px;padding:8px 0;margin:0;font-size:14px;">Customize</button>
   </div>
   <div class="veil"></div>
@@ -669,6 +669,7 @@ mat('BOOKSHELF_DECO','Bookshelf',[150,108,62],{stack:16}); ITEMS.BOOKSHELF_DECO.
 mat('BAKED_POTATO','Baked Potato',[200,154,92],{food:6});
 // fuels that are also blocks
 ITEMS.PLANKS.fuel = 15; ITEMS.LOG.fuel = 15; ITEMS.CRAFTING.fuel = 15;
+[['SPRUCE_LOG',15],['BIRCH_LOG',15],['ASH_LOG',15],['SPRUCE_PLANKS',15],['BIRCH_PLANKS',15],['ASH_PLANKS',15],['STICK',5],['WOOD_FENCE',15],['LADDER',10],['BOWL',5],['OAK_SAPLING',5],['SPRUCE_SAPLING',5],['BIRCH_SAPLING',5],['CHERRY_SAPLING',5],['BOOKSHELF',15],['SIGN',10],['CARPENTER',15]].forEach(function(p){ if(ITEMS[p[0]]) ITEMS[p[0]].fuel=p[1]; });
 // smelting for ore/sand
 ITEMS.IRON_ORE.smeltTo='IRON_INGOT';
 ITEMS.LOG.smeltTo='CHARCOAL';
@@ -1676,8 +1677,8 @@ var World = {
     // interior
     var bx=cx-(R-1), bz=cz-(R-1);
     setW(ch,bx,h+1,bz,B.BED); setW(ch,bx,h+1,bz+1,B.BED);
-    setTileW(ch,bx,h+1,bz,{type:'bed', dx:0, dz:1, hx:bx, hy:h+1, hz:bz+1});
-    setTileW(ch,bx,h+1,bz+1,{type:'bedhead', fx:bx, fy:h+1, fz:bz});
+    setTileW(ch,bx,h+1,bz+1,{type:'bed', dx:0, dz:-1, hx:bx, hy:h+1, hz:bz});   // foot into the room, pillow (head) against the wall
+    setTileW(ch,bx,h+1,bz,{type:'bedhead', fx:bx, fy:h+1, fz:bz+1});
     setW(ch,cx+(R-1),h+1,cz-(R-1),B.CRAFTING);
     setW(ch,cx+(R-1),h+1,cz-(R-2),B.FURNACE);
     setTileW(ch,cx+(R-1),h+1,cz-(R-2),{type:'furnace', input:null,fuel:null,output:null,burn:0,burnMax:0,cook:0,front:4});
@@ -2477,7 +2478,7 @@ function buildToolHeads(headMat, handleMat, sc){
   g.add(box(0.06,0.6,0.06,handleMat,0,0.26,0));                       // handle
   var refs={};
   var pick=new THREE.Group(); pick.add(box(0.30,0.055,0.06,headMat,0,0.57,0)); pick.add(box(0.11,0.05,0.05,headMat,-0.16,0.53,0,0.6)); pick.add(box(0.11,0.05,0.05,headMat,0.16,0.53,0,-0.6)); g.add(pick); refs.pickaxe=pick;
-  var axe=new THREE.Group(); axe.add(box(0.15,0.22,0.05,headMat,0.085,0.55,0)); axe.add(box(0.06,0.28,0.05,headMat,0.175,0.55,0)); g.add(axe); refs.axe=axe; refs.battleaxe=axe;
+  var axe=new THREE.Group(); axe.add(box(0.15,0.22,0.05,headMat,-0.085,0.55,0)); axe.add(box(0.06,0.28,0.05,headMat,-0.175,0.55,0)); g.add(axe); refs.axe=axe; refs.battleaxe=axe;
   var shovel=new THREE.Group(); shovel.add(box(0.16,0.19,0.035,headMat,0,0.60,0)); shovel.add(box(0.05,0.07,0.05,headMat,0,0.48,0)); g.add(shovel); refs.shovel=shovel;
   var hoe=new THREE.Group(); hoe.add(box(0.20,0.05,0.05,headMat,0.07,0.59,0)); hoe.add(box(0.05,0.10,0.05,headMat,0.16,0.55,0)); g.add(hoe); refs.hoe=hoe;
   var sword=new THREE.Group(); sword.add(box(0.07,0.5,0.03,headMat,0,0.66,0)); sword.add(box(0.22,0.05,0.05,handleMat,0,0.40,0)); g.add(sword); refs.sword=sword;
@@ -3488,6 +3489,7 @@ document.addEventListener('keydown',function(e){
   keys[e.code]=true;
   if(e.code==='Space' && !wasDown) tryToggleFly();
   if(e.code==='KeyE'){ toggleInventory(); e.preventDefault(); }
+  if(e.code==='KeyQ' && !uiOpen && running){ throwItem(); e.preventDefault(); }
   if(e.code==='KeyV'){ cycleView(); }
   if(e.code==='Escape'){ if(uiOpen) closeScreen(); }
   if(e.code>='Digit1'&&e.code<='Digit9'){ selectHotbar(+e.code.slice(5)-1); }
@@ -3783,6 +3785,10 @@ function breakBlock(hit){
   var id=hit.id; var b=blk(id);
   if(id===B.BED){ breakBed(hit.x,hit.y,hit.z); if(gameMode!=='creative') spawnDrop(hit.x,hit.y,hit.z,'BED',1); damageTool(); sfxBreak(); return; }
   if(id===B.FURN){ breakFurniture(hit.x,hit.y,hit.z); damageTool(); sfxBreak(); return; }
+  if(id===B.CHEST){ var _ct=World.tiles[World.ck(hit.x,hit.y,hit.z)];
+    if(_ct && _ct.items){ for(var _ci=0;_ci<_ct.items.length;_ci++){ var _it=_ct.items[_ci]; if(_it && _it.key) spawnDrop(hit.x,hit.y,hit.z,_it.key,_it.qty||1); } }   // spill the contents
+    delete World.tiles[World.ck(hit.x,hit.y,hit.z)]; World.setBlock(hit.x,hit.y,hit.z,B.AIR,true);
+    if(gameMode!=='creative') spawnDrop(hit.x,hit.y,hit.z,'CHEST',1); World.reflowLight(hit.x,hit.y,hit.z); forceTorchRescan(); damageTool(); sfxBreak(); return; }
   if(b.shape==='door'){
     var dtile=World.tiles[World.ck(hit.x,hit.y,hit.z)];
     var oy=(dtile && dtile.doorTop)? hit.y-1 : hit.y+1;
@@ -3846,6 +3852,8 @@ function breakBlock(hit){
   if(World.tiles[tk]) delete World.tiles[tk];
   // gravity blocks (sand/gravel) above? simple: leave for now
   World.setBlock(hit.x,hit.y,hit.z,B.AIR,true);
+  var _above=World.getBlock(hit.x,hit.y+1,hit.z);
+  if(blk(_above) && blk(_above).thin && BLOCKS[_above]){ World.setBlock(hit.x,hit.y+1,hit.z,B.AIR,true); if(gameMode!=='creative') spawnDrop(hit.x,hit.y+1,hit.z,BLOCKS[_above].key,1); World.reflowLight(hit.x,hit.y+1,hit.z); }   // torch loses its support and drops
   World.floodSeed(hit.x,hit.y,hit.z);
   World.reflowLight(hit.x,hit.y,hit.z); forceTorchRescan();
   if(isLogId(id)) scheduleLeafDecay([[hit.x,hit.y,hit.z]]);
@@ -4539,7 +4547,7 @@ function rerenderScreen(){ var sc=screenEl.querySelector('.panel'); var st=sc?sc
 function slotHTML(slot){
   if(!slot) return '';
   var it=ITEMS[slot.key]; if(!it) return '';
-  var h='<img class="ic" src="'+iconFor(slot.key)+'">';
+  var h='<img class="ic" title="'+String(it.name||slot.key).replace(/"/g,'')+(slot.qty>1?' \u00d7'+slot.qty:'')+'" src="'+iconFor(slot.key)+'">';
   if(slot.qty>1) h+='<span class="qty">'+slot.qty+'</span>';
   if(it.durability!=null && slot.dur!=null){ h+='<div class="dur"><i style="width:'+Math.round(100*slot.dur/it.durability)+'%"></i></div>'; }
   return h;
@@ -7024,7 +7032,8 @@ function hitEntity(e){
 var playerAtkCd=0;
 function attackEntities(){ var e=mobInFront(); if(!e) return false;
   if((e.kind==='plane'||e.kind==='boat') && !Player.riding){ doPlace(); return true; }   // tap a vehicle to board it, not attack it
-  if(e.kind==='villager'||e.kind==='dwarf'||e.kind==='forgewright'){ return true; }   // don't attack townsfolk; trade is on the use/interact button
+  if(e.kind==='forgewright'){ return true; }   // the Forgewright is interact-only (Aether Forge)
+  // villagers & dwarves CAN be attacked now (trading is on the use/interact button)
   if(playerAtkCd<=0){ hitEntity(e); playerAtkCd=0.42; triggerHandSwing(); }
   return true;
 }
@@ -8522,22 +8531,22 @@ function gpFocusables(cont){
   return els.filter(function(e){ return !e.disabled && e.getClientRects().length>0 && e.offsetWidth>0 && e.offsetHeight>0; });
 }
 function gpCenter(el){ var r=el.getBoundingClientRect(); return {x:r.left+r.width/2, y:r.top+r.height/2}; }
-function gpSetFocus(el){
+function gpSetFocus(el, silent){
   if(gpFocusEl===el) return;
   var had=!!gpFocusEl;
   if(gpFocusEl) gpFocusEl.classList.remove('gpfocus');
   gpFocusEl=el;
-  if(el){ el.classList.add('gpfocus'); if(had) sfxUITick(); try{ el.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){ } try{ gpFocusPos=gpCenter(el); }catch(_){ } }
+  if(el){ el.classList.add('gpfocus'); if(had && !silent) sfxUITick(); try{ el.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){ } try{ gpFocusPos=gpCenter(el); }catch(_){ } }
 }
 function gpEnsureFocus(cont){
   if(gpFocusEl && cont.contains(gpFocusEl) && gpVisible(gpFocusEl)){ gpFocusCont=cont; return true; }
   var els=gpFocusables(cont); if(!els.length){ gpSetFocus(null); return false; }
-  var pick=null;
-  if(gpFocusCont===cont && gpFocusPos){   // same screen re-rendered (e.g. a machine updating) -> keep focus where it was, don't snap to Close
-    var best=1e9; for(var j=0;j<els.length;j++){ var c=gpCenter(els[j]); var dd=(c.x-gpFocusPos.x)*(c.x-gpFocusPos.x)+(c.y-gpFocusPos.y)*(c.y-gpFocusPos.y); if(dd<best){ best=dd; pick=els[j]; } }
+  if(gpFocusCont===cont && gpFocusPos){   // same screen re-rendered (e.g. a machine updating) -> silently keep focus where it was
+    var best=1e9, pick=null; for(var j=0;j<els.length;j++){ var c=gpCenter(els[j]); var dd=(c.x-gpFocusPos.x)*(c.x-gpFocusPos.x)+(c.y-gpFocusPos.y)*(c.y-gpFocusPos.y); if(dd<best){ best=dd; pick=els[j]; } }
+    if(pick){ gpFocusCont=cont; gpSetFocus(pick, true); return true; }
   }
-  if(!pick){ for(var i=0;i<els.length;i++){ var t=(els[i].textContent||'').toLowerCase(); if(els[i].classList.contains('primary')||/play|create|start|continue|resume/.test(t)){ pick=els[i]; break; } } }
-  gpFocusCont=cont; gpSetFocus(pick||els[0]); return true;
+  var prim=null; for(var i=0;i<els.length;i++){ var t=(els[i].textContent||'').toLowerCase(); if(els[i].classList.contains('primary')||/play|create|start|continue|resume/.test(t)){ prim=els[i]; break; } }
+  gpFocusCont=cont; gpSetFocus(prim||els[0]); return true;
 }
 function gpMoveFocus(dx,dy,cont){
   if(!gpEnsureFocus(cont)) return;
@@ -8602,6 +8611,18 @@ function gpUITick(bt, ax, pressed, dt){
   for(var i=0;i<16;i++) gpPrev[i]=gpBtn(bt[i]);   // consume all edges so nothing leaks into gameplay
   return true;
 }
+function throwItem(){
+  var s=inv.hotbar[hotbarSel]; if(!s) return;
+  var before=drops.length;
+  spawnDrop(Math.floor(Player.pos.x), Math.floor(Player.pos.y+1), Math.floor(Player.pos.z), s.key, 1);
+  var d=drops[drops.length-1];
+  if(d && drops.length>before){
+    var fx=-Math.sin(Player.yaw), fz=-Math.cos(Player.yaw);
+    d.pos.x=Player.pos.x+fx*0.6; d.pos.y=Player.pos.y+Player.eye-0.2; d.pos.z=Player.pos.z+fz*0.6;
+    d.vel.x=fx*6; d.vel.z=fz*6; d.vel.y=2.6; d.pickCd=1.6;
+  }
+  s.qty-=1; if(s.qty<=0) inv.hotbar[hotbarSel]=null; renderHotbar(); try{ sfxClick(); }catch(e){}
+}
 function pollGamepad(dt){
   if(typeof navigator==='undefined' || !navigator.getGamepads) return;
   var pads=navigator.getGamepads(), gp=(gpIndex>=0)?pads[gpIndex]:null;
@@ -8631,6 +8652,7 @@ function pollGamepad(dt){
   if(gpBtn(bt[6])){ gpPlaceCd-=dt; if(gpPlaceCd<=0){ doPlace(); gpPlaceCd=0.22; } } else gpPlaceCd=0;  // LT - fires once on press, then repeats while held (no double-fire)
   if(pressed(4)||pressed(14)) selectHotbar((hotbarSel+8)%9);   // LB / Dpad-left - prev
   if(pressed(5)||pressed(15)) selectHotbar((hotbarSel+1)%9);   // RB / Dpad-right - next
+  if(pressed(13)) throwItem();                                  // Dpad-down - throw the held item
   if(pressed(2)) toggleInventory();           // X - inventory
   if(pressed(3)) cycleView();                 // Y - camera
   if(pressed(9)) openPauseMenu();             // Start - pause
@@ -8640,7 +8662,7 @@ function loop(t){
   try{
   var gdt=(t-(gpLast||t))/1000; gpLast=t; if(gdt>0.1)gdt=0.1; if(gdt<0)gdt=0;
   pollGamepad(gdt);
-  if(!running) return;
+  if(!running){ try{ renderCharPreview(); }catch(_){} return; }
   now=t; var dt=(t-last)/1000; last=t; if(dt>0.1)dt=0.1; frame++;
   if(chunkMatT.uniforms.uTime) chunkMatT.uniforms.uTime.value = t*0.001;
   if(chunkMat.uniforms.uCamPos) chunkMat.uniforms.uCamPos.value.copy(camera.position);
@@ -8792,8 +8814,10 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 130';
+var VERSION='Update 132';
 var CHANGELOG=[
+  { v:'Update 132', t:'Villagers, Tooltips, Axe & Beds', items:['<b>Villagers &amp; dwarves can be attacked now</b> \u2014 so you can collect hats from hatted townsfolk. Trading still lives on the use/interact button, and the Forgewright stays interact-only','<b>Item tooltips</b> \u2014 hover an item in your inventory or hotbar to see its name','<b>Axe fixed</b> \u2014 it now sits the right way round in your hand instead of facing backwards','<b>Village beds no longer backwards</b> \u2014 the pillow now sits against the wall like it should'] },
+  { v:'Update 131', t:'Fixes: Menu, Chests, Torches, Fuel', items:['<b>Fixed the main-menu character</b> \u2014 it wasn\u2019t rendering because the menu skipped the draw call. Your customized character now shows and slowly turns above the Customize button','<b>Breaking a chest spills its contents</b> onto the ground, so you never lose items to a misclick','<b>Torches drop when their support is broken</b> \u2014 mine the block under a torch and it falls as an item','<b>Everything wooden burns as furnace fuel now</b> \u2014 all planks & logs (spruce, birch, ash), sticks, fences, ladders, saplings, bookshelves, signs and benches','<b>Throw items</b> \u2014 press <b>Q</b> (keyboard) or <b>D-pad Down</b> (controller) to toss the held item, Minecraft-style','<b>Controller:</b> the furnace/machine screens no longer spam-highlight the Close button while the machine updates'] },
   { v:'Update 130', t:'Frogs, Pants & Cursor', items:['<b>Frogs!</b> Green frogs now hop around the Swamp biome \u2014 the swamp\u2019s first residents','<b>Pants slot added</b> to the Dressing Room \u2014 Blue Jeans, Black Trousers, Explorer Khaki and Crimson Pants (unlocked via achievements), applied to your character and the menu preview','<b>Mouse cursor hides</b> when you\u2019re using a controller, and reappears the moment you move the mouse'] },
   { v:'Update 129', t:'Dressing Room & Character Preview', items:['<b>Character preview on the main menu</b> \u2014 your customized character now stands in the bottom-right of the title screen, slowly turning, with a <b>Customize</b> button beneath','<b>Full Dressing Room</b> \u2014 the Wardrobe now has tabs for <b>Hats, Shirts, Glasses &amp; Shoes</b>. Change any of them and it updates on your character (and the menu preview) instantly','<b>Achievements now reward cosmetics</b> \u2014 shirts, glasses and shoes unlock as you earn achievements (and stay unlocked across all your worlds). Hats still drop from hatted mobs','<b>Controller fix</b> \u2014 the Close button no longer keeps re-selecting itself on the furnace and other machine screens; gamepad focus now stays put while a machine\u2019s progress updates'] },
   { v:'Update 128', t:'Textures & Chrome Performance', items:['<b>Fixed the texture flicker/shimmer</b> (especially on desktop Chrome). The renderer was drawing at up to 2\u00d7 pixel density \u2014 far more than your phone \u2014 which both slowed Chrome down and made thin block patterns sparkle as you moved. Capped it, and block detail now fades sooner with distance','<b>Cobblestone redone</b> \u2014 proper irregular stones with dark mortar gaps and aged, uneven shading instead of the old flat speckle','<b>Warmer, aged stone palette</b> \u2014 stone and cobble now lean industrial grey-brown, a first step toward a cohesive steampunk resource-pack look'] },
