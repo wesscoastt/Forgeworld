@@ -480,6 +480,10 @@ defBlock({key:'CORAL_PINK', name:'Pink Coral', col:[232,112,168], solid:true, ha
 defBlock({key:'CORAL_BLUE', name:'Blue Coral', col:[86,134,232], solid:true, hard:0.5 });
 defBlock({key:'CORAL_YELLOW', name:'Yellow Coral', col:[240,200,72], solid:true, hard:0.5 });
 defBlock({key:'SEA_LANTERN', name:'Sea Lantern', col:[178,224,214], top:[200,238,228], solid:true, hard:0.6, light:14 });
+defBlock({key:'GLOW_CRYSTAL', name:'Glow Crystal', col:[168,120,232], top:[196,150,250], side:[150,104,214], solid:true, tool:'pickaxe', tier:1, hard:1.2, light:12 });
+defBlock({key:'GLOWSHROOM', name:'Glowshroom', col:[86,196,168], top:[120,220,190], side:[70,170,150], solid:true, tool:'axe', hard:0.4, light:10 });
+defBlock({key:'MOSS_STONE', name:'Mossy Stone', col:[84,112,70], top:[96,128,78], side:[80,104,66], solid:true, tool:'pickaxe', tier:1, hard:1.5, drop:'COBBLE' });
+defBlock({key:'CRYSTAL_ORE', name:'Crystal', col:[150,110,220], solid:true, tool:'pickaxe', tier:1, hard:1.4, light:9 });
 defBlock({key:'FURNITURE_BENCH', name:'Carpenter\u2019s Bench', col:[150,110,64], top:[176,134,82], side:[126,92,52], solid:true, tool:'axe', hard:1.6 });
 defBlock({key:'FURN', name:'Furniture', col:[140,100,60], solid:false, hard:0.4 });
 defBlock({key:'STONE_SLAB', name:'Stone Slab', col:[136,136,140], solid:true, tool:'pickaxe', tier:1, hard:1.4, shape:'slab', tex:'STONE' });
@@ -666,6 +670,12 @@ mat('WOOD_STOOL','Wooden Stool',[150,108,62],{stack:16}); ITEMS.WOOD_STOOL.furnK
 mat('SIDE_TABLE','Side Table',[150,108,62],{stack:16}); ITEMS.SIDE_TABLE.furnKind='sidetable';
 mat('WOOD_LAMP','Standing Lamp',[170,140,90],{stack:16}); ITEMS.WOOD_LAMP.furnKind='lamp';
 mat('BOOKSHELF_DECO','Bookshelf',[150,108,62],{stack:16}); ITEMS.BOOKSHELF_DECO.furnKind='bookshelf';
+mat('WARDROBE','Wardrobe',[130,95,55],{stack:16}); ITEMS.WARDROBE.furnKind='wardrobe'; ITEMS.WARDROBE.furnStore=27;
+mat('BARREL','Barrel',[140,100,60],{stack:16}); ITEMS.BARREL.furnKind='barrel'; ITEMS.BARREL.furnStore=18;
+mat('SOFA','Sofa',[150,90,90],{stack:16}); ITEMS.SOFA.furnKind='sofa';
+mat('POTTED_PLANT','Potted Plant',[90,150,80],{stack:16}); ITEMS.POTTED_PLANT.furnKind='plant';
+mat('GRAND_CLOCK','Grandfather Clock',[130,95,55],{stack:16}); ITEMS.GRAND_CLOCK.furnKind='grandclock';
+mat('RUG','Rug',[160,90,100],{stack:16}); ITEMS.RUG.furnKind='rug';
 mat('BAKED_POTATO','Baked Potato',[200,154,92],{food:6});
 // fuels that are also blocks
 ITEMS.PLANKS.fuel = 15; ITEMS.LOG.fuel = 15; ITEMS.CRAFTING.fuel = 15;
@@ -1152,6 +1162,9 @@ var World = {
     var biome = this.biomeAt(wx,wz);
     var h = this.heightAt(wx,wz);
     hmap[lx*CHUNK+lz] = h;
+    var ravN = this.noise.fbm(wx*0.009+300, wz*0.009+300, 2);
+    var ravDist = Math.abs(ravN-0.5);
+    var ub = this.noise.fbm(wx*0.005+900, wz*0.005+900, 2);
     for(var y=0;y<WORLD_H;y++){
       var id = B.AIR;
       if(y===0){ id=B.BEDROCK; }
@@ -1185,6 +1198,14 @@ var World = {
       // lava: deep sea + occasional cave pools
       if(id===B.AIR && y>0 && y<=4){ id=B.LAVA; }
       else if(id===B.AIR && y>0 && y<=11 && isSolid(blocks[idx(lx,y-1,lz)]) && hash3(wx,y,wz,this.seed^0x1a7a)<0.05){ id=B.LAVA; }
+      // ravines: winding deep chasms, open to the surface
+      if(ravDist<0.017 && y>9 && y<=h && id!==B.AIR && id!==B.BEDROCK && !blk(id).liquid){ id=B.AIR; }
+      // underground biomes: decorate cave floors by region
+      if(id===B.AIR && y>6 && y<h-6){ var _bl=blocks[idx(lx,y-1,lz)];
+        if(_bl===B.STONE||_bl===B.DEEPSLATE||_bl===B.MOSS_STONE){ var _dc=hash3(wx,y,wz,this.seed^0xCA7E);
+          if(ub>0.56 && ub<0.70){ if(_dc<0.035) id=B.GLOW_CRYSTAL; else if(_dc<0.05) blocks[idx(lx,y-1,lz)]=B.CRYSTAL_ORE; }
+          else if(ub>0.40 && ub<0.52){ if(_dc<0.045) id=B.GLOWSHROOM; }
+          else if(ub>0.28 && ub<0.40){ if(_dc<0.08) blocks[idx(lx,y-1,lz)]=B.MOSS_STONE; } } }
       blocks[idx(lx,y,lz)] = id;
     }
   },
@@ -2549,6 +2570,9 @@ var COSMETICS={
 var playerCos={shirt:'teal',glasses:'none',shoes:'navy',pants:'blue'};
 try{ var _pc=localStorage.getItem('fw_cos'); if(_pc) playerCos=JSON.parse(_pc); }catch(e){}
 var cosGlobal={}; try{ cosGlobal=JSON.parse(localStorage.getItem('fw_cosowned')||'{}'); }catch(e){}
+var hatsOwned={}; try{ hatsOwned=JSON.parse(localStorage.getItem('fw_hatsowned')||'{}'); }catch(e){}
+var hideHelmet=false; try{ hideHelmet=localStorage.getItem('fw_hidehelm')==='1'; }catch(e){}
+function unlockHat(id){ if(!HATS[id]||hatsOwned[id]) return; hatsOwned[id]=1; try{ localStorage.setItem('fw_hatsowned', JSON.stringify(hatsOwned)); }catch(e){} try{ toast('New hat unlocked: '+HATS[id].name+' \u2014 wear it via Customize'); }catch(e){} }
 function cosItem(cat,id){ var a=COSMETICS[cat]; for(var i=0;i<a.length;i++) if(a[i].id===id) return a[i]; return null; }
 function cosOwned(it){ return it.def || !!cosGlobal[it.id]; }
 function saveCos(){ try{ localStorage.setItem('fw_cos', JSON.stringify(playerCos)); }catch(e){} }
@@ -2560,7 +2584,23 @@ function buildGlasses(id){ var g=new THREE.Group(); function b(w,h,d,c,x,y,z){ v
   return g;
 }
 // apply a full cosmetic set to an avatar's limbs (used by the player model AND the menu preview)
+function armorTint(key){ if(!key) return null; if(key.indexOf('DIAMOND')>=0) return 0x5fe9e0; if(key.indexOf('IRON')>=0) return 0xd2d2d2; if(key.indexOf('GOLD')>=0) return 0xe9d24a; if(key.indexOf('LEATHER')>=0) return 0x9a6a3a; if(key.indexOf('CHAIN')>=0) return 0x8a8f98; return 0xbfc4cc; }
+function buildArmorPiece(kind, tint){ var g=new THREE.Group(); var m=new THREE.MeshBasicMaterial({color:tint});
+  function b(w,h,d,x,y,z){ var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); g.add(me); }
+  if(kind==='head'){ b(0.6,0.34,0.6,0,1.74,0); b(0.62,0.14,0.14,0,1.55,0.26); }
+  else if(kind==='chest'){ b(0.58,0.62,0.34,0,1.07,0); b(0.22,0.5,0.26,-0.34,1.4,0); b(0.22,0.5,0.26,0.34,1.4,0); }
+  else if(kind==='legguard'){ b(0.25,0.52,0.29,0,-0.37,0); }   // limb-local (attached to a leg group so it swings)
+  else if(kind==='boot'){ b(0.27,0.22,0.34,0,-0.72,0.03); }
+  return g;
+}
 function applyCosmeticsTo(root, L, state){
+  if(L._armor){ for(var _a=0;_a<L._armor.length;_a++){ var _ap=L._armor[_a]; _ap.parent.remove(_ap.node); } } L._armor=[];
+  var _arm=state.armor||[null,null,null,null];
+  function _reg(parent, node){ if(parent){ parent.add(node); L._armor.push({parent:parent, node:node}); } }
+  if(!(typeof hideHelmet!=='undefined'&&hideHelmet) && _arm[0] && armorTint(_arm[0].key)!=null) _reg(root, buildArmorPiece('head', armorTint(_arm[0].key)));
+  if(_arm[1] && armorTint(_arm[1].key)!=null) _reg(root, buildArmorPiece('chest', armorTint(_arm[1].key)));
+  if(_arm[2] && armorTint(_arm[2].key)!=null){ var _tl=armorTint(_arm[2].key); _reg(L.legL, buildArmorPiece('legguard',_tl)); _reg(L.legR, buildArmorPiece('legguard',_tl)); }
+  if(_arm[3] && armorTint(_arm[3].key)!=null){ var _tf=armorTint(_arm[3].key); _reg(L.legL, buildArmorPiece('boot',_tf)); _reg(L.legR, buildArmorPiece('boot',_tf)); }
   if(L._hat){ root.remove(L._hat); L._hat=null; }
   if(state.hat && HATS[state.hat]){ L._hat=new THREE.Group(); HATS[state.hat].build(L._hat); L._hat.position.y=1.9; root.add(L._hat); }
   var sh=cosItem('shirt',state.shirt); if(sh&&sh.col!=null&&L.torso) L.torso.material.color.setHex(sh.col);
@@ -2569,7 +2609,7 @@ function applyCosmeticsTo(root, L, state){
   if(L._glasses){ L.head.remove(L._glasses); L._glasses=null; }
   var gl=cosItem('glasses',state.glasses); if(gl&&gl.id!=='none'&&L.head){ L._glasses=buildGlasses(gl.id); L.head.add(L._glasses); }
 }
-function applyPlayerHat(){ applyCosmeticsTo(playerAvatar, avatarLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants}); }
+function applyPlayerHat(){ applyCosmeticsTo(playerAvatar, avatarLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, armor:(typeof inv!=='undefined'&&inv.armor)}); }
 // ---- main-menu character preview (its own tiny renderer + avatar) ----
 var previewRenderer=null, previewScene=null, previewCam=null, previewAvatar=null, previewLimbs={};
 function initCharPreview(){
@@ -2581,12 +2621,12 @@ function initCharPreview(){
   previewAvatar=buildAvatarModel(previewLimbs); previewScene.add(previewAvatar);
   updateCharPreview();
 }
-function updateCharPreview(){ if(!previewAvatar) return; applyCosmeticsTo(previewAvatar, previewLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants}); }
+function updateCharPreview(){ if(!previewAvatar) return; applyCosmeticsTo(previewAvatar, previewLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, armor:(typeof inv!=='undefined'&&inv.armor)}); }
 function renderCharPreview(){ if(!previewRenderer){ initCharPreview(); if(!previewRenderer) return; } previewAvatar.rotation.y += 0.012; previewRenderer.render(previewScene, previewCam); }
 function applyPlayerCosmetics(){ applyPlayerHat(); if(typeof updateCharPreview==='function') updateCharPreview(); }
 applyPlayerHat();
 var _wardTab='hat';
-function hatOwnedSet(){ var owned={}; for(var q=0;q<inv.hotbar.length;q++){ var h=inv.hotbar[q]; if(h&&h.key.indexOf('HAT_')===0) owned[h.key.slice(4)]=1; } for(var q2=0;q2<inv.main.length;q2++){ var h2=inv.main[q2]; if(h2&&h2.key.indexOf('HAT_')===0) owned[h2.key.slice(4)]=1; } if(playerHat) owned[playerHat]=1; return owned; }
+function hatOwnedSet(){ var owned={}; for(var q=0;q<inv.hotbar.length;q++){ var h=inv.hotbar[q]; if(h&&h.key.indexOf('HAT_')===0) owned[h.key.slice(4)]=1; } for(var q2=0;q2<inv.main.length;q2++){ var h2=inv.main[q2]; if(h2&&h2.key.indexOf('HAT_')===0) owned[h2.key.slice(4)]=1; } for(var hk in hatsOwned) owned[hk]=1; if(playerHat) owned[playerHat]=1; return owned; }
 function openWardrobe(){
   var ov=document.getElementById('wardrobeOv');
   if(!ov){ ov=document.createElement('div'); ov.id='wardrobeOv'; ov.style.cssText='position:fixed;inset:0;z-index:61;background:radial-gradient(circle at 50% 30%,#141d2eF2,#070b12F8);display:flex;align-items:center;justify-content:center;padding:16px;'; document.body.appendChild(ov); }
@@ -3094,7 +3134,7 @@ function chunkFrag(alpha, grain){
     '  if(id==11.0){ if(face<0.5){ col*=0.82+0.28*n2(uv*8.0); } else { if(uv.y>0.82) col*=vec3(0.58,1.2,0.5); col*=0.85+0.3*n2(uv*6.0); } }',
     '  else if(id==12.0){ col*=0.8+0.34*n2(uv*7.0); col*=1.0-0.16*step(0.86,n2(uv*5.0+3.0)); }',
     '  else if(id==13.0){ col*=0.9+0.16*n2(uv*5.0); col*=1.0-0.12*lineAt(fract(uv.x+0.3*n2(uv*2.0)),0.5,0.04); }',
-    '  else if(id==14.0){ vec2 g=uv*2.7; vec2 ci=floor(g); float r=n2(ci); vec2 f=fract(g)-0.5; f+=(vec2(n2(ci+7.3),n2(ci+3.1))-0.5)*0.34; float d=length(f); float stone=1.0-smoothstep(0.26,0.44,d); float mortar=smoothstep(0.40,0.52,d); col*=(0.62+0.52*r)*(0.72+0.5*stone); col*=1.0-0.36*mortar; }',
+    '  else if(id==14.0){ vec2 g=uv*2.5; vec2 ci=floor(g); vec2 fp=fract(g)-0.5; fp+=(vec2(n2(ci*1.7+2.0),n2(ci*1.3+9.0))-0.5)*0.42; float d=max(abs(fp.x),abs(fp.y))*0.9+length(fp)*0.55; float br=0.66+0.46*n2(ci+0.5); float stone=1.0-smoothstep(0.30,0.47,d); float mortar=smoothstep(0.38,0.5,d); col*=(0.7+0.55*stone)*br; col*=1.0-0.42*mortar; }',
     '  else if(id==15.0){ col*=0.92+0.14*n2(uv*12.0); }',
     '  else if(id==16.0){ float rows=4.0; float ry=floor(uv.y*rows); float yy=fract(uv.y*rows); col*=0.9+0.12*n2(vec2(ry,floor(uv.x*3.0+ry*1.7))); col*=1.0-0.45*lineAt(yy,0.0,0.06)-0.45*lineAt(yy,1.0,0.06); col*=1.0-0.35*lineAt(fract(uv.x*2.0+fract(ry*0.5)),0.0,0.04); col*=0.97+0.06*sin(uv.x*42.0); }',
     '  else if(id==17.0){ if(face<1.5){ vec2 c=uv-0.5; col*=0.86+0.16*sin(length(c)*34.0); col*=0.9+0.14*n2(uv*6.0); } else { col*=0.84+0.26*n2(vec2(floor(uv.x*8.0),floor(uv.y*5.0))); col*=1.0-0.18*lineAt(fract(uv.x*6.0),0.5,0.07); } }',
@@ -4046,6 +4086,7 @@ function doPlace(){
   if(isChest(hit.id)){ openChest(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.BED){ sleepInBed(hit); return; }
   if(hit.id===B.BEEHIVE){ harvestHive(hit.x,hit.y,hit.z); return; }
+  if(hit.id===B.FURN){ var _fk=World.ck(hit.x,hit.y,hit.z); var _ftile=World.tiles[_fk]; if(_ftile && _ftile.items){ openChest(_fk, true); return; } }
   if(hit.id===B.FURNITURE_BENCH){ openFurnitureBench(); return; }
   if(blk(hit.id).shape==='door'){ toggleDoor(hit.x,hit.y,hit.z); return; }
   if(hit.id===B.FENCE_GATE){ var gt=World.tiles[World.ck(hit.x,hit.y,hit.z)]; if(gt){ gt.open=!gt.open; World.markDirty(hit.x>>4,hit.z>>4); sfxDoor(gt.open); } return; }
@@ -4161,6 +4202,14 @@ function doPlace(){
   }
   // eat food
   if(slot && ITEMS[slot.key] && ITEMS[slot.key].food){ if(tryEat(slot)) return; }
+  // two matching slabs combine into one full block
+  if(slot && blk(hit.id).shape==='slab' && BLOCKS[hit.id] && slot.key===BLOCKS[hit.id].key){
+    var _full=B[BLOCKS[hit.id].tex]; if(_full!=null){
+      var _tk=World.ck(hit.x,hit.y,hit.z); if(World.tiles[_tk]) delete World.tiles[_tk];
+      World.setBlock(hit.x,hit.y,hit.z,_full,true); World.reflowLight(hit.x,hit.y,hit.z);
+      if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(); return;
+    }
+  }
   if(!slot || ITEMS[slot.key].block==null) return;
   var nx=hit.x+hit.nx, ny=hit.y+hit.ny, nz=hit.z+hit.nz;
   if(ny<0||ny>=WORLD_H) return;
@@ -4270,8 +4319,13 @@ function placeShape(pid, pb, hit, nx,ny,nz){
     World.tiles[World.ck(nx,ny,nz)]={type:'trapdoor', shape:'trapdoor', dir:playerFacing(), open:false, half:thalf2};
     World.setBlock(nx,ny,nz,pid,true);
   } else if(pb.shape==='door'){
-    if(!isSolid(World.getBlock(nx,ny-1,nz))) return false;
+    if(!isSolid(World.getBlock(nx,ny-1,nz))) return false;                 // needs a floor beneath
+    if(isSolid(World.getBlock(nx,ny+1,nz))) return false;                  // needs 2-tall clear space (don't overwrite the block above)
     var ddir=playerFacing(), hinge=resolveDoorHinge(nx,ny,nz,ddir);
+    if(hinge==='l'){   // if no partner door set the hinge, favour an adjacent wall so the door swings into the opening
+      var perp = (ddir==='north'||ddir==='south') ? [[1,0],[-1,0]] : [[0,1],[0,-1]];
+      if(isSolid(World.getBlock(nx+perp[0][0],ny,nz+perp[0][1])) && !isSolid(World.getBlock(nx+perp[1][0],ny,nz+perp[1][1]))) hinge='r';
+    }
     World.tiles[World.ck(nx,ny,nz)]={type:'door', shape:'door', dir:ddir, open:false, hinge:hinge};
     World.tiles[World.ck(nx,ny+1,nz)]={type:'door', shape:'door', doorTop:true};
     World.setBlock(nx,ny,nz,pid,true);
@@ -4640,7 +4694,7 @@ function clickOffhand(){
   } else if(s){ cursor=s; inv.offhand[0]=null; }
   setHeld(); rerenderScreen();
 }
-function clickArmorSlot(i){
+function clickArmorSlot(i){ setTimeout(function(){ try{ applyPlayerCosmetics(); }catch(e){} },0);
   var slotType=['head','chest','legs','feet'][i], here=inv.armor[i];
   if(cursor){
     var ci=ITEMS[cursor.key];
@@ -4758,7 +4812,7 @@ function makeAvatarPreview(){
   var fig=document.createElement('div'); fig.style.cssText='position:relative;width:50px;height:140px;';
   function aCol(slot, base){ if(slot && ITEMS[slot.key]){ var n=slot.key; if(n.indexOf('DIAMOND')>=0) return '#5fe9e0'; if(n.indexOf('IRON')>=0) return '#d2d2d2'; if(n.indexOf('GOLD')>=0) return '#e9d24a'; if(n.indexOf('LEATHER')>=0) return '#9a6a3a'; } return base; }
   function pc(w,hh,t,l,c){ var d=document.createElement('div'); d.style.cssText='position:absolute;width:'+w+'px;height:'+hh+'px;top:'+t+'px;left:'+l+'px;background:'+c+';border-radius:2px;'; fig.appendChild(d); }
-  pc(24,22,2,13, aCol(inv.armor[0],'#d6a47c'));                                   // head / helmet
+  pc(24,22,2,13, aCol(hideHelmet?null:inv.armor[0],'#d6a47c'));                                   // head / helmet
   pc(4,5,11,18,'#23150e'); pc(4,5,11,29,'#23150e');                               // eyes
   pc(2,2,12,19,'#eef6ff'); pc(2,2,12,30,'#eef6ff');                               // eye glints
   pc(9,2,20,21,'#6e3a2c');                                                        // mouth
@@ -4834,6 +4888,9 @@ function openInventory(keep){
     var ag=gridContainer(1);
     for(var ai=0;ai<4;ai++){ (function(ai){ ag.appendChild(makeGridSlot(inv.armor,ai,function(idx,btn){ clickArmorSlot(idx); })); })(ai); }
     acol.appendChild(ag);
+    var _hh=document.createElement('button'); _hh.className='tog'+(hideHelmet?' on':''); _hh.textContent=hideHelmet?'Helmet: Off':'Hide Helmet'; _hh.style.cssText='font-size:10px;padding:3px 7px;'; _hh.title='Hide the helmet so hats/hair show';
+    _hh.onclick=function(){ hideHelmet=!hideHelmet; try{ localStorage.setItem('fw_hidehelm', hideHelmet?'1':'0'); }catch(e){} try{ applyPlayerCosmetics(); }catch(e){} openInventory(true); };
+    acol.appendChild(_hh);
     prow.appendChild(acol);
     prow.appendChild(makeAvatarPreview());
     var ocol=document.createElement('div'); ocol.style.cssText='display:flex; flex-direction:column; align-items:center; gap:4px; justify-content:flex-end;';
@@ -5339,6 +5396,12 @@ function makeFurnitureMesh(kind){
   else if(kind==='lamp'){ fbox(g,0.16,0.06,0.16,Wd,0,0.03,0); fbox(g,0.08,0.95,0.08,Wd,0,0.5,0); var sh=fbox(g,0.4,0.34,0.4,0xffe9a0,0,1.1,0); }
   else if(kind==='bookshelf'){ fbox(g,0.94,0.94,0.5,W,0,0.5,0); fbox(g,0.84,0.06,0.42,Wd,0,0.5,0.05); var bc=[0xb0492f,0x2f6bb0,0x40915a,0xd0b050,0x8a4fb0];
     for(var bi=0;bi<10;bi++){ var row=bi<5?0.74:0.26, bx=-0.34+(bi%5)*0.17; fbox(g,0.12,0.32,0.36,bc[(bi*3)%5],bx,row,0.08); } }
+  else if(kind==='wardrobe'){ fbox(g,0.9,1.6,0.5,W,0,0.8,0); fbox(g,0.42,1.5,0.02,Wd,-0.22,0.8,0.26); fbox(g,0.42,1.5,0.02,Wd,0.22,0.8,0.26); fbox(g,0.05,0.24,0.05,0x2a2a2a,-0.05,0.8,0.29); fbox(g,0.05,0.24,0.05,0x2a2a2a,0.05,0.8,0.29); }
+  else if(kind==='barrel'){ fbox(g,0.72,0.9,0.72,Wd,0,0.45,0); fbox(g,0.78,0.12,0.78,0x3a2a1a,0,0.22,0); fbox(g,0.78,0.12,0.78,0x3a2a1a,0,0.68,0); fbox(g,0.6,0.06,0.6,0x2a1e12,0,0.9,0); }
+  else if(kind==='sofa'){ fbox(g,1.14,0.3,0.54,0x8a4f4f,0,0.3,0); fbox(g,1.14,0.42,0.14,0x8a4f4f,0,0.62,-0.2); fbox(g,0.14,0.42,0.54,0x7a4444,-0.5,0.46,0); fbox(g,0.14,0.42,0.54,0x7a4444,0.5,0.46,0); fbox(g,0.48,0.1,0.46,0xa86a6a,-0.27,0.48,0.02); fbox(g,0.48,0.1,0.46,0xa86a6a,0.27,0.48,0.02); }
+  else if(kind==='plant'){ fbox(g,0.34,0.3,0.34,0xb5723a,0,0.15,0); fbox(g,0.4,0.4,0.4,0x3f8f45,0,0.52,0); fbox(g,0.24,0.32,0.24,0x4f9f55,0,0.82,0); }
+  else if(kind==='grandclock'){ fbox(g,0.5,1.7,0.36,Wd,0,0.85,0); fbox(g,0.36,0.36,0.04,0xf0e8d0,0,1.42,0.19); fbox(g,0.02,0.14,0.02,0x222222,0,1.42,0.21); fbox(g,0.12,0.02,0.02,0x222222,0.04,1.44,0.21); fbox(g,0.22,0.5,0.03,0x5a3a1a,0,0.75,0.18); }
+  else if(kind==='rug'){ fbox(g,1.3,0.05,0.92,0x8a3f4f,0,0.03,0); fbox(g,1.04,0.06,0.66,0xc07a5a,0,0.04,0); fbox(g,0.7,0.07,0.42,0x8a3f4f,0,0.05,0); }
   return g;
 }
 function placeFurniture(slot, hit){
@@ -5347,12 +5410,15 @@ function placeFurniture(slot, hit){
   if(World.getBlock(fx,fy,fz)!==B.AIR || !isSolid(World.getBlock(fx,fy-1,fz))) return false;
   var rot=Math.round(Player.yaw/(Math.PI/2))*(Math.PI/2);
   World.setBlock(fx,fy,fz,B.FURN,true);
-  World.tiles[World.ck(fx,fy,fz)]={type:'furniture', kind:ITEMS[slot.key].furnKind, rot:rot, item:slot.key};
+  var _ft={type:'furniture', kind:ITEMS[slot.key].furnKind, rot:rot, item:slot.key};
+  if(ITEMS[slot.key].furnStore) _ft.items=newArray(ITEMS[slot.key].furnStore);
+  World.tiles[World.ck(fx,fy,fz)]=_ft;
   rebuildFurniture(); return true;
 }
 function breakFurniture(x,y,z){
   var t=World.tiles[World.ck(x,y,z)];
   if(t && t.item && gameMode!=='creative') spawnDrop(x,y,z,t.item,1);
+  if(t && t.items && gameMode!=='creative'){ for(var _ci=0;_ci<t.items.length;_ci++){ var _it=t.items[_ci]; if(_it&&_it.key) spawnDrop(x,y,z,_it.key,_it.qty||1); } }
   delete World.tiles[World.ck(x,y,z)];
   World.setBlock(x,y,z,B.AIR,true); rebuildFurniture();
 }
@@ -5369,7 +5435,10 @@ function invTake(key,qty){ var i; for(i=0;i<inv.hotbar.length&&qty>0;i++){ var s
 var FURN_RECIPES=[
   {item:'WOOD_CHAIR', cost:{PLANKS:4}}, {item:'WOOD_STOOL', cost:{PLANKS:3}},
   {item:'WOOD_TABLE', cost:{PLANKS:5}}, {item:'SIDE_TABLE', cost:{PLANKS:4}},
-  {item:'WOOD_LAMP', cost:{PLANKS:3, TORCH:1}}, {item:'BOOKSHELF_DECO', cost:{PLANKS:4, WHEAT:3}}
+  {item:'WOOD_LAMP', cost:{PLANKS:3, TORCH:1}}, {item:'BOOKSHELF_DECO', cost:{PLANKS:4, WHEAT:3}},
+  {item:'WARDROBE', cost:{PLANKS:6}}, {item:'BARREL', cost:{PLANKS:6}},
+  {item:'SOFA', cost:{PLANKS:4, WOOL:2}}, {item:'POTTED_PLANT', cost:{PLANKS:2, OAK_SAPLING:1}},
+  {item:'GRAND_CLOCK', cost:{PLANKS:6, GOLD_INGOT:1}}, {item:'RUG', cost:{WOOL:4}}
 ];
 function openFurnitureBench(){
   openScreen(); currentScreen='furnbench';
@@ -5840,7 +5909,7 @@ function makeZombie(){
   part(0.5,0.72,0.28, SHIRT, 0,0.95,0);                 // torso
   var head=part(0.44,0.44,0.44, SKIN, 0,1.58,0);        // head
   // eyes (dark)
-  var eyeM=new THREE.MeshBasicMaterial({color:0x14202a});
+  var eyeM=new THREE.MeshBasicMaterial({color:0xffb43a});   // glowing amber eyes (steampunk)
   var e1=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.02),eyeM); e1.position.set(-0.1,1.6,0.23); g.add(e1);
   var e2=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.02),eyeM); e2.position.set(0.1,1.6,0.23); g.add(e2);
   var armL=part(0.16,0.6,0.18, SKIN, -0.36,1.16,0.18);  // arms forward (zombie pose)
@@ -5853,9 +5922,17 @@ function makeZombie(){
   var legR=part(0.18,0.7,0.2, PANTS, 0.13,0.35,0);
   flat(0.41,0.06,0.02, mixHex(SKIN,0x000000,0.5), 0,1.68,0.225);             // brow shadow
   if(Math.random()<0.4) flat(0.2,0.12,0.02, mixHex(SKIN,0x3a5a2a,0.5), 0.12,1.6,0.235); // mottled cheek patch
+  part(0.15,0.16,0.15, 0xb08d3a, -0.3,1.28,0.02);        // brass shoulder pauldron
+  flat(0.17,0.17,0.02, 0xb5723a, -0.14,0.98,0.155);      // copper gear plate on chest
+  part(0.07,0.36,0.07, 0x4a4f55, 0.22,1.34,-0.15);       // exhaust pipe on the back
+  part(0.1,0.09,0.1, 0x2f343a, 0.22,1.54,-0.15);         // pipe cap
+  flat(0.06,0.06,0.02, 0xffb43a, 0.22,1.5,-0.1);         // glowing vent
+  part(0.5,0.06,0.3, 0x7a5a2a, 0,0.78,0);                // riveted brass belt band
   g.userData.legs=[legL,legR]; g.userData.arms=[armL,armR];
   return g;
 }
+function zombifyMesh(g){ if(g.__mats){ for(var i=0;i<g.__mats.length;i++){ var m=g.__mats[i]; m.color.setHex(mixHex(m.color.getHex(),0x5a8f3a,0.5)); m.__base=m.color.getHex(); } }
+  var eM=new THREE.MeshBasicMaterial({color:0xffb43a}); var q1=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.02),eM); q1.position.set(-0.11,1.6,0.27); g.add(q1); var q2=q1.clone(); q2.position.x=0.11; g.add(q2); return g; }
 function makeSpooler(){
   // tiny clockwork critter (front = +z): low brass body, flat splayed copper legs, spinning thread reels
   var g=new THREE.Group(); g.__mats=[];
@@ -6392,6 +6469,18 @@ function makeBoar(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,
   var l1=p(0.13,0.34,0.13,DK,-0.17,0.17,0.22), l2=p(0.13,0.34,0.13,DK,0.17,0.17,0.22);
   var l3=p(0.13,0.34,0.13,DK,-0.17,0.17,-0.32), l4=p(0.13,0.34,0.13,DK,0.17,0.17,-0.32);
   g.userData.legs=[l1,l2,l3,l4]; return g; }
+function makeKnight(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
+  var STEEL=0xb8bec8, DARK=0x6b7079, CAPE=0x9a2f3a, GOLD=0xd9b24a, SKIN=0xc99a6b;
+  p(0.5,0.5,0.5,STEEL,0,1.62,0);                                   // helmet
+  p(0.34,0.1,0.06,DARK,0,1.62,0.24); p(0.05,0.28,0.5,GOLD,0,1.86,0);   // visor slit + plume ridge
+  p(0.56,0.7,0.32,STEEL,0,1.05,0); p(0.58,0.2,0.34,GOLD,0,1.28,0);     // cuirass + gorget
+  p(0.5,0.66,0.16,CAPE,0,1.06,-0.2);                                // cape
+  var aL=p(0.2,0.72,0.24,STEEL,-0.36,1.4,0), aR=p(0.2,0.72,0.24,STEEL,0.36,1.4,0);
+  p(0.2,0.5,0.24,DARK,-0.12,0.66,0); p(0.2,0.5,0.24,DARK,0.12,0.66,0);  // legs
+  p(0.05,0.62,0.05,0x8a6a3a,0.44,1.15,0.14); p(0.12,0.5,0.03,0xdfe4ea,0.44,1.5,0.14);   // sword hilt + blade in right hand
+  p(0.44,0.5,0.06,DARK,-0.42,1.12,0.02); p(0.3,0.34,0.04,GOLD,-0.42,1.12,0.06);          // shield on left arm
+  g.userData.legs=[aL,aR]; return g;
+}
 function makeFrog(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   var BODY=0x5a8f3a, BELLY=0xc2d488;
   p(0.5,0.28,0.44,BODY,0,0.22,0);
@@ -6417,7 +6506,7 @@ function makeRabbit(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,
   var l3=p(0.08,0.15,0.13,FUR,-0.07,0.075,-0.1), l4=p(0.08,0.15,0.13,FUR,0.07,0.075,-0.1);     // bigger hind legs
   g.userData.legs=[l1,l2,l3,l4]; return g; }
 var MOBDEF={
-  zombie:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:3}, skeleton:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:2},
+  zombie:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:3}, zombie_villager:{hp:20,w:0.6,h:1.9,sp:2.1,dmg:4}, zombie_dwarf:{hp:18,w:0.6,h:1.42,sp:2.0,dmg:4}, skeleton:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:2},
   spooler:{hp:8,w:0.8,h:0.6,sp:4.0,dmg:0}, creeper:{hp:12,w:0.55,h:1.9,sp:2.6,dmg:2},
   fish:{hp:3,w:0.4,h:0.3,sp:2.0,dmg:0}, cow:{hp:14,w:0.8,h:1.3,sp:1.4,dmg:0,passive:true},
   pig:{hp:10,w:0.7,h:0.9,sp:1.5,dmg:0,passive:true}, sheep:{hp:10,w:0.8,h:1.2,sp:1.4,dmg:0,passive:true},
@@ -6441,7 +6530,8 @@ var MOBDEF={
   dwarf:{hp:20,w:0.6,h:1.3,sp:1.2,dmg:0,passive:true},
   forgewright:{hp:26,w:0.6,h:1.9,sp:0.7,dmg:0,passive:true},
   cinderkin:{hp:22,w:0.6,h:1.8,sp:2.2,dmg:4,passive:true,neutral:true},
-  frog:{hp:4,w:0.5,h:0.55,sp:1.7,dmg:0,passive:true}
+  frog:{hp:4,w:0.5,h:0.55,sp:1.7,dmg:0,passive:true},
+  knight:{hp:46,w:0.62,h:1.95,sp:2.7,dmg:7,passive:true,guard:true}
 };
 function meshFor(kind){ switch(kind){
   case 'spooler':return makeSpooler(); case 'skeleton':return makeSkeleton(); case 'creeper':return makeCreeper();
@@ -6451,7 +6541,7 @@ function meshFor(kind){ switch(kind){
   case 'deer':return makeDeer(); case 'duck':return makeDuck(); case 'bird':return makeBird();
   case 'horse':return makeHorse(); case 'dog':return makeDog(); case 'cat':return makeCat();
   case 'bear':return makeBear();
-  case 'fox':return makeFox(); case 'boar':return makeBoar(); case 'rabbit':return makeRabbit(); case 'frog':return makeFrog();
+  case 'fox':return makeFox(); case 'boar':return makeBoar(); case 'rabbit':return makeRabbit(); case 'frog':return makeFrog(); case 'knight':return makeKnight(); case 'zombie_villager':return zombifyMesh(makeVillager()); case 'zombie_dwarf':return zombifyMesh(makeDwarf());
   case 'bee':return makeBee();
   case 'boat':return makeBoat();
   case 'plane':return makePlane();
@@ -6470,6 +6560,16 @@ function spawnEnemy(kind, x,y,z){
   e.maxHp=e.hp;
   var HAT_HEADY={zombie:1.9,skeleton:1.9,villager:1.95,dwarf:1.4,forgewright:2.0,cinderkin:1.95,creeper:2.0,pig:0.95,cow:1.35,sheep:1.15,rabbit:0.55,fox:0.75};
   if(HAT_HEADY[kind]!=null && Math.random()<0.05){ var _hids=Object.keys(HATS); e.hat=_hids[(Math.random()*_hids.length)|0]; var _hg=new THREE.Group(); HATS[e.hat].build(_hg); _hg.position.y=HAT_HEADY[kind]; mesh.add(_hg); }
+  if((kind==='zombie'||kind==='skeleton'||kind==='zombie_villager') && Math.random()<0.30){   // Minecraft-style: armored undead
+    var TIERS=[['LEATHER',0x9a6a3a],['IRON',0xcdd0d6],['DIAMOND',0x5fe9e0]]; var _tw=Math.random(); var ti=_tw<0.6?0:(_tw<0.9?1:2);
+    var T=TIERS[ti], defBase=[2,5,8][ti], ench=Math.random()<0.08, tint=ench?mixHex(T[0]===''?0:T[1],0x9a4fff,0.4):T[1];
+    var PIECES=[['head','HELMET',0.5,0.5,0.5,1.58],['chest','CHESTPLATE',0.57,0.74,0.33,0.95],['legs','LEGGINGS',0.44,0.5,0.24,0.35],['feet','BOOTS',0.46,0.17,0.28,0.06]];
+    var pprob=[0.85,0.72,0.6,0.7]; e.armorPieces=[]; e.armorDef=0;
+    for(var pi=0;pi<PIECES.length;pi++){ if(Math.random()<pprob[pi]){ var P=PIECES[pi];
+      var am=new THREE.MeshBasicMaterial({color:tint}); var abox=new THREE.Mesh(new THREE.BoxGeometry(P[2],P[3],P[4]),am); abox.position.set(0,P[5],0); mesh.add(abox);
+      e.armorPieces.push({key:T[0]+'_'+P[1]}); e.armorDef+=defBase*0.35; } }
+    e.enchanted=ench; if(ench) e.armorDef*=1.4;
+  }
   if(kind==='skeleton') e.atkCd=1.4+Math.random()*1.4;
   entities.push(e);
 }
@@ -6556,6 +6656,13 @@ function animalTick(e,dt){
       if(cpd<13){ e.wdir=Math.atan2(cpz,cpx); e.moving=true; e.wcd=Math.max(e.wcd,0.4); e.fleeBoost=true; e.prey.fleeFrom=e;
         if(cpd<1.3){ e.prey.hp-=8*dt; e.prey.hurt=0.2; e.prey.noDrop=true; } }
       else e.prey=null; }
+  }
+  if(e.kind==='knight'){   // village guard: hunt down the nearest hostile monster
+    var kbest=null,kbD=26*26;
+    for(var ki=0;ki<entities.length;ki++){ var kh=entities[ki]; if(kh===e||kh.hp<=0||kh.passive||(kh.dmg||0)<=0) continue;
+      var kdx=kh.pos.x-e.pos.x, kdz=kh.pos.z-e.pos.z, kd=kdx*kdx+kdz*kdz; if(kd<kbD){ kbD=kd; kbest=kh; } }
+    if(kbest){ e.wdir=Math.atan2(kbest.pos.z-e.pos.z, kbest.pos.x-e.pos.x); e.moving=true; e.fleeBoost=true; e.mesh.rotation.y=-e.wdir+Math.PI/2;
+      if(kbD<3.2*3.2){ e.atkCd=(e.atkCd||0)-dt; if(e.atkCd<=0){ e.atkCd=0.7; damageMob(kbest, e.dmg, e); } } }
   }
   var sp = e.moving ? e.speed*(e.fleeBoost?1.6:1.0) : 0;
   e.vel.x=Math.cos(e.wdir)*sp; e.vel.z=Math.sin(e.wdir)*sp;
@@ -6832,7 +6939,10 @@ function tickFishing(dt){
 function tickEntities(dt){
   var pp=Player.pos;
   for(var i=entities.length-1;i>=0;i--){ var e=entities[i];
-    if(e && e.hp!=null && e.hp<=0 && e.hat && !e._hd){ e._hd=1; giveItem('HAT_'+e.hat,1); toast('Collected: '+(ITEMS['HAT_'+e.hat]?ITEMS['HAT_'+e.hat].name:'Hat')+'!'); }
+    if(e && e.hp!=null && e.hp<=0 && e.hat && !e._hd){ e._hd=1; unlockHat(e.hat); }
+    if(e && e.hp!=null && e.hp<=0 && e.armorPieces && !e._ad){ e._ad=1; var _ex=Math.floor(e.pos.x),_ey=Math.floor(e.pos.y),_ez=Math.floor(e.pos.z);
+      for(var _ai=0;_ai<e.armorPieces.length;_ai++){ if(e.enchanted||Math.random()<0.4) spawnDrop(_ex,_ey,_ez, e.armorPieces[_ai].key, 1); }
+      if(e.enchanted) spawnDrop(_ex,_ey,_ez,'EMERALD',1); }
     if(e===Player.riding){
       if(e.kind==='plane'){
         e.pos.x=pp.x; e.pos.z=pp.z; e.pos.y=pp.y+0.3;
@@ -7013,12 +7123,18 @@ function vehicleInFront(maxd){
   }
   return best;
 }
+function damageMob(e, dmg, from){ if(!e||e.hp<=0) return; e.hp-=dmg; e.hurt=0.2; e.barT=3.0; try{ spawnDmgNumber(e, Math.max(1,Math.round(dmg)), false); }catch(_){}
+  if(from){ var a=Math.atan2(e.pos.z-from.pos.z, e.pos.x-from.pos.x); e.vel.x+=Math.cos(a)*5; e.vel.z+=Math.sin(a)*5; e.vel.y=4.0; }
+  if((e.kind==='bear'||e.kind==='boar'||e.kind==='cinderkin') && !e.tamed){ e.provoked=true; e.aggroT=14; }
+  try{ sfxHurtMob(e.kind); }catch(_){}
+}
 function hitEntity(e){
   var dir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
   var tool=currentTool(); var dmg= (tool && tool.dmg)? tool.dmg : 1;
   dmg += 1.6*heldEnchLvl('honed');   // Honed enchant
   dmg *= rpgCombatDmg();                                   // RPG combat damage perk
   var _crit=false; if(Math.random()<rpgCritChance()){ dmg*=1.6; _crit=true; }   // RPG critical hit
+  if(e.armorDef){ dmg=Math.max(1, dmg-e.armorDef); }   // mob armor absorbs some damage
   e.hp-=dmg; e.hurt=0.2; e.barT=3.0;
   spawnDmgNumber(e, Math.max(1,Math.round(dmg)), _crit);
   if(_crit){ try{ tone(1200,0.05,'square',0.05); }catch(_){} }
@@ -7065,7 +7181,20 @@ function maybeSpawnEnemies(){
   if(cy<0) return;
   if(World.blockLightAt(x,cy,z) > 7) return; // it's already night here; only block near torches/light
   var r=Math.random(); var kind = r<0.42?'zombie' : r<0.70?'skeleton' : r<0.86?'creeper' : 'spooler';
+  if(kind==='zombie'){ var zr=Math.random(); if(zr<0.16) kind='zombie_villager'; else if(zr<0.24) kind='zombie_dwarf'; }   // infected variants
   spawnEnemy(kind, x+0.5, cy, z+0.5);
+}
+function maybeSpawnKnights(){
+  var kc=0,i; for(i=0;i<entities.length;i++) if(entities[i].kind==='knight') kc++;
+  if(kc>=6 || Math.random()>0.4) return;
+  for(var s=0;s<villageSites.length;s++){ var v=villageSites[s];
+    var dx=v.x-Player.pos.x, dz=v.z-Player.pos.z; if(dx*dx+dz*dz > 60*60) continue;
+    var near=0; for(i=0;i<entities.length;i++){ var e=entities[i]; if(e.kind==='knight'){ var ex=e.pos.x-v.x, ez=e.pos.z-v.z; if(ex*ex+ez*ez<26*26) near++; } }
+    if(near>=2) continue;
+    var ang=Math.random()*6.283, rr=6+Math.random()*8, x=Math.floor(v.x+Math.cos(ang)*rr), z=Math.floor(v.z+Math.sin(ang)*rr), cy=-1;
+    for(var y=WORLD_H-1;y>1;y--){ if(isSolid(World.getBlockLoaded(x,y,z))){ cy=y+1; break; } }
+    if(cy<0) continue; spawnEnemy('knight', x+0.5, cy, z+0.5); return;
+  }
 }
 function maybeSpawnVillagers(){
   var vcount=0,i; for(i=0;i<entities.length;i++) if(entities[i].kind==='villager') vcount++;
@@ -8678,7 +8807,7 @@ function loop(t){
     if(Player.bowCd>0) Player.bowCd-=dt;
     tickDrops(dt);
     tickSurvival(dt);
-    if(frame%4===0){ maybeSpawnEnemies(); maybeSpawnVillagers(); maybeSpawnDwarves(); }
+    if(frame%4===0){ maybeSpawnEnemies(); maybeSpawnVillagers(); maybeSpawnDwarves(); maybeSpawnKnights(); }
     if(frame%5===0) maybeSpawnFish();
     if(frame%9===0) maybeSpawnBirds();
     if(frame%3===0) maybeSpawnAnimals();
@@ -8814,8 +8943,13 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 132';
+var VERSION='Update 137';
 var CHANGELOG=[
+  { v:'Update 137', t:'Armored Undead & Furniture', items:['<b>Armored mobs!</b> Zombies, skeletons and zombie villagers now sometimes spawn wearing <b>leather, iron or diamond armor</b> (helmet/chest/legs/boots) that absorbs damage and drops when they die. Rare <b>enchanted</b> ones glint purple, resist more, and always drop their gear plus an emerald','<b>Wardrobes &amp; Barrels</b> \u2014 new furniture you can <b>store items in</b> like a chest (tap to open, break to spill contents)','<b>More home furniture</b> \u2014 build a Sofa, Grandfather Clock, Potted Plant and Rug at the Carpenter\u2019s Bench to decorate your home'] },
+  { v:'Update 136', t:'Steampunk Zombies + Caves & Ravines', items:['<b>Zombies got a steampunk makeover</b> \u2014 glowing amber eyes, a brass pauldron, a copper chest gear, a riveted belt and a venting exhaust pipe on the back','<b>Zombie Villagers &amp; Zombie Dwarves</b> now spawn as infected variants \u2014 sickly-green townsfolk that hunt you like other undead','<b>Ravines</b> \u2014 winding open chasms now cut through the surface and plunge deep underground','<b>Underground biomes</b> \u2014 explore glowing <b>Crystal Caves</b> (purple glow crystals), <b>Fungal Caverns</b> (teal glowshrooms) and <b>Mossy caves</b> deep below, all lit by their own glow'] },
+  { v:'Update 135', t:'Knights, Animated Armor & Cobble', items:['<b>Village Knights!</b> Armored knights with sword, shield, cape and plumed helm now patrol near villages and <b>hunt down hostile monsters</b> \u2014 zombies, skeletons, creepers and the like \u2014 to defend the townsfolk. They won\u2019t attack you','<b>Armor animates with you now</b> \u2014 leg guards and boots swing with your legs as you walk instead of floating in place','<b>Cobblestone reworked again</b> \u2014 rounded irregular stones with clearer dark mortar and per-stone shading for a proper cobbled look'] },
+  { v:'Update 134', t:'3D Armor, Slabs & Doors', items:['<b>Armor now shows on your character</b> in 3rd-person and the menu preview \u2014 helmet, chestplate with shoulders, leg guards and boots, tinted by material (leather / iron / gold / diamond). The <b>Hide Helmet</b> toggle now hides it on the character too, and your hat sits on top','<b>Slabs combine</b> \u2014 place a matching slab onto a slab and the two merge into a full block, just like Minecraft. Slabs still go on the top or bottom half, or vertically against a wall face','<b>Doors improved</b> \u2014 they now need proper 2-tall clear space to place (no more overwriting the block above), and a lone door\u2019s hinge favours an adjacent wall so it swings into the opening'] },
+  { v:'Update 133', t:'Hats Auto-Unlock + Hide Helmet', items:['<b>Killing a hatted mob now permanently unlocks that hat</b> in your Wardrobe \u2014 no item to manage, it just becomes available under Customize (and stays unlocked across all worlds)','Your equipped hat sits on top of your head/helmet, and there\u2019s a new <b>Hide Helmet</b> toggle in the inventory\u2019s equipment panel so hats and hair can show'] },
   { v:'Update 132', t:'Villagers, Tooltips, Axe & Beds', items:['<b>Villagers &amp; dwarves can be attacked now</b> \u2014 so you can collect hats from hatted townsfolk. Trading still lives on the use/interact button, and the Forgewright stays interact-only','<b>Item tooltips</b> \u2014 hover an item in your inventory or hotbar to see its name','<b>Axe fixed</b> \u2014 it now sits the right way round in your hand instead of facing backwards','<b>Village beds no longer backwards</b> \u2014 the pillow now sits against the wall like it should'] },
   { v:'Update 131', t:'Fixes: Menu, Chests, Torches, Fuel', items:['<b>Fixed the main-menu character</b> \u2014 it wasn\u2019t rendering because the menu skipped the draw call. Your customized character now shows and slowly turns above the Customize button','<b>Breaking a chest spills its contents</b> onto the ground, so you never lose items to a misclick','<b>Torches drop when their support is broken</b> \u2014 mine the block under a torch and it falls as an item','<b>Everything wooden burns as furnace fuel now</b> \u2014 all planks & logs (spruce, birch, ash), sticks, fences, ladders, saplings, bookshelves, signs and benches','<b>Throw items</b> \u2014 press <b>Q</b> (keyboard) or <b>D-pad Down</b> (controller) to toss the held item, Minecraft-style','<b>Controller:</b> the furnace/machine screens no longer spam-highlight the Close button while the machine updates'] },
   { v:'Update 130', t:'Frogs, Pants & Cursor', items:['<b>Frogs!</b> Green frogs now hop around the Swamp biome \u2014 the swamp\u2019s first residents','<b>Pants slot added</b> to the Dressing Room \u2014 Blue Jeans, Black Trousers, Explorer Khaki and Crimson Pants (unlocked via achievements), applied to your character and the menu preview','<b>Mouse cursor hides</b> when you\u2019re using a controller, and reappears the moment you move the mouse'] },
