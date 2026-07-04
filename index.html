@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>ForgeWorld</title>
 <style>
+.gp-cursor-hide, .gp-cursor-hide *{ cursor:none !important; }
   :root{
     --safe-t: env(safe-area-inset-top, 0px);
     --safe-b: env(safe-area-inset-bottom, 0px);
@@ -290,6 +291,10 @@
 
 <div id="menu">
   <div id="panorama"></div>
+  <div id="charPreview" style="position:absolute;right:18px;bottom:18px;z-index:5;display:flex;flex-direction:column;align-items:center;gap:6px;">
+    <canvas id="charCanvas" width="150" height="210" style="background:rgba(10,14,22,.55);border:1px solid #ffffff22;border-radius:12px;"></canvas>
+    <button class="mbtn" id="btnCustomize" style="width:150px;padding:8px 0;margin:0;font-size:14px;">Customize</button>
+  </div>
   <div class="veil"></div>
   <div id="logo">ForgeWorld</div>
   <div id="splash"></div>
@@ -411,8 +416,8 @@ function defBlock(o){ var id = BLOCKS.length; BLOCKS[id] = o; o.id = id; if(o.ke
 defBlock({key:'AIR', name:'Air', solid:false, transparent:true });
 defBlock({key:'GRASS', name:'Grass Block', col:[72,138,56], top:[86,152,62], side:[118,88,54], solid:true, tool:'shovel', hard:0.7 });
 defBlock({key:'DIRT', name:'Dirt', col:[133,96,62], solid:true, tool:'shovel', hard:0.6 });
-defBlock({key:'STONE', name:'Stone', col:[125,125,128], solid:true, tool:'pickaxe', tier:1, hard:1.5, drop:'COBBLE' });
-defBlock({key:'COBBLE', name:'Cobblestone', col:[120,120,122], side:[108,108,110], solid:true, tool:'pickaxe', tier:1, hard:2.0 });
+defBlock({key:'STONE', name:'Stone', col:[124,120,115], solid:true, tool:'pickaxe', tier:1, hard:1.5, drop:'COBBLE' });
+defBlock({key:'COBBLE', name:'Cobblestone', col:[122,115,107], side:[110,103,95], solid:true, tool:'pickaxe', tier:1, hard:2.0 });
 defBlock({key:'DEEPSLATE', name:'Deepslate', col:[64,64,70], side:[56,56,62], solid:true, tool:'pickaxe', tier:1, hard:3.2, drop:'COBBLE_DEEP' });
 defBlock({key:'COBBLE_DEEP', name:'Cobbled Deepslate', col:[58,58,64], side:[50,50,56], solid:true, tool:'pickaxe', tier:1, hard:3.4 });
 defBlock({key:'SAND', name:'Sand', col:[219,206,148], solid:true, tool:'shovel', hard:0.6 });
@@ -2445,7 +2450,7 @@ function makeGeom(P,C,L,U,D,I){
 /* ----------------------------- RENDERER --------------------------------- */
 var canvas=document.getElementById('c');
 var renderer=new THREE.WebGLRenderer({ canvas:canvas, antialias:false, powerPreference:'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, IS_MOBILE?1.4:2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, IS_MOBILE?1.4:1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 var scene=new THREE.Scene();
 var camera=new THREE.PerspectiveCamera(72, window.innerWidth/window.innerHeight, 0.08, 1000);
@@ -2512,50 +2517,104 @@ var avatarLimbs={};
 var mobNoiseTex=(function(){ var s=8, cv=document.createElement('canvas'); cv.width=cv.height=s; var x=cv.getContext('2d');
   for(var i=0;i<s;i++) for(var j=0;j<s;j++){ var v=205+((Math.random()*50)|0); x.fillStyle='rgb('+v+','+v+','+v+')'; x.fillRect(i,j,1,1); }
   var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; return t; })();
-var playerAvatar=(function(){ var g=new THREE.Group();
+function buildAvatarModel(L){ var g=new THREE.Group();
   function p(w,h,d,c,x,y,z){ var m=new THREE.MeshBasicMaterial({color:c, map:mobNoiseTex}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); g.add(me); return me; }
   function limb(w,h,d,c,px,py,pz){ var grp=new THREE.Group(); grp.position.set(px,py,pz);
     var m=new THREE.MeshBasicMaterial({color:c, map:mobNoiseTex}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(0,-h/2,0); grp.add(me); g.add(grp); return grp; }
-  // body (Steve-ish proportions, ~1.85 tall)
   var SKIN=0xc99a6b, SHIRT=0x2e8b9b, PANTS=0x35407a;
-  p(0.5,0.5,0.5,SKIN,0,1.62,0);                 // head
-  p(0.52,0.12,0.52,0x6b4a2e,0,1.84,0);          // hair top
-  p(0.1,0.1,0.02,0x14110f,-0.12,1.64,0.26); p(0.1,0.1,0.02,0x14110f,0.12,1.64,0.26); // eyes
-  p(0.04,0.04,0.02,0xf4f4ff,-0.13,1.66,0.27); p(0.04,0.04,0.02,0xf4f4ff,0.11,1.66,0.27); // eye glints
-  p(0.18,0.035,0.02,0x6e3a2c,0,1.52,0.26);     // mouth
-  p(0.5,0.74,0.26,SHIRT,0,1.05,0);              // torso
-  avatarLimbs.armL=limb(0.18,0.74,0.22,SKIN,-0.34,1.4,0);
-  avatarLimbs.armR=limb(0.18,0.74,0.22,SKIN,0.34,1.4,0);
-  avatarLimbs.legL=limb(0.2,0.74,0.24,PANTS,-0.12,0.68,0);
-  avatarLimbs.legR=limb(0.2,0.74,0.24,PANTS,0.12,0.68,0);
-  g.visible=false; return g; })();
+  L.head=p(0.5,0.5,0.5,SKIN,0,1.62,0);
+  p(0.52,0.12,0.52,0x6b4a2e,0,1.84,0);
+  p(0.1,0.1,0.02,0x14110f,-0.12,1.64,0.26); p(0.1,0.1,0.02,0x14110f,0.12,1.64,0.26);
+  p(0.04,0.04,0.02,0xf4f4ff,-0.13,1.66,0.27); p(0.04,0.04,0.02,0xf4f4ff,0.11,1.66,0.27);
+  p(0.18,0.035,0.02,0x6e3a2c,0,1.52,0.26);
+  L.torso=p(0.5,0.74,0.26,SHIRT,0,1.05,0);
+  L.armL=limb(0.18,0.74,0.22,SKIN,-0.34,1.4,0);
+  L.armR=limb(0.18,0.74,0.22,SKIN,0.34,1.4,0);
+  L.legL=limb(0.2,0.74,0.24,PANTS,-0.12,0.68,0);
+  L.legR=limb(0.2,0.74,0.24,PANTS,0.12,0.68,0);
+  L.footL=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.13,0.3), new THREE.MeshBasicMaterial({color:0x2a2f52})); L.footL.position.set(0,-0.74,0.04); L.legL.add(L.footL);
+  L.footR=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.13,0.3), new THREE.MeshBasicMaterial({color:0x2a2f52})); L.footR.position.set(0,-0.74,0.04); L.legR.add(L.footR);
+  return g;
+}
+var playerAvatar=buildAvatarModel(avatarLimbs); playerAvatar.visible=false;
 scene.add(playerAvatar);
 var playerHat=null; try{ playerHat=localStorage.getItem('fw_hat')||null; }catch(e){}
-var _avatarHat=null;
-function applyPlayerHat(){ if(_avatarHat){ playerAvatar.remove(_avatarHat); _avatarHat=null; }
-  if(playerHat && HATS[playerHat]){ _avatarHat=new THREE.Group(); HATS[playerHat].build(_avatarHat); _avatarHat.position.y=1.9; playerAvatar.add(_avatarHat); } }
+var COSMETICS={
+  shirt:[ {id:'teal',name:'Teal Tunic',col:0x2e8b9b,def:true}, {id:'red',name:'Red Jersey',col:0xc0392b,ach:'first_kill'}, {id:'green',name:'Ranger Green',col:0x3f7a3a,ach:'rancher'}, {id:'blue',name:'Diamond Blue',col:0x3fa0d0,ach:'diamonds'}, {id:'gold',name:'Golden Vest',col:0xd4af37,ach:'survivor'}, {id:'purple',name:'Royal Purple',col:0x7a3f9a,ach:'marksman'} ],
+  glasses:[ {id:'none',name:'None',def:true}, {id:'round',name:'Round Specs',ach:'fisherman'}, {id:'shades',name:'Cool Shades',ach:'first_kill'}, {id:'goggles',name:'Steam Goggles',ach:'time_to_mine'} ],
+  shoes:[ {id:'navy',name:'Navy Boots',col:0x2a2f52,def:true}, {id:'brown',name:'Leather Boots',col:0x6b4a2e,ach:'getting_wood'}, {id:'redsh',name:'Red Sneakers',col:0xc0392b,ach:'stone_age'}, {id:'goldsh',name:'Golden Boots',col:0xd4af37,ach:'diamonds'} ],
+  pants:[ {id:'blue',name:'Blue Jeans',col:0x35407a,def:true}, {id:'black',name:'Black Trousers',col:0x24262e,ach:'lighting_up'}, {id:'khaki',name:'Explorer Khaki',col:0x9a7b4a,ach:'time_to_mine'}, {id:'crimson',name:'Crimson Pants',col:0x8a2f3a,ach:'first_kill'} ]
+};
+var playerCos={shirt:'teal',glasses:'none',shoes:'navy',pants:'blue'};
+try{ var _pc=localStorage.getItem('fw_cos'); if(_pc) playerCos=JSON.parse(_pc); }catch(e){}
+var cosGlobal={}; try{ cosGlobal=JSON.parse(localStorage.getItem('fw_cosowned')||'{}'); }catch(e){}
+function cosItem(cat,id){ var a=COSMETICS[cat]; for(var i=0;i<a.length;i++) if(a[i].id===id) return a[i]; return null; }
+function cosOwned(it){ return it.def || !!cosGlobal[it.id]; }
+function saveCos(){ try{ localStorage.setItem('fw_cos', JSON.stringify(playerCos)); }catch(e){} }
+function grantCosmeticsFor(achId){ var got=[]; for(var cat in COSMETICS){ var a=COSMETICS[cat]; for(var i=0;i<a.length;i++){ if(a[i].ach===achId && !cosGlobal[a[i].id]){ cosGlobal[a[i].id]=1; got.push(a[i].name); } } } if(got.length){ try{ localStorage.setItem('fw_cosowned', JSON.stringify(cosGlobal)); }catch(e){} try{ toast('Cosmetic unlocked: '+got.join(', ')); }catch(e){} } }
+function buildGlasses(id){ var g=new THREE.Group(); function b(w,h,d,c,x,y,z){ var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshBasicMaterial({color:c})); me.position.set(x,y,z); g.add(me); return me; }
+  if(id==='round'){ b(0.15,0.15,0.03,0x14110f,-0.12,0.02,0.26); b(0.15,0.15,0.03,0x14110f,0.12,0.02,0.26); b(0.1,0.03,0.02,0x14110f,0,0.02,0.27); b(0.11,0.11,0.02,0x9fd8ff,-0.12,0.02,0.275); b(0.11,0.11,0.02,0x9fd8ff,0.12,0.02,0.275); }
+  else if(id==='shades'){ b(0.42,0.14,0.03,0x0a0a0c,0,0.02,0.26); b(0.16,0.11,0.02,0x223,-0.11,0.02,0.275); b(0.16,0.11,0.02,0x223,0.11,0.02,0.275); }
+  else if(id==='goggles'){ b(0.18,0.18,0.05,0x6b4a2e,-0.12,0.03,0.25); b(0.18,0.18,0.05,0x6b4a2e,0.12,0.03,0.25); b(0.13,0.13,0.03,0x7fd0ff,-0.12,0.03,0.28); b(0.13,0.13,0.03,0xffcf6a,0.12,0.03,0.28); b(0.5,0.06,0.02,0x3a2a1a,0,0.03,0.0); }
+  return g;
+}
+// apply a full cosmetic set to an avatar's limbs (used by the player model AND the menu preview)
+function applyCosmeticsTo(root, L, state){
+  if(L._hat){ root.remove(L._hat); L._hat=null; }
+  if(state.hat && HATS[state.hat]){ L._hat=new THREE.Group(); HATS[state.hat].build(L._hat); L._hat.position.y=1.9; root.add(L._hat); }
+  var sh=cosItem('shirt',state.shirt); if(sh&&sh.col!=null&&L.torso) L.torso.material.color.setHex(sh.col);
+  var so=cosItem('shoes',state.shoes); if(so&&so.col!=null){ if(L.footL)L.footL.material.color.setHex(so.col); if(L.footR)L.footR.material.color.setHex(so.col); }
+  var pnt=cosItem('pants',state.pants); if(pnt&&pnt.col!=null){ if(L.legL&&L.legL.children[0])L.legL.children[0].material.color.setHex(pnt.col); if(L.legR&&L.legR.children[0])L.legR.children[0].material.color.setHex(pnt.col); }
+  if(L._glasses){ L.head.remove(L._glasses); L._glasses=null; }
+  var gl=cosItem('glasses',state.glasses); if(gl&&gl.id!=='none'&&L.head){ L._glasses=buildGlasses(gl.id); L.head.add(L._glasses); }
+}
+function applyPlayerHat(){ applyCosmeticsTo(playerAvatar, avatarLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants}); }
+// ---- main-menu character preview (its own tiny renderer + avatar) ----
+var previewRenderer=null, previewScene=null, previewCam=null, previewAvatar=null, previewLimbs={};
+function initCharPreview(){
+  var cv=document.getElementById('charCanvas'); if(!cv || previewRenderer) return;
+  try{ previewRenderer=new THREE.WebGLRenderer({canvas:cv, alpha:true, antialias:true}); }catch(e){ return; }
+  previewRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1)); previewRenderer.setSize(150,210,false);
+  previewScene=new THREE.Scene();
+  previewCam=new THREE.PerspectiveCamera(32, 150/210, 0.1, 100); previewCam.position.set(0,1.15,4.4); previewCam.lookAt(0,1.0,0);
+  previewAvatar=buildAvatarModel(previewLimbs); previewScene.add(previewAvatar);
+  updateCharPreview();
+}
+function updateCharPreview(){ if(!previewAvatar) return; applyCosmeticsTo(previewAvatar, previewLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants}); }
+function renderCharPreview(){ if(!previewRenderer){ initCharPreview(); if(!previewRenderer) return; } previewAvatar.rotation.y += 0.012; previewRenderer.render(previewScene, previewCam); }
+function applyPlayerCosmetics(){ applyPlayerHat(); if(typeof updateCharPreview==='function') updateCharPreview(); }
 applyPlayerHat();
+var _wardTab='hat';
+function hatOwnedSet(){ var owned={}; for(var q=0;q<inv.hotbar.length;q++){ var h=inv.hotbar[q]; if(h&&h.key.indexOf('HAT_')===0) owned[h.key.slice(4)]=1; } for(var q2=0;q2<inv.main.length;q2++){ var h2=inv.main[q2]; if(h2&&h2.key.indexOf('HAT_')===0) owned[h2.key.slice(4)]=1; } if(playerHat) owned[playerHat]=1; return owned; }
 function openWardrobe(){
   var ov=document.getElementById('wardrobeOv');
   if(!ov){ ov=document.createElement('div'); ov.id='wardrobeOv'; ov.style.cssText='position:fixed;inset:0;z-index:61;background:radial-gradient(circle at 50% 30%,#141d2eF2,#070b12F8);display:flex;align-items:center;justify-content:center;padding:16px;'; document.body.appendChild(ov); }
   ov.style.display='flex';
-  var owned={}; for(var q=0;q<inv.hotbar.length;q++){ var h=inv.hotbar[q]; if(h&&h.key.indexOf('HAT_')===0) owned[h.key.slice(4)]=1; }
-  for(var q2=0;q2<inv.main.length;q2++){ var h2=inv.main[q2]; if(h2&&h2.key.indexOf('HAT_')===0) owned[h2.key.slice(4)]=1; }
-  if(playerHat) owned[playerHat]=1;
-  var ids=Object.keys(HATS), cards='';
-  var noneSel=!playerHat;
-  cards+='<div class="wcard'+(noneSel?' on':'')+'" data-hat="">No Hat</div>';
-  for(var i=0;i<ids.length;i++){ var id=ids[i], have=!!owned[id], sel=(playerHat===id);
-    cards+='<div class="wcard'+(sel?' on':'')+(have?'':' locked')+'" data-hat="'+(have?id:'')+'">'+HATS[id].name+(have?'':' \uD83D\uDD12')+'</div>';
+  var tabs=['hat','shirt','pants','glasses','shoes'], tabNames={hat:'Hats',shirt:'Shirts',pants:'Pants',glasses:'Glasses',shoes:'Shoes'};
+  var tabBar=''; for(var t=0;t<tabs.length;t++){ tabBar+='<button class="wtab'+(_wardTab===tabs[t]?' on':'')+'" data-tab="'+tabs[t]+'">'+tabNames[tabs[t]]+'</button>'; }
+  var cards='';
+  if(_wardTab==='hat'){ var owned=hatOwnedSet(), ids=Object.keys(HATS);
+    cards+='<div class="wcard'+(!playerHat?' on':'')+'" data-val="">No Hat</div>';
+    for(var i=0;i<ids.length;i++){ var id=ids[i], have=!!owned[id]; cards+='<div class="wcard'+(playerHat===id?' on':'')+(have?'':' locked')+'" data-val="'+(have?id:'')+'">'+HATS[id].name+(have?'':' \uD83D\uDD12')+'</div>'; }
+  } else { var arr=COSMETICS[_wardTab];
+    for(var j=0;j<arr.length;j++){ var it=arr[j], own=cosOwned(it), selc=(playerCos[_wardTab]===it.id);
+      var sw=(it.col!=null)?'<span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#'+('000000'+it.col.toString(16)).slice(-6)+';margin-right:6px;vertical-align:middle"></span>':'';
+      cards+='<div class="wcard'+(selc?' on':'')+(own?'':' locked')+'" data-val="'+(own?it.id:'')+'">'+sw+it.name+(own?'':' \uD83D\uDD12')+'</div>'; }
   }
-  ov.innerHTML='<style>.wcard{background:#182133;border:1px solid #2b3a54;border-radius:10px;padding:12px 10px;font-size:13px;font-weight:700;color:#dfe8f5;text-align:center;cursor:pointer;transition:border-color .15s}.wcard.on{border-color:#f0c24a;color:#f0c24a}.wcard.locked{opacity:.4;cursor:default}</style>'
-    +'<div style="max-width:560px;width:100%;max-height:88vh;overflow-y:auto;background:#0f1622;border:1px solid #ffffff22;border-radius:14px;padding:18px">'
-    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><div style="font-size:22px;font-weight:800;flex:1">Wardrobe</div><button class="mbtn" id="wardClose" style="width:auto;padding:8px 18px;margin:0">Close</button></div>'
-    +'<div class="small" style="opacity:.75;margin-bottom:12px">Hats drop from mobs wearing them \u2014 hunt them to collect. Locked hats you haven\u2019t found yet.</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px">'+cards+'</div></div>';
+  ov.innerHTML='<style>.wcard{background:#182133;border:1px solid #2b3a54;border-radius:10px;padding:11px 10px;font-size:13px;font-weight:700;color:#dfe8f5;text-align:center;cursor:pointer}.wcard.on{border-color:#f0c24a;color:#f0c24a}.wcard.locked{opacity:.4;cursor:default}.wtab{background:#0e1622;border:1px solid #2b3a54;border-radius:8px 8px 0 0;padding:8px 14px;font-weight:700;color:#9fb0c8;cursor:pointer}.wtab.on{background:#182133;color:#f0c24a;border-color:#f0c24a}</style>'
+    +'<div style="max-width:600px;width:100%;max-height:90vh;overflow-y:auto;background:#0f1622;border:1px solid #ffffff22;border-radius:14px;padding:18px">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div style="font-size:22px;font-weight:800;flex:1">Dressing Room</div><button class="mbtn" id="wardClose" style="width:auto;padding:8px 18px;margin:0">Close</button></div>'
+    +'<div style="display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap">'+tabBar+'</div>'
+    +'<div class="small" style="opacity:.75;margin-bottom:12px">Hats drop from mobs wearing them. Shirts, glasses &amp; shoes unlock from achievements. Locked items you haven\u2019t earned yet.</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px">'+cards+'</div></div>';
   document.getElementById('wardClose').onclick=function(){ ov.style.display='none'; };
+  var tb=ov.querySelectorAll('.wtab'); for(var k=0;k<tb.length;k++){ tb[k].onclick=function(){ _wardTab=this.getAttribute('data-tab'); try{ sfxClick(); }catch(e){} openWardrobe(); }; }
   var cs=ov.querySelectorAll('.wcard');
-  for(var c=0;c<cs.length;c++){ cs[c].onclick=function(){ if(this.classList.contains('locked')) return; var hid=this.getAttribute('data-hat'); playerHat=hid||null; try{ localStorage.setItem('fw_hat', playerHat||''); }catch(e){} applyPlayerHat(); try{ sfxClick(); }catch(e){} openWardrobe(); }; }
+  for(var c=0;c<cs.length;c++){ cs[c].onclick=function(){ if(this.classList.contains('locked')) return; var val=this.getAttribute('data-val');
+    if(_wardTab==='hat'){ playerHat=val||null; try{ localStorage.setItem('fw_hat', playerHat||''); }catch(e){} }
+    else { playerCos[_wardTab]=val; saveCos(); }
+    applyPlayerCosmetics(); try{ sfxClick(); }catch(e){} openWardrobe();
+  }; }
 }
 // held item shown in the avatar's right hand (3rd person)
 var avHeldMats=[]; for(var _av=0;_av<6;_av++) avHeldMats.push(new THREE.MeshBasicMaterial({color:0x8a7a5a}));
@@ -2972,7 +3031,7 @@ function chunkFrag(alpha, grain){
     ' float h = fract(sin(dot(q, vec3(12.9898,78.233,37.719)))*43758.5453);',
     ' float gn = 0.84 + 0.20*h;',
     ' vec3 dc = vColor*gn;',
-    ' float vDetail = 1.0 - smoothstep(14.0, 34.0, distance(vWorld, uCamPos));',  // fade fine speckle/texture detail with distance to stop sub-pixel shimmer
+    ' float vDetail = 1.0 - smoothstep(9.0, 22.0, distance(vWorld, uCamPos));',  // fade fine speckle/texture detail with distance to stop sub-pixel shimmer
     // decorated functional blocks
     ' if(vDecor > 0.5){',
     '   float base = floor(vDecor/8.0 + 0.0001);',
@@ -3034,7 +3093,7 @@ function chunkFrag(alpha, grain){
     '  if(id==11.0){ if(face<0.5){ col*=0.82+0.28*n2(uv*8.0); } else { if(uv.y>0.82) col*=vec3(0.58,1.2,0.5); col*=0.85+0.3*n2(uv*6.0); } }',
     '  else if(id==12.0){ col*=0.8+0.34*n2(uv*7.0); col*=1.0-0.16*step(0.86,n2(uv*5.0+3.0)); }',
     '  else if(id==13.0){ col*=0.9+0.16*n2(uv*5.0); col*=1.0-0.12*lineAt(fract(uv.x+0.3*n2(uv*2.0)),0.5,0.04); }',
-    '  else if(id==14.0){ vec2 g=uv*3.0; float r=n2(g); vec2 f=fract(g)-0.5; float s=1.0-smoothstep(0.30,0.46,length(f)); col*=(0.74+0.34*r)*(0.62+0.42*s); }',
+    '  else if(id==14.0){ vec2 g=uv*2.7; vec2 ci=floor(g); float r=n2(ci); vec2 f=fract(g)-0.5; f+=(vec2(n2(ci+7.3),n2(ci+3.1))-0.5)*0.34; float d=length(f); float stone=1.0-smoothstep(0.26,0.44,d); float mortar=smoothstep(0.40,0.52,d); col*=(0.62+0.52*r)*(0.72+0.5*stone); col*=1.0-0.36*mortar; }',
     '  else if(id==15.0){ col*=0.92+0.14*n2(uv*12.0); }',
     '  else if(id==16.0){ float rows=4.0; float ry=floor(uv.y*rows); float yy=fract(uv.y*rows); col*=0.9+0.12*n2(vec2(ry,floor(uv.x*3.0+ry*1.7))); col*=1.0-0.45*lineAt(yy,0.0,0.06)-0.45*lineAt(yy,1.0,0.06); col*=1.0-0.35*lineAt(fract(uv.x*2.0+fract(ry*0.5)),0.0,0.04); col*=0.97+0.06*sin(uv.x*42.0); }',
     '  else if(id==17.0){ if(face<1.5){ vec2 c=uv-0.5; col*=0.86+0.16*sin(length(c)*34.0); col*=0.9+0.14*n2(uv*6.0); } else { col*=0.84+0.26*n2(vec2(floor(uv.x*8.0),floor(uv.y*5.0))); col*=1.0-0.18*lineAt(fract(uv.x*6.0),0.5,0.07); } }',
@@ -3673,6 +3732,7 @@ function tickMining(dt){
   // tall grass breaks instantly when held over
   if(harvestCd<=0 && harvestTuft()){ harvestCd=0.18; mining.target=null; mining.progress=0; return; }
   if(harvestCd<=0 && harvestFlower()){ harvestCd=0.22; mining.target=null; mining.progress=0; return; }
+  if(harvestCd<=0 && tryHarvest(true)){ harvestCd=0.28; mining.target=null; mining.progress=0; return; }   // hold/punch harvests RIPE crops
   // holding while aimed at a mob = keep punching it
   if(mobInFront()){ attackEntities(); mining.target=null; mining.progress=0; return; }
   var hit=raycast();
@@ -3697,12 +3757,13 @@ function tapAction(){
   if(tryHarvest()) return;
   doPlace();
 }
-function tryHarvest(){
+function tryHarvest(matureOnly){
   var hit=raycast(); if(!hit) return false;
   var tk=World.ck(hit.x,hit.y+1,hit.z), tl=World.tiles[tk];
   if(!(tl && tl.type==='crop')){ tk=World.ck(hit.x,hit.y,hit.z); tl=World.tiles[tk]; }   // also accept the aimed cell itself (village crops)
   if(!(tl && tl.type==='crop')) return false;
   if(!tl.mature){   // immature: pull it up so it can always be cleared (gives a seed back)
+    if(matureOnly) return false;   // holding/'punching' should NOT rip up crops that aren't ready
     var sd = tl.crop==='carrot'?'CARROT': tl.crop==='potato'?'POTATO': tl.crop==='tomato'?'TOMATO_SEEDS': tl.crop==='corn'?'CORN_SEEDS':'SEEDS';
     giveItem(sd,1); delete World.tiles[tk]; var ch0=World.getChunk(hit.x>>4,hit.z>>4,false); if(ch0) buildPlantMesh(ch0); sfxBreak(); triggerHandSwing(); return true;
   }
@@ -3906,6 +3967,8 @@ function doPlace(){
   triggerHandSwing();
   var heldBpk=inv.hotbar[hotbarSel];
   if(heldBpk && heldBpk.key==='BACKPACK'){ openBackpack(heldBpk); return; }
+  // use/LT picks a ripe crop (berry-bush style) when you're not holding a block to place
+  if(!heldBpk || ITEMS[heldBpk.key]==null || ITEMS[heldBpk.key].block==null){ if(tryHarvest(true)) return; }
   // mount a tamed horse (takes priority; aiming at a mob has no block hit)
   if(!Player.riding){
     var veh=vehicleInFront(4.4);
@@ -6321,6 +6384,17 @@ function makeBoar(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,
   var l1=p(0.13,0.34,0.13,DK,-0.17,0.17,0.22), l2=p(0.13,0.34,0.13,DK,0.17,0.17,0.22);
   var l3=p(0.13,0.34,0.13,DK,-0.17,0.17,-0.32), l4=p(0.13,0.34,0.13,DK,0.17,0.17,-0.32);
   g.userData.legs=[l1,l2,l3,l4]; return g; }
+function makeFrog(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
+  var BODY=0x5a8f3a, BELLY=0xc2d488;
+  p(0.5,0.28,0.44,BODY,0,0.22,0);
+  p(0.42,0.12,0.4,BELLY,0,0.12,0.02);
+  p(0.15,0.15,0.15,0xffffff,-0.14,0.38,0.06); p(0.15,0.15,0.15,0xffffff,0.14,0.38,0.06);
+  p(0.08,0.08,0.04,0x101010,-0.14,0.38,0.15); p(0.08,0.08,0.04,0x101010,0.14,0.38,0.15);
+  p(0.3,0.04,0.05,0x37631f,0,0.15,0.22);
+  var l1=p(0.12,0.13,0.2,BODY,-0.2,0.08,0.14), l2=p(0.12,0.13,0.2,BODY,0.2,0.08,0.14);
+  p(0.15,0.12,0.16,BODY,-0.22,0.07,-0.13); p(0.15,0.12,0.16,BODY,0.22,0.07,-0.13);
+  g.userData.legs=[l1,l2]; return g;
+}
 function makeRabbit(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   var FUR=([0xd8cbb0,0x9a8a72,0x6a5236,0xeceae4,0x4a4038,0xc9a06a])[(Math.random()*6)|0], WH=0xefe9dc;   // nose toward +Z
   p(0.24,0.22,0.36, FUR, 0,0.2,0);                 // body
@@ -6358,7 +6432,8 @@ var MOBDEF={
   villager:{hp:20,w:0.6,h:1.9,sp:1.1,dmg:0,passive:true,villager:true},
   dwarf:{hp:20,w:0.6,h:1.3,sp:1.2,dmg:0,passive:true},
   forgewright:{hp:26,w:0.6,h:1.9,sp:0.7,dmg:0,passive:true},
-  cinderkin:{hp:22,w:0.6,h:1.8,sp:2.2,dmg:4,passive:true,neutral:true}
+  cinderkin:{hp:22,w:0.6,h:1.8,sp:2.2,dmg:4,passive:true,neutral:true},
+  frog:{hp:4,w:0.5,h:0.55,sp:1.7,dmg:0,passive:true}
 };
 function meshFor(kind){ switch(kind){
   case 'spooler':return makeSpooler(); case 'skeleton':return makeSkeleton(); case 'creeper':return makeCreeper();
@@ -6368,7 +6443,7 @@ function meshFor(kind){ switch(kind){
   case 'deer':return makeDeer(); case 'duck':return makeDuck(); case 'bird':return makeBird();
   case 'horse':return makeHorse(); case 'dog':return makeDog(); case 'cat':return makeCat();
   case 'bear':return makeBear();
-  case 'fox':return makeFox(); case 'boar':return makeBoar(); case 'rabbit':return makeRabbit();
+  case 'fox':return makeFox(); case 'boar':return makeBoar(); case 'rabbit':return makeRabbit(); case 'frog':return makeFrog();
   case 'bee':return makeBee();
   case 'boat':return makeBoat();
   case 'plane':return makePlane();
@@ -7284,6 +7359,7 @@ function maybeSpawnAnimals(){
     else if(r<0.12){ spawnEnemy('fox', x+0.5,cy,z+0.5); }
     else if(r<0.20){ spawnEnemy('rabbit', x+0.5,cy,z+0.5); }
     else spawnEnemy(r<0.2?'cow':r<0.36?'sheep':r<0.5?'pig':r<0.64?'chicken':r<0.78?'deer':r<0.9?'horse':'dog', x+0.5,cy,z+0.5); }
+  else if(ground===B.SWAMP_GRASS){ spawnEnemy(Math.random()<0.8?'frog':'cow', x+0.5,cy,z+0.5); }   // swamp frogs
   else if(ground===B.SAND && World.biomeAt(x,z)===3 && Math.random()<0.5){ spawnEnemy('rabbit', x+0.5,cy,z+0.5); }   // desert rabbits
   else if(ground===B.SAND && (blk(World.getBlockLoaded(x+1,cy-1,z)).liquid || blk(World.getBlockLoaded(x-1,cy-1,z)).liquid || blk(World.getBlockLoaded(x,cy-1,z+1)).liquid || blk(World.getBlockLoaded(x,cy-1,z-1)).liquid)){ spawnEnemy(Math.random()<0.55?'crab':'duck', x+0.5,cy,z+0.5); }
 }
@@ -7493,6 +7569,7 @@ var ACHIEVEMENTS={
 };
 var unlocked={};
 function unlock(id){ if(gameMode==='creative' || unlocked[id] || !ACHIEVEMENTS[id]) return; unlocked[id]=true;
+  grantCosmeticsFor(id);
   var a=ACHIEVEMENTS[id]; toast('\uD83C\uDFC6 Achievement: '+a.name+'  (+'+a.xp+' XP)');
   giveXP(a.xp); if(a.item) giveItem(a.item[0],a.item[1]); sfxClick(); }
 function giveXP(n){ Player.xp+=n; while(Player.xp >= xpForLevel(Player.xpLevel)){ Player.xp-=xpForLevel(Player.xpLevel); Player.xpLevel++; sfxClick(); } updateStats(); }
@@ -8425,10 +8502,11 @@ function rumble(strong, weak, ms){
     gpPad.vibrationActuator.playEffect('dual-rumble', {duration:ms||120, strongMagnitude:Math.min(1,strong||0.4), weakMagnitude:Math.min(1,weak!=null?weak:(strong||0.4))});
   } }catch(_){ }
 }
-window.addEventListener('gamepadconnected', function(e){ gpIndex=e.gamepad.index; gamepadActive=true; try{ toast('Controller connected'); }catch(_){} });
-window.addEventListener('gamepaddisconnected', function(e){ if(e.gamepad.index===gpIndex){ gpIndex=-1; gamepadActive=false; input.fwd=0; input.strafe=0; input.mine=false; input.jump=false; input.crouch=false; } });
+window.addEventListener('gamepadconnected', function(e){ gpIndex=e.gamepad.index; gamepadActive=true; try{ document.body.classList.add('gp-cursor-hide'); }catch(_){} try{ toast('Controller connected'); }catch(_){} });
+window.addEventListener('mousemove', function(){ try{ document.body.classList.remove('gp-cursor-hide'); }catch(_){} });
+window.addEventListener('gamepaddisconnected', function(e){ if(e.gamepad.index===gpIndex){ gpIndex=-1; gamepadActive=false; try{ document.body.classList.remove('gp-cursor-hide'); }catch(_){} input.fwd=0; input.strafe=0; input.mine=false; input.jump=false; input.crouch=false; } });
 function gpBtn(b){ return !!(b && (b.pressed || b.value>0.5)); }
-var gpLast=0, gpFocusEl=null, gpNavCd=0;
+var gpLast=0, gpFocusEl=null, gpNavCd=0, gpFocusPos=null, gpFocusCont=null;
 function gpVisible(el){ return !!(el && !el.classList.contains('hidden') && el.getClientRects().length>0); }
 function gpUIContainer(){
   var ids=['settings','achscreen','guidescreen','death','pause'];
@@ -8449,13 +8527,17 @@ function gpSetFocus(el){
   var had=!!gpFocusEl;
   if(gpFocusEl) gpFocusEl.classList.remove('gpfocus');
   gpFocusEl=el;
-  if(el){ el.classList.add('gpfocus'); if(had) sfxUITick(); try{ el.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){ } }
+  if(el){ el.classList.add('gpfocus'); if(had) sfxUITick(); try{ el.scrollIntoView({block:'nearest',inline:'nearest'}); }catch(_){ } try{ gpFocusPos=gpCenter(el); }catch(_){ } }
 }
 function gpEnsureFocus(cont){
-  if(gpFocusEl && cont.contains(gpFocusEl) && gpVisible(gpFocusEl)) return true;
+  if(gpFocusEl && cont.contains(gpFocusEl) && gpVisible(gpFocusEl)){ gpFocusCont=cont; return true; }
   var els=gpFocusables(cont); if(!els.length){ gpSetFocus(null); return false; }
-  var prim=null; for(var i=0;i<els.length;i++){ var t=(els[i].textContent||'').toLowerCase(); if(els[i].classList.contains('primary')||/play|create|start|continue|resume/.test(t)){ prim=els[i]; break; } }
-  gpSetFocus(prim||els[0]); return true;
+  var pick=null;
+  if(gpFocusCont===cont && gpFocusPos){   // same screen re-rendered (e.g. a machine updating) -> keep focus where it was, don't snap to Close
+    var best=1e9; for(var j=0;j<els.length;j++){ var c=gpCenter(els[j]); var dd=(c.x-gpFocusPos.x)*(c.x-gpFocusPos.x)+(c.y-gpFocusPos.y)*(c.y-gpFocusPos.y); if(dd<best){ best=dd; pick=els[j]; } }
+  }
+  if(!pick){ for(var i=0;i<els.length;i++){ var t=(els[i].textContent||'').toLowerCase(); if(els[i].classList.contains('primary')||/play|create|start|continue|resume/.test(t)){ pick=els[i]; break; } } }
+  gpFocusCont=cont; gpSetFocus(pick||els[0]); return true;
 }
 function gpMoveFocus(dx,dy,cont){
   if(!gpEnsureFocus(cont)) return;
@@ -8525,7 +8607,7 @@ function pollGamepad(dt){
   var pads=navigator.getGamepads(), gp=(gpIndex>=0)?pads[gpIndex]:null;
   if(!gp){ for(var i=0;i<pads.length;i++){ if(pads[i]){ gp=pads[i]; gpIndex=i; break; } } }
   if(!gp){ gamepadActive=false; return; }
-  gamepadActive=true; gpPad=gp;
+  gamepadActive=true; gpPad=gp; if(!document.body.classList.contains('gp-cursor-hide')){ var _bt=gp.buttons,_ax=gp.axes,_any=false; for(var _i=0;_i<_bt.length;_i++){ if(_bt[_i]&&_bt[_i].pressed){_any=true;break;} } if(!_any){ for(var _a=0;_a<_ax.length;_a++){ if(Math.abs(_ax[_a]||0)>0.3){_any=true;break;} } } if(_any) try{ document.body.classList.add('gp-cursor-hide'); }catch(_){} }
   var ax=gp.axes, bt=gp.buttons;
   function dz(v){ v=v||0; return Math.abs(v)<0.18?0:v; }
   function pressed(idx){ var d=gpBtn(bt[idx]), was=gpPrev[idx]; gpPrev[idx]=d; return d&&!was; }
@@ -8660,6 +8742,7 @@ function loop(t){
   updateMobBars(dt); tickDmgNumbers(dt);
   updateTurbineRotors(dt);
   renderer.render(scene,camera);
+  if(!running){ try{ renderCharPreview(); }catch(_){} }
   updateWaypointHud();
   if(viewMode===0 && running){
     if(handCam.aspect!==camera.aspect){ handCam.aspect=camera.aspect; handCam.updateProjectionMatrix(); }
@@ -8683,6 +8766,7 @@ function showScreen(id){
   ['menu','worldsel','createworld'].forEach(function(s){ document.getElementById(s).classList.toggle('hidden', s!==id); });
 }
 document.getElementById('btnPlay').addEventListener('click', function(){ ac(); renderWorldList(); showScreen('worldsel'); });
+(function(){ var cb=document.getElementById('btnCustomize'); if(cb) cb.addEventListener('click', function(){ try{ ac(); }catch(e){} openWardrobe(); }); })();
 document.getElementById('btnWorldBack').addEventListener('click', function(){ ac(); showScreen('menu'); });
 document.getElementById('btnCreate').addEventListener('click', function(){ ac();
   document.getElementById('cwName').value=''; document.getElementById('cwSeed').value='';
@@ -8708,8 +8792,12 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 126';
+var VERSION='Update 130';
 var CHANGELOG=[
+  { v:'Update 130', t:'Frogs, Pants & Cursor', items:['<b>Frogs!</b> Green frogs now hop around the Swamp biome \u2014 the swamp\u2019s first residents','<b>Pants slot added</b> to the Dressing Room \u2014 Blue Jeans, Black Trousers, Explorer Khaki and Crimson Pants (unlocked via achievements), applied to your character and the menu preview','<b>Mouse cursor hides</b> when you\u2019re using a controller, and reappears the moment you move the mouse'] },
+  { v:'Update 129', t:'Dressing Room & Character Preview', items:['<b>Character preview on the main menu</b> \u2014 your customized character now stands in the bottom-right of the title screen, slowly turning, with a <b>Customize</b> button beneath','<b>Full Dressing Room</b> \u2014 the Wardrobe now has tabs for <b>Hats, Shirts, Glasses &amp; Shoes</b>. Change any of them and it updates on your character (and the menu preview) instantly','<b>Achievements now reward cosmetics</b> \u2014 shirts, glasses and shoes unlock as you earn achievements (and stay unlocked across all your worlds). Hats still drop from hatted mobs','<b>Controller fix</b> \u2014 the Close button no longer keeps re-selecting itself on the furnace and other machine screens; gamepad focus now stays put while a machine\u2019s progress updates'] },
+  { v:'Update 128', t:'Textures & Chrome Performance', items:['<b>Fixed the texture flicker/shimmer</b> (especially on desktop Chrome). The renderer was drawing at up to 2\u00d7 pixel density \u2014 far more than your phone \u2014 which both slowed Chrome down and made thin block patterns sparkle as you moved. Capped it, and block detail now fades sooner with distance','<b>Cobblestone redone</b> \u2014 proper irregular stones with dark mortar gaps and aged, uneven shading instead of the old flat speckle','<b>Warmer, aged stone palette</b> \u2014 stone and cobble now lean industrial grey-brown, a first step toward a cohesive steampunk resource-pack look'] },
+  { v:'Update 127', t:'Crop Harvesting Fixed', items:['<b>You can harvest ripe crops again</b> \u2014 holding (\u201Cpunching\u201D) over ready wheat, carrots, potatoes, tomatoes or corn now harvests them, instead of trying to break the farmland. A quick tap still works too','<b>Use / LT also picks ripe crops</b> (berry-bush style) when you are not holding a block to place \u2014 so either action works','Holding over a crop that is <b>not ready yet</b> no longer accidentally rips it up \u2014 only ripe crops are harvested by holding'] },
   { v:'Update 126', t:'Hats, Machine FX & Wiki', items:['<b>Hat system!</b> Mobs now sometimes spawn wearing a hat \u2014 kill them to collect it. Ten hats to find (Crown, Top Hat, Wizard, Pirate Tricorn, Party, Chef, Cowboy, Viking Helm, Halo, Propeller Beanie). Equip them in the new <b>Wardrobe</b> (pause menu) and your hat shows on your character in 3rd-person view','<b>Machines came alive</b> \u2014 running Generators, Blast Furnaces and Macerators now vent <b>steam</b>, on top of the new spinning wind-turbine rotors','<b>New wiki walkthrough</b> \u2014 \u201CYour First Factory (Step by Step)\u201D teaches a brand-new player the exact order to build the machine chain, from first iron to a fully automated base. The whole wiki is also now emoji-free'] },
   { v:'Update 125', t:'Waypoints, Turbines & Quarry', items:['<b>Waypoints upgraded</b> \u2014 in the Map you can now rename a waypoint (tap its name), pick from 10 icons &amp; colours (tap the icon), and toggle whether each one shows in the world (Shown/Hidden). Delete now asks first','<b>Wind turbines actually spin</b> \u2014 placed turbines now have a real 3-blade rotor mounted on top that turns (and spins faster in wind/storms), instead of being a plain white block','<b>Quarry status fixed</b> \u2014 it no longer just says \u201Cdepth 0\u201D. It now correctly reports when it is idle for lack of power, and shows the true depth once mining','<b>Machine makeover</b> \u2014 generators, macerators, compressors, solar panels, energy cells, the blast furnace and sprinkler now have distinct, more fitting colours so they read apart at a glance'] },
   { v:'Update 124', t:'Big Batch: UnderForge Life & More', items:['<b>Cinderkin</b> now roam the UnderForge in small groups \u2014 ash-grey wanderers with ember eyes. They are peaceful until you hit one\u2026 then the whole grudge is yours','The <b>Forgewright</b> now shows a floating name so you know it can be interacted with \u2014 tap it with the use action and it opens the Aether Forge to upgrade your held tool','<b>Dead ash trees</b> with grey <b>Ash Log / Ash Planks</b> wood now grow in the UnderForge ash flats','<b>Craft a Clock</b> (gold + redstone) and carry it to see the in-game time under your coordinates','<b>No more Apple emojis</b> \u2014 system messages and the changelog are now emoji-free for a cleaner ForgeWorld identity','<b>Water block removed from creative</b> \u2014 scoop water with a bucket and place it, like Minecraft','<b>Female villagers</b> \u2014 villages now have long-haired villagers in dresses alongside the rest'] },
