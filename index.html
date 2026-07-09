@@ -637,6 +637,7 @@ var HATS={
 (function(){ for(var id in HATS){ mat('HAT_'+id, HATS[id].name, HATS[id].col, {stack:1, hat:id}); } })();
 mat('BOAT','Boat',[154,106,58],{stack:1});
 mat('AIRSHIP','Airship',[184,74,58],{stack:1});
+mat('GLIDER','Glider',[168,120,70],{stack:1});
 mat('ROCKET_FUEL','Rocket Fuel',[120,190,140],{stack:16});
 mat('NOSE_CONE','Rocket Nose Cone',[196,200,208],{stack:16});
 mat('FUEL_TANK','Fuel Tank',[176,178,186],{stack:16});
@@ -687,6 +688,7 @@ mat('HONEY','Honey',[235,178,46],{food:4,heal:1,stack:16});
 mat('BREAD','Bread',[196,150,84],{food:6});
 mat('SWEET_BERRIES','Sweet Berries',[176,40,70],{food:3,stack:64});
 mat('EGG','Egg',[242,228,202],{stack:16});
+mat('BOILED_EGG','Boiled Egg',[246,238,214],{food:5,stack:16});
 mat('COCONUT','Coconut',[176,132,88],{food:4,stack:16});
 mat('BANANA','Banana',[236,206,72],{food:4,stack:16});
 mat('BAKED_POTATO','Baked Potato',[196,150,92],{food:6,stack:16});
@@ -1082,7 +1084,14 @@ function applyBlockTex(mats, bid){
 var _iconCanvasCache={}, _iconTexCache={};
 function iconTexture(key){
   if(_iconTexCache[key]) return _iconTexCache[key];
-  iconFor(key); var cv=_iconCanvasCache[key]; if(!cv) return null;
+  iconFor(key); var cv=_iconCanvasCache[key];
+  if(!cv){   // fallback: rasterize the icon data-URL so every item still shows in hand
+    var url=iconFor(key); if(!url) return null;
+    cv=document.createElement('canvas'); cv.width=cv.height=48;
+    var t2=new THREE.CanvasTexture(cv); t2.magFilter=THREE.NearestFilter; t2.minFilter=THREE.NearestFilter;
+    var img=new Image(); img.onload=function(){ try{ cv.getContext('2d').drawImage(img,0,0,48,48); t2.needsUpdate=true; }catch(_){ } }; img.src=url;
+    _iconTexCache[key]=t2; return t2;
+  }
   var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; t.needsUpdate=true;
   _iconTexCache[key]=t; return t;
 }
@@ -1157,7 +1166,7 @@ var World = {
     var cont = this.bnoise.fbm(wx*0.0011+11, wz*0.0011-7, 3);
     if(cont < -0.18) return 7;       // ocean (more common)
     // pick biome by argmax of independent noise fields -> contiguous blobs, never thin strips
-    var f=0.0032;
+    var f=0.0018;
     var sPlains = this.bnoise.fbm(wx*f+10,  wz*f+10,  2) + 0.18;
     var sOak    = this.bnoise.fbm(wx*f+200, wz*f-90,  2) + 0.02;
     var sMtn    = this.bnoise.fbm(wx*f-50,  wz*f+505, 2) + 0.04;
@@ -1186,7 +1195,7 @@ var World = {
   },
   _biomeH: function(bi, wx, wz, base){
     if(bi===7){ return SEA - 3 - Math.floor((this.noise.fbm(wx*0.02+5, wz*0.02-5, 3)+1)*6) - Math.floor(Math.max(0,this.noise.fbm(wx*0.009-20, wz*0.009+20, 2))*12); }
-    if(bi===2){ var m = this.noise.fbm(wx*0.02+9, wz*0.02-9, 5); return SEA + 8 + Math.pow(Math.max(0,(m+0.2)),1.4)*82 + base*9; }
+    if(bi===2){ var m = this.noise.fbm(wx*0.02+9, wz*0.02-9, 5); var amp = 55 + 75*Math.max(0, this.noise.fbm(wx*0.004-77, wz*0.004+77, 2)+0.2); return SEA + 8 + Math.pow(Math.max(0,(m+0.2)),1.4)*amp + base*9; }
     if(bi===3){ return SEA + 1 + base*6 + this.noise.fbm(wx*0.05,wz*0.05,2)*2; }
     if(bi===12){ return SEA + Math.floor(base*2.4) + (this.noise.fbm(wx*0.06+3,wz*0.06-3,2))*1.2; }
     return SEA + 1 + base*10;
@@ -1200,7 +1209,7 @@ var World = {
     var base = this.noise.fbm(wx*0.012, wz*0.012, 4);
     var cont = this.bnoise.fbm(wx*0.0011+11, wz*0.0011-7, 3);
     // biome scores (same fields as biomeAt) so we can blend the two strongest -> smooth slopes, not cliffs
-    var f=0.0032;
+    var f=0.0018;
     var sc=[
       [0, this.bnoise.fbm(wx*f+10,  wz*f+10,  2)+0.18],
       [1, this.bnoise.fbm(wx*f+200, wz*f-90,  2)+0.02],
@@ -2573,7 +2582,7 @@ var armSleeve=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.22,0.46), sleeveMat); 
 var armHand=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.2,0.3), handMat); armHand.position.set(0,0,-0.2);
 handMesh.add(armSleeve); handMesh.add(armHand);
 var handHeldMats=[]; for(var _hm=0;_hm<6;_hm++) handHeldMats.push(new THREE.MeshBasicMaterial({color:0x8a7a5a, fog:false}));
-var handHeld=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.3), handHeldMats);
+var handHeld=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.42,0.42), handHeldMats);
 handHeld.position.set(0.02,0.12,-0.32); handHeld.visible=false;
 handMesh.add(handHeld);
 var handToolHeadMat=new THREE.MeshBasicMaterial({color:0xcccccc, fog:false});
@@ -2594,10 +2603,10 @@ function buildToolHeads(headMat, handleMat, sc){
   return {group:g, refs:refs};
 }
 var handTM=buildToolHeads(handToolHeadMat, handToolHandleMat, 1.0); handTool.add(handTM.group);
-handTool.position.set(0.05,-0.04,-0.32); handTool.rotation.set(0.02,-0.26,0.26); handTool.visible=false;
+handTool.position.set(0.05,-0.06,-0.32); handTool.rotation.set(0.02,-0.26,0.26); handTool.scale.setScalar(1.22); handTool.visible=false;
 handMesh.add(handTool);
 var handIconMat=new THREE.MeshBasicMaterial({transparent:true, fog:false, alphaTest:0.4, side:THREE.DoubleSide});
-var handIcon=new THREE.Mesh(new THREE.PlaneGeometry(0.42,0.42), handIconMat);
+var handIcon=new THREE.Mesh(new THREE.PlaneGeometry(0.58,0.58), handIconMat);
 handIcon.position.set(0.0,0.1,-0.3); handIcon.rotation.set(-0.3,0.0,0.0); handIcon.visible=false;
 handMesh.add(handIcon);
 var handTorch=new THREE.Group();
@@ -4674,6 +4683,7 @@ shapeless([{key:'CARROT',qty:1},{key:'POTATO',qty:1},{key:'TOMATO',qty:1},{key:'
 toolRecipes('AETHERIUM','AETHERIUM');
 shaped([['PLANKS',null,'PLANKS'],['PLANKS','PLANKS','PLANKS']], 'BOAT', 1);
 shaped([['WOOL','WOOL','WOOL'],['IRON_INGOT','BRASS_BLOCK','IRON_INGOT'],['PLANKS','PLANKS','PLANKS']], 'AIRSHIP', 1);
+shaped([['LEATHER','STICK','LEATHER'],['STICK','STICK','STICK'],[null,'STICK',null]], 'GLIDER', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],[null,'IRON_INGOT',null],['IRON_INGOT',null,'IRON_INGOT']], 'PROPELLER', 1);
 shaped([['PLANKS','PROPELLER','PLANKS'],['PLANKS','PLANKS','PLANKS'],[null,'STICK',null]], 'WOODEN_PLANE', 1);
 shaped([['STEEL_INGOT','STEEL_INGOT','STEEL_INGOT'],['STEEL_INGOT','STICK','STEEL_INGOT'],[null,'STICK',null]], 'STEEL_BATTLEAXE', 1);
@@ -5242,7 +5252,7 @@ function openRecipeBook(){
     shown++;
     var row=recipeRow(r);
     if(ok && !creative){
-      row.style.cursor='pointer'; row.style.borderColor='#5cc24a'; row.style.background='#16321a';
+      row.style.cursor='pointer'; row.style.borderColor='#5cc24a'; row.style.background='#16321a'; row.setAttribute('role','button');
       var tag=document.createElement('div'); tag.textContent='\u2713 Craft'; tag.style.cssText='margin-left:auto;font-size:12px;font-weight:700;color:#8de29a;'; row.appendChild(tag);
       row.addEventListener('click', function(){ if(craftFromBook(r)){ toast('Crafted '+(ITEMS[r.out]?ITEMS[r.out].name:r.out)); openRecipeBook(); } });
     } else if(!ok){ row.style.opacity='0.4'; }
@@ -5659,7 +5669,7 @@ var FURN_RECIPES=[
 ];
 var COMPOSTABLE={ SEEDS:0.3, TOMATO_SEEDS:0.3, CORN_SEEDS:0.3, WHEAT:0.65, CARROT:0.65, POTATO:0.65, TOMATO:0.65, CORN:0.5, APPLE:0.65, OAK_SAPLING:0.5, SPRUCE_SAPLING:0.5, BIRCH_SAPLING:0.5, SWEET_BERRIES:0.3, HONEY:0.5, BREAD:0.85 };
 var COOK_RECIPES=[
-  {item:'BREAD', cost:{WHEAT:3}}, {item:'BAKED_POTATO', cost:{POTATO:1}},
+  {item:'BREAD', cost:{WHEAT:3}}, {item:'BAKED_POTATO', cost:{POTATO:1}}, {item:'BOILED_EGG', cost:{EGG:1}},
   {item:'VEGGIE_STEW', cost:{CARROT:1,POTATO:1,TOMATO:1}}, {item:'CORN_CHOWDER', cost:{CORN:2,POTATO:1}},
   {item:'TOMATO_SOUP', cost:{TOMATO:2}}, {item:'GLAZED_CARROTS', cost:{CARROT:2,HONEY:1}},
   {item:'FRUIT_SALAD', cost:{APPLE:1,SWEET_BERRIES:2}}, {item:'BERRY_PIE', cost:{SWEET_BERRIES:3,WHEAT:1}},
@@ -5729,7 +5739,7 @@ function openMapScreen(){
   var h=document.createElement('h2'); h.textContent='Map'; p.appendChild(h);
   var R=40, S=2*R;
   var cv=document.createElement('canvas'); cv.width=cv.height=S;
-  cv.style.cssText='width:min(82vw,360px);height:min(82vw,360px);image-rendering:pixelated;border:2px solid #0008;border-radius:8px;display:block;margin:0 auto;background:#0c0f14;';
+  cv.style.cssText='width:min(52vh,82vw,320px);height:min(52vh,82vw,320px);image-rendering:pixelated;border:2px solid #0008;border-radius:8px;display:block;margin:0 auto;background:#0c0f14;';
   var ctx=cv.getContext('2d'), img=ctx.createImageData(S,S);
   var px=Math.floor(Player.pos.x), pz=Math.floor(Player.pos.z);
   for(var dz=-R;dz<R;dz++){ for(var dx=-R;dx<R;dx++){
@@ -6398,13 +6408,14 @@ function birdTick(e,dt){
   e.pos.x += Math.cos(e.wdir)*e.speed*dt; e.pos.z += Math.sin(e.wdir)*e.speed*dt;
   e.mesh.position.copy(e.pos); e.mesh.rotation.y=-e.wdir+Math.PI/2;
   var flap=Math.sin(now*0.02)*0.6; if(e.mesh.userData.wings){ e.mesh.userData.wings[0].rotation.z=flap; e.mesh.userData.wings[1].rotation.z=-flap; }
-  if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++) mm[mi].color.setHex(red?0xffaaaa:mm[mi].__base); } }
+  if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++){ if(red){ mm[mi].color.setHex(0xffb0a8); } else if(mm[mi].__base!=null){ mm[mi].color.setHex(mm[mi].__base); } } } }
 }
 function maybeBirdEggs(){
   for(var i=0;i<entities.length;i++){ var e=entities[i]; if(e.kind!=='bird') continue;
     var dx=e.pos.x-Player.pos.x, dz=e.pos.z-Player.pos.z; if(dx*dx+dz*dz>50*50) continue;
-    if(Math.random()<0.10){ var gx=Math.floor(e.pos.x), gz=Math.floor(e.pos.z), gy=surfaceY(gx,gz);
-      if(gy>0){ spawnDrop(gx, gy, gz, 'EGG', 1); } } }
+    if(Math.random()<0.03){ var gx=Math.floor(e.pos.x), gz=Math.floor(e.pos.z), gy=surfaceY(gx,gz);
+      var near=0; for(var di=0;di<drops.length;di++){ var dd2=drops[di]; if(dd2.item.key==='EGG'){ var ex2=dd2.pos.x-gx, ez2=dd2.pos.z-gz; if(ex2*ex2+ez2*ez2<20*20) near++; } }
+      if(near<2 && gy>0){ spawnDrop(gx, gy, gz, 'EGG', 1); } } }
 }
 function maybeSpawnBirds(){
   if(gameMode!=='creative' && sunU.value<0.4) return;
@@ -6593,7 +6604,7 @@ function fishTick(e,dt){
   e.mesh.position.copy(e.pos);
   e.mesh.rotation.y=-e.heading;                                   // model faces +x
   if(e.mesh.userData.tail) e.mesh.userData.tail.rotation.y=Math.sin(now*0.013)*0.55;  // tail swish
-  if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++) mm[mi].color.setHex(red?0xffffff:mm[mi].__base); } }
+  if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++){ if(red){ mm[mi].color.setHex(0xffb0a8); } else if(mm[mi].__base!=null){ mm[mi].color.setHex(mm[mi].__base); } } } }
 }
 function partMesh(g,w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex, map:mobNoiseTex, side:THREE.DoubleSide}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); m.__base=hex; g.__mats.push(m); g.add(me); return me; }
 function eyePair(g,y,z,spread,w,pupil){ function p(W,H,D,c,x,yy,zz){ return partMesh(g,W,H,D,c,x,yy,zz); }
@@ -6809,11 +6820,14 @@ function makeKnight(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,
   p(0.34,0.1,0.06,DARK,0,1.62,0.24); p(0.05,0.28,0.5,GOLD,0,1.86,0);   // visor slit + plume ridge
   p(0.56,0.7,0.32,STEEL,0,1.05,0); p(0.58,0.2,0.34,GOLD,0,1.28,0);     // cuirass + gorget
   p(0.5,0.66,0.16,CAPE,0,1.06,-0.2);                                // cape
-  var aL=p(0.2,0.72,0.24,STEEL,-0.36,1.4,0), aR=p(0.2,0.72,0.24,STEEL,0.36,1.4,0);
   p(0.2,0.5,0.24,DARK,-0.12,0.66,0); p(0.2,0.5,0.24,DARK,0.12,0.66,0);  // legs
-  p(0.09,0.09,0.22,0x6b4a2e,0.46,1.06,0.16); p(0.2,0.06,0.1,GOLD,0.46,1.06,0.28); p(0.08,0.1,0.8,0xdfe4ea,0.46,1.06,0.72); p(0.07,0.06,0.14,0xf4f8ff,0.46,1.06,1.15);   // sword held out, blade pointing forward
-  p(0.44,0.5,0.06,DARK,-0.42,1.12,0.02); p(0.3,0.34,0.04,GOLD,-0.42,1.12,0.06);          // shield on left arm
-  g.userData.legs=[aL,aR]; return g;
+  function armGroup(sx){ var ag=new THREE.Group(); ag.position.set(sx,1.7,0); g.add(ag); return ag; }
+  function apart(ag,w,h,d,c,x,y,z){ var m=new THREE.MeshBasicMaterial({color:c, map:mobNoiseTex, side:THREE.DoubleSide}); m.__base=c; g.__mats.push(m); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); ag.add(me); return me; }
+  var armL=armGroup(-0.36), armR=armGroup(0.36);
+  apart(armL,0.2,0.72,0.24,STEEL,0,-0.3,0); apart(armR,0.2,0.72,0.24,STEEL,0,-0.3,0);
+  apart(armR,0.09,0.09,0.22,0x6b4a2e,0.1,-0.64,0.16); apart(armR,0.2,0.06,0.1,GOLD,0.1,-0.64,0.28); apart(armR,0.08,0.1,0.8,0xdfe4ea,0.1,-0.64,0.72); apart(armR,0.07,0.06,0.14,0xf4f8ff,0.1,-0.64,1.15);   // sword gripped by the right hand
+  apart(armL,0.44,0.5,0.06,DARK,-0.06,-0.58,0.02); apart(armL,0.3,0.34,0.04,GOLD,-0.06,-0.58,0.06);   // shield strapped to the left arm
+  g.userData.legs=[armL,armR]; return g;
 }
 function makeMonkey(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   var FUR=0x6b4a2e, FACE=0xcaa06a, DARK=0x3a2717;
@@ -6914,7 +6928,9 @@ function spawnEnemy(kind, x,y,z){
     var PIECES=[['head','HELMET',0.5,0.5,0.5,1.58],['chest','CHESTPLATE',0.57,0.74,0.33,0.95],['legs','LEGGINGS',0.44,0.5,0.24,0.35],['feet','BOOTS',0.46,0.17,0.28,0.06]];
     var pprob=[0.85,0.72,0.6,0.7]; e.armorPieces=[]; e.armorDef=0;
     for(var pi=0;pi<PIECES.length;pi++){ if(Math.random()<pprob[pi]){ var P=PIECES[pi];
-      var am=new THREE.MeshBasicMaterial({color:tint}); var abox=new THREE.Mesh(new THREE.BoxGeometry(P[2],P[3],P[4]),am); abox.position.set(0,P[5],0); mesh.add(abox);
+      var am=new THREE.MeshBasicMaterial({color:tint, map:(typeof mobNoiseTex!=='undefined'?mobNoiseTex:null)}); am.__base=tint;
+      if(mesh.__mats) mesh.__mats.push(am);
+      var abox=new THREE.Mesh(new THREE.BoxGeometry(P[2],P[3],P[4]),am); abox.position.set(0,P[5],0); mesh.add(abox);
       e.armorPieces.push({key:T[0]+'_'+P[1]}); e.armorDef+=defBase*0.35; } }
     e.enchanted=ench; if(ench){ e.armorDef*=1.4; e.enchTool=randomEnchantedTool(); }
   }
@@ -7010,7 +7026,7 @@ function animalTick(e,dt){
     for(var ki=0;ki<entities.length;ki++){ var kh=entities[ki]; if(kh===e||kh.hp<=0||kh.passive||(kh.dmg||0)<=0) continue;
       var kdx=kh.pos.x-e.pos.x, kdz=kh.pos.z-e.pos.z, kd=kdx*kdx+kdz*kdz; if(kd<kbD){ kbD=kd; kbest=kh; } }
     if(kbest){ e.wdir=Math.atan2(kbest.pos.z-e.pos.z, kbest.pos.x-e.pos.x); e.moving=true; e.fleeBoost=true; e.mesh.rotation.y=-e.wdir+Math.PI/2;
-      if(kbD<3.2*3.2){ e.atkCd=(e.atkCd||0)-dt; if(e.atkCd<=0){ e.atkCd=0.7; damageMob(kbest, e.dmg, e); } } }
+      if(kbD<3.2*3.2){ e.atkCd=(e.atkCd||0)-dt; if(e.atkCd<=0){ e.atkCd=0.7; e.swingT=0.32; damageMob(kbest, e.dmg, e); } } }
   }
   var sp = e.moving ? e.speed*(e.fleeBoost?1.6:1.0) : 0;
   e.vel.x=Math.cos(e.wdir)*sp; e.vel.z=Math.sin(e.wdir)*sp;
@@ -7052,8 +7068,10 @@ function animalTick(e,dt){
   var ny=e.pos.y+e.vel.y*dt; if(!entCollides(e,e.pos.x,ny,e.pos.z)) e.pos.y=ny; else { if(e.vel.y<0) e.onGround=true; e.vel.y=0; }
   if(e.swimming) e.pos.y += Math.sin(now*0.006+(e.wdir||0))*0.01;
   e.mesh.position.copy(e.pos);
+  if(e.swimming) e.mesh.position.y -= 0.34;   // body sits down in the water while swimming
   var mv=Math.hypot(e.vel.x,e.vel.z)>0.1, swg=Math.sin(now*0.012)*(mv?0.5:0);
   if(e.mesh.userData.legs){ var _lg=e.mesh.userData.legs; if(_lg.length>=4){ _lg[0].rotation.x=swg; _lg[3].rotation.x=swg; _lg[1].rotation.x=-swg; _lg[2].rotation.x=-swg; } else { _lg[0].rotation.x=swg; if(_lg[1]) _lg[1].rotation.x=-swg; } }
+  if(e.swingT>0){ e.swingT-=dt; var _kp=(0.32-Math.max(0,e.swingT))/0.32; var _kl=e.mesh.userData.legs; if(_kl&&_kl[1]) _kl[1].rotation.x=-1.7*Math.sin(_kp*Math.PI); }   // sword-swing attack animation
   if(e.love>0) e.love-=dt; if(e.loveCd>0) e.loveCd-=dt;
   if(e.baby){ e.age=(e.age||0)+dt; if(e.age>50){ e.baby=false; e.mesh.scale.set(1,1,1); } }
   if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++) mm[mi].color.setHex(red?0xffaaaa:mm[mi].__base); } }
@@ -7306,7 +7324,7 @@ function tickEntities(dt){
         continue;
       }
       if(e.kind==='airship'){
-        e.pos.x=pp.x; e.pos.z=pp.z; e.pos.y=pp.y-0.5;
+        e.pos.x=pp.x; e.pos.z=pp.z; e.pos.y=pp.y+0.35;   // gondola basket rises to the pilot's waist
         e.mesh.position.set(e.pos.x,e.pos.y,e.pos.z); e.mesh.rotation.set(0, Player.yaw, 0, 'YXZ');
         if(e.mesh.userData.prop) e.mesh.userData.prop.rotation.z += dt*22;
         continue;
@@ -8476,6 +8494,8 @@ function travelDim(target){
     }
     Player.pos.set(sx+0.5, sy+1.2, sz+2.5); Player.yaw=0; Player.pitch=0;
   }
+  var _ax=Math.floor(Player.pos.x), _az=Math.floor(Player.pos.z), _ah=World.heightAt(_ax,_az);
+  if(Player.pos.y < _ah-6 || Player.pos.y > _ah+40){ Player.pos.y=_ah+1.2; }   // never arrive buried in terrain or falling from the sky
   Player.vel.set(0,0,0); Player.spawnGrace=20;
   ashStorm=0; ashStormOn=false; ashStormTimer=22+Math.random()*30;
   toast(target==='underforge'?'\uD83C\uDF2B\uFE0F You cross into the UnderForge\u2026':'\u2728 You return to the overworld');
@@ -8993,6 +9013,16 @@ function physics(dt){
     Player.vel.y = adir.y*fIn2*asp + ((input.jump||keys['Space'])?4.5:0);   // hover when idle; jump rises; look down+forward descends
     Player.inWater=false; fellFrom=null;
   }
+  if(!riding && !Player.onGround && !Player.inWater && Player.vel.y<-4){   // glider: hold it while falling to soar down
+    var _gs=inv.hotbar[hotbarSel];
+    if(_gs && _gs.key==='GLIDER'){
+      Player.vel.y=-2.4;
+      var _gd=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(0,Player.yaw,0,'YXZ'));
+      Player.vel.x=_gd.x*7.5; Player.vel.z=_gd.z*7.5; fellFrom=null;
+      if(_gs.gdur==null) _gs.gdur=260;
+      _gs.gdur--; if(_gs.gdur<=0){ inv.hotbar[hotbarSel]=null; renderHotbar(); toast('Your glider wore out and fell apart!'); try{ sfxBreakTool&&sfxBreakTool(); }catch(_){ } }
+    }
+  }
   moveAxis('x', Player.vel.x*dt);
   moveAxis('z', Player.vel.z*dt);
   moveAxis('y', Player.vel.y*dt);
@@ -9180,7 +9210,7 @@ function loop(t){
     if(frame%4===0){ maybeSpawnEnemies(); maybeSpawnVillagers(); maybeSpawnDwarves(); maybeSpawnKnights(); }
     if(frame%5===0) maybeSpawnFish();
     if(frame%9===0) maybeSpawnBirds();
-    if(frame%40===0) maybeBirdEggs();
+    if(frame%220===0) maybeBirdEggs();
     if(frame%3===0) maybeSpawnAnimals();
     if(frame%7===0) maybeSpawnOcean();
     ambientTick(dt);
@@ -9317,8 +9347,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 146';
+var VERSION='Update 147';
 var CHANGELOG=[
+  { v:'Update 147', t:'Big Fix & Polish Round', items:['<b>Glider!</b> Craft one from sticks + leather, hold it while falling, and soar down from tall places. It wears out with use like a tool','<b>Held items look right now</b> \u2014 everything shows its proper icon or block texture in hand (eggs, maps and more were invisible before), and held items/tools are noticeably bigger','<b>Bigger biomes &amp; taller mountains</b> \u2014 biomes are nearly twice the size, and mountain ranges now vary from rolling foothills to towering peaks (new terrain only)','<b>Knights fixed</b> \u2014 the sword is gripped in the hand (no more floating) and knights swing it with a proper attack animation','<b>Armored mobs fixed</b> \u2014 armor is textured and shaded like the body (no more flat white rectangles), and mobs no longer get stuck one solid colour after being hit','<b>Animals swim properly</b> \u2014 they sit down in the water instead of trotting across the surface','<b>Airship</b> \u2014 you now stand in the gondola basket instead of floating above it','<b>Bird eggs are rare</b> now and never pile up','<b>Boiled Egg</b> \u2014 cook an egg in the Cooking Pot for a quick snack','<b>Portal safety</b> \u2014 rift travel can no longer drop you inside terrain, and the Map now fits fully on screen','<b>Recipe Book on controller</b> \u2014 craftable recipes are focusable, so you can select and craft with A'] },
   { v:'Update 146', t:'The Matter Economy (Tekkit)', items:['<b>Recycler</b> \u2014 feed it any junk item and it turns some of it into <b>Scrap</b> (needs power). A classic Tekkit machine','<b>Mass Fabricator</b> \u2014 the endgame: it devours enormous amounts of power to fabricate <b>UU-Matter</b>. Drop Scrap in to speed it up dramatically','<b>UU-Matter</b> can be crafted into valuables \u2014 iron, gold, redstone, diamonds, even Aetherium \u2014 so a big enough power grid literally makes matter from energy','Both machines support pipes &amp; hoppers for full automation'] },
   { v:'Update 145', t:'Rocket Tech (Moon, Part 1)', items:['<b>The road to the Moon begins!</b> A new <b>Rocket Workbench</b> lets you assemble a rocket from crafted parts','<b>Rocket parts</b> \u2014 craft <b>Rocket Fuel</b> (coal + redstone), a <b>Nose Cone</b>, <b>Fuel Tanks</b>, a <b>Rocket Engine</b>, <b>Fins</b>, and an Aetherium <b>Heat Shield</b>, then combine them at the Workbench into a <b>Rocket</b>','The launch pad and the Moon dimension itself are coming in the next updates','Removed the Sky Barge (a truly flyable platform is a bigger project for later) \u2014 the rideable Airship remains'] },
   { v:'Update 144', t:'100+ Hats & Enchanted Foes', items:['<b>Over 100 hats to collect!</b> Caps, beanies, top hats, berets and party cones in 15 colours, plus Santa, Witch, Jester, Wizard, Graduation, Sombrero, Fez, Ushanka, Headphones, Flower Crown, Cat/Bunny ears, Devil Horns, Cog Topper, Aviator Goggles and many more \u2014 all droppable from hatted mobs and equippable in the Dressing Room','<b>Enchanted enemies</b> \u2014 a rare armored mob now carries an <b>enchanted weapon</b> (glinting purple armor gives it away) and drops it on death with its enchantments intact for you to keep','Dropped enchanted gear now <b>keeps its enchantments</b> when you pick it up'] },
