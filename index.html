@@ -537,6 +537,9 @@ defBlock({key:'HARVESTER', name:'Steam Harvester', col:[120,150,96], top:[196,17
 defBlock({key:'BLAST_FURNACE', name:'Blast Furnace', col:[70,66,68], top:[44,42,46], side:[60,56,60], spec:[255,120,30], solid:true, tool:'pickaxe', tier:1, hard:3.4 });
 defBlock({key:'ELECTRIC_FURNACE', name:'Electric Furnace', col:[86,92,104], top:[54,58,68], side:[96,102,116], spec:[90,190,255], solid:true, tool:'pickaxe', tier:1, hard:3.4 });
 defBlock({key:'RECYCLER', name:'Recycler', col:[78,92,74], top:[54,68,50], side:[86,100,82], spec:[120,220,120], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
+defBlock({key:'GEOTHERMAL', name:'Geothermal Generator', col:[110,74,60], top:[150,70,40], side:[100,66,54], spec:[255,120,40], solid:true, tool:'pickaxe', tier:1, hard:3.2 });
+defBlock({key:'GILDED_STONE', name:'Gilded Stone', col:[112,84,52], top:[132,102,60], side:[104,76,48], spec:[240,200,90], solid:true, tool:'pickaxe', tier:1, hard:2.6 });
+defBlock({key:'RUNIC_BRASS', name:'Runic Brass', col:[186,148,72], top:[206,168,84], side:[176,138,64], solid:true, tool:'pickaxe', tier:1, hard:2.4, light:9 });
 defBlock({key:'MASS_FABRICATOR', name:'Mass Fabricator', col:[92,72,110], top:[64,48,80], side:[100,80,120], spec:[210,150,240], solid:true, tool:'pickaxe', tier:1, hard:4.0 });
 defBlock({key:'SPAWNER', name:'Monster Spawner', col:[42,38,46], top:[52,48,58], side:[38,34,42], solid:true, tool:'pickaxe', tier:1, hard:5.0, light:2 });
 defBlock({key:'SPRINKLER', name:'Mechanical Sprinkler', col:[92,140,150], top:[60,120,140], side:[150,192,205], spec:[120,200,230], solid:true, tool:'pickaxe', tier:1, hard:2.8 });
@@ -646,6 +649,7 @@ mat('ROCKET_FINS','Rocket Fins',[176,178,186],{stack:16});
 mat('HEAT_SHIELD','Heat Shield',[120,224,224],{stack:16});
 mat('ROCKET','Rocket',[220,80,60],{stack:1});
 mat('SCRAP','Scrap',[124,112,96],{stack:64});
+mat('PHILOSOPHERS_STONE','Philosopher\u2019s Stone',[214,60,60],{stack:1});
 mat('UU_MATTER','UU-Matter',[214,150,240],{stack:64});
 mat('PROPELLER','Propeller',[205,208,216],{stack:16});
 mat('WOODEN_PLANE','Wooden Plane',[176,140,86],{stack:1});
@@ -1662,9 +1666,60 @@ var World = {
     if(lx>0 && h+th-1<WORLD_H-1) blocks[idx(lx-1,h+th-1,lz)]=B.ASH_LOG;              // bare branch stubs
     if(lz<CHUNK-1 && h+th<WORLD_H-1) blocks[idx(lx,h+th,lz+1)]=B.ASH_LOG;
   },
+  genDwarfCity: function(ch){
+    var cx=ch.cx, cz=ch.cz;
+    var rcx=Math.floor(cx/8), rcz=Math.floor(cz/8);
+    if(hash3(rcx,881,rcz,this.seed^0xD3A7) > 0.5) return;                       // only some regions hide a city
+    var ccx=rcx*8+2+(hash3(rcx,882,rcz,this.seed)*4|0), ccz=rcz*8+2+(hash3(rcx,883,rcz,this.seed)*4|0);
+    if(Math.abs(cx-ccx)>1 || Math.abs(cz-ccz)>1) return;                        // the city spans a 3x3-chunk district
+    var center=(cx===ccx && cz===ccz);
+    // gilded roads in a cross through every district chunk
+    for(var px=0;px<16;px++) for(var pz=0;pz<16;pz++){
+      var road=(px>=7&&px<=9)||(pz>=7&&pz<=9); if(!road) continue;
+      var gh=ch.hmap[px*CHUNK+pz]; if(gh<3||gh>=WORLD_H-8) continue;
+      setLocal(ch.blocks,px,gh,pz,(px===8||pz===8)?B.GILDED_STONE:B.ASH_PLANKS);
+      for(var cy=gh+1;cy<=gh+3;cy++) setLocal(ch.blocks,px,cy,pz,B.AIR);
+    }
+    var lh=ch.hmap[8*CHUNK+3]; if(lh>3&&lh<WORLD_H-6) setLocal(ch.blocks,8,lh+1,3,B.RUNIC_BRASS);   // street lamps
+    var lh2=ch.hmap[8*CHUNK+12]; if(lh2>3&&lh2<WORLD_H-6) setLocal(ch.blocks,8,lh2+1,12,B.RUNIC_BRASS);
+    // stone halls in the quadrants (the centre chunk gets four)
+    var spots=center?[[1,1],[10,1],[1,10],[10,10]]:[[2,2],[9,9]];
+    for(var si=0;si<spots.length;si++){
+      var hx=spots[si][0], hz=spots[si][1];
+      var hh=ch.hmap[(hx+2)*CHUNK+(hz+2)]; if(hh<3||hh>=WORLD_H-10) continue;
+      for(var dx=0;dx<5;dx++) for(var dz=0;dz<5;dz++){
+        var x=hx+dx, z=hz+dz; if(x<0||x>15||z<0||z>15) continue;
+        setLocal(ch.blocks,x,hh,z,((dx+dz)%2===0)?B.GILDED_STONE:B.ASH_STONE);       // inlaid floor
+        var edge=(dx===0||dz===0||dx===4||dz===4), corner=(dx===0||dx===4)&&(dz===0||dz===4);
+        for(var y=1;y<=3;y++){
+          if(corner) setLocal(ch.blocks,x,hh+y,z,B.BRASS_BLOCK);
+          else if(edge && !(y<=2 && dx===2 && dz===0)) setLocal(ch.blocks,x,hh+y,z,B.ASH_STONE);   // doorway on the south side
+          else if(!edge) setLocal(ch.blocks,x,hh+y,z,B.AIR);
+        }
+        setLocal(ch.blocks,x,hh+4,z, edge?B.BRASS_BLOCK:B.ASH_PLANKS);               // roof
+      }
+      setLocal(ch.blocks,hx+2,hh+3,hz+2,B.RUNIC_BRASS);                              // hanging hall lamp
+    }
+    if(center){                                                                       // grand vault with dwarven loot
+      var mh=ch.hmap[8*CHUNK+8];
+      if(mh>3 && mh<WORLD_H-8){
+        setLocal(ch.blocks,8,mh+1,8,B.CHEST);
+        var vk=this.ck(cx*16+8, mh+1, cz*16+8);
+        var loot=newArray(27);
+        loot[0]={key:'GILDED_STONE',qty:6+(hash3(cx,886,cz,this.seed)*6|0)};
+        loot[1]={key:'RUNIC_BRASS',qty:3+(hash3(cx,887,cz,this.seed)*4|0)};
+        loot[2]={key:'BRASS_INGOT',qty:5}; loot[3]={key:'AETHERIUM',qty:2};
+        loot[4]={key:'EMERALD',qty:2+(hash3(cx,888,cz,this.seed)*3|0)};
+        this.tiles[vk]={type:'chest', items:loot};
+        var sk='dc'+ccx+','+ccz; if(!villageSiteSet[sk]){ villageSiteSet[sk]=1; villageSites.push({x:cx*16+8+0.5, y:mh+2, z:cz*16+8+0.5}); }   // dwarves & knights call it home
+      }
+    }
+  },
   genAshFortress: function(ch){
     var cx=ch.cx, cz=ch.cz;
-    if(hash3(cx,201,cz,this.seed^0xF0E7) > 0.05) return;
+    var _fm=hash3(cx,778,cz,this.seed);
+    for(var _fx=-1;_fx<=1;_fx++) for(var _fz=-1;_fz<=1;_fz++){ if(_fx===0&&_fz===0) continue; if(hash3(cx+_fx,778,cz+_fz,this.seed) > _fm) return; }
+    if(hash3(cx,201,cz,this.seed^0xF0E7) > 0.4) return;
     var ax=4, az=4, h=ch.hmap[ax*CHUNK+az]; if(h<3||h>=WORLD_H-12) return;
     var sz=7+(hash3(cx,202,cz,this.seed)*3|0);
     for(var dx=0;dx<sz;dx++){ for(var dz=0;dz<sz;dz++){
@@ -1987,10 +2042,12 @@ var World = {
   },
   genStructures: function(ch){
     var cx=ch.cx, cz=ch.cz;
-    if(this.dim==='underforge'){ this.genAshFortress(ch); return; }
+    if(this.dim==='underforge'){ this.genDwarfCity(ch); this.genAshFortress(ch); return; }
     this.genVillage(ch);
     this.genSteampunkStructures(ch);
-    if(hash3(cx,101,cz,this.seed^0xB00B) > 0.035) return;
+    var _lm=hash3(cx,777,cz,this.seed);   // structures never spawn in adjacent chunks
+    for(var _sx=-1;_sx<=1;_sx++) for(var _sz=-1;_sz<=1;_sz++){ if(_sx===0&&_sz===0) continue; if(hash3(cx+_sx,777,cz+_sz,this.seed) > _lm) return; }
+    if(hash3(cx,101,cz,this.seed^0xB00B) > 0.3) return;
     var lx=5+(hash3(cx,102,cz,this.seed)*6|0), lz=5+(hash3(cx,103,cz,this.seed)*6|0);
     var wx=cx*CHUNK+lx, wz=cz*CHUNK+lz;
     var biome=this.biomeAt(wx,wz); if(biome===7) return;
@@ -4202,6 +4259,7 @@ function doPlace(){
     return;
   }
   if(hit.id===B.GENERATOR){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
+  if(hit.id===B.GEOTHERMAL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.AETHER_FORGE){ openAetherForge(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.SOLAR_PANEL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.ENERGY_CELL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
@@ -4340,6 +4398,14 @@ function doPlace(){
     }
     return;
   }
+  // Philosopher's Stone: tap a block to transmute it (EE classic)
+  if(slot && slot.key==='PHILOSOPHERS_STONE'){
+    var TG=[[B.DIRT,B.SAND,B.GRAVEL],[B.COBBLE,B.STONE],[B.LOG,B.SPRUCE_LOG,B.BIRCH_LOG,B.CHERRY_LOG],[B.WOOL,B.RED_WOOL,B.YELLOW_WOOL,B.BLUE_WOOL,B.GREEN_WOOL,B.PURPLE_WOOL,B.PINK_WOOL]];
+    for(var tg=0; tg<TG.length; tg++){ var gi=TG[tg].indexOf(hit.id);
+      if(gi>=0){ var nid=TG[tg][(gi+1)%TG[tg].length];
+        World.setBlock(hit.x,hit.y,hit.z,nid,true); sfxClick(); toast('Transmuted to '+(BLOCKS[nid]?BLOCKS[nid].name:'?'));
+        return; } }
+    toast('This block can\u2019t be transmuted'); return; }
   // throw an egg (small chance to hatch a chick where it lands)
   if(slot && slot.key==='EGG'){ var fx=-Math.sin(Player.yaw), fz=-Math.cos(Player.yaw);
     var tx=Player.pos.x+fx*3, tz=Player.pos.z+fz*3, ty=surfaceY(Math.floor(tx),Math.floor(tz));
@@ -4392,6 +4458,7 @@ function doPlace(){
   if(pid===B.RECYCLER) World.tiles[World.ck(nx,ny,nz)]={type:'recycler', input:null, output:null, cook:0};
   if(pid===B.MASS_FABRICATOR) World.tiles[World.ck(nx,ny,nz)]={type:'massfab', input:null, output:null, cook:0};
   if(pid===B.GENERATOR) World.tiles[World.ck(nx,ny,nz)]={type:'generator', slot:null, burn:0, burnMax:0, energy:0};
+  if(pid===B.GEOTHERMAL) World.tiles[World.ck(nx,ny,nz)]={type:'generator', geo:true, slot:null, burn:0, burnMax:0, energy:0};
   if(pid===B.SOLAR_PANEL) World.tiles[World.ck(nx,ny,nz)]={type:'generator', solar:true, energy:0};
   if(pid===B.ENERGY_CELL) World.tiles[World.ck(nx,ny,nz)]={type:'generator', cell:true, energy:0};
   if(pid===B.QUARRY){ World.tiles[World.ck(nx,ny,nz)]={type:'quarry', cd:0, qx:null, qz:null, cy:null, done:false}; toast('\u26CF\uFE0F Quarry placed \u2014 wire it to a generator with cable to start mining'); }
@@ -4661,6 +4728,8 @@ shapeless([{key:'UU_MATTER',qty:5}], 'GOLD_INGOT', 1);
 shapeless([{key:'UU_MATTER',qty:8}], 'DIAMOND', 1);
 shapeless([{key:'UU_MATTER',qty:10}], 'AETHERIUM', 1);
 shapeless([{key:'UU_MATTER',qty:2}], 'REDSTONE', 4);
+shaped([['REDSTONE','AETHERIUM','REDSTONE'],['AETHERIUM','DIAMOND','AETHERIUM'],['REDSTONE','AETHERIUM','REDSTONE']], 'PHILOSOPHERS_STONE', 1);
+shaped([['IRON_INGOT','GLASS','IRON_INGOT'],['GLASS','GENERATOR','GLASS'],['IRON_INGOT','ENERGY_CELL','IRON_INGOT']], 'GEOTHERMAL', 1);
 shaped([['STONE','STONE','STONE']], 'STONE_SLAB', 6);
 shaped([['COBBLE','COBBLE','COBBLE']], 'COBBLE_SLAB', 6);
 shaped([['PLANKS','PLANKS','PLANKS']], 'PLANK_SLAB', 6);
@@ -6003,6 +6072,11 @@ function tickGenerators(dt){
       continue;
     }
     if(t.cell){ var cp=tk.split(','), cap=t.cap||CELL_MAX; if((t.energy||0) < cap){ if(drawPower(+cp[0],+cp[1],+cp[2], 16*dt, true)) t.energy=Math.min(cap,(t.energy||0)+16*dt); } continue; }
+    if(t.geo && t.burn<=0 && (t.energy||0)<GEN_MAX){ var gp=tk.split(','), ggx=+gp[0], ggy=+gp[1], ggz=+gp[2];
+      var NB=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+      for(var ni=0;ni<NB.length;ni++){ var nbx=ggx+NB[ni][0], nby=ggy+NB[ni][1], nbz=ggz+NB[ni][2];
+        if(World.getBlock(nbx,nby,nbz)===B.LAVA){ World.setBlock(nbx,nby,nbz,B.AIR,true); t.burnMax=t.burn=30; break; } }
+    }
     if(t.burn>0){ t.burn-=dt; t.energy=Math.min(GEN_MAX,(t.energy||0)+22*dt); }
     if(t.burn<=0 && t.slot && (t.energy||0)<GEN_MAX){
       var fv=ITEMS[t.slot.key] && ITEMS[t.slot.key].fuel;
@@ -7194,7 +7268,7 @@ function spawnDrop(x,y,z,key,qty){
   drops.push({mesh:m, pos:new THREE.Vector3(x+0.5,y+0.4,z+0.5), vel:new THREE.Vector3((Math.random()-0.5)*1.6, 2.6, (Math.random()-0.5)*1.6), item:{key:key,qty:qty}, life:300, t:Math.random()*6.28, pickCd:0.45});
 }
 function clearDrops(){ for(var i=0;i<drops.length;i++) scene.remove(drops[i].mesh); drops=[]; }
-function sfxPickup(){ tone(900,0.05,'square',0.045,1200); tone(1320,0.05,'square',0.035,1500); }
+function sfxPickup(){ tone(660,0.07,'sine',0.055,1320); tone(990,0.05,'sine',0.03,1560); }
 function tickDrops(dt){
   for(var i=drops.length-1;i>=0;i--){ var d=drops[i];
     d.pickCd-=dt; d.life-=dt; d.t+=dt*3;
@@ -8198,7 +8272,7 @@ function sfxUITick(){ var nowm=(typeof performance!=='undefined'?performance.now
 // legacy aliases
 function beep(freq,dur,type,vol){ tone(freq,dur,type,vol); }
 function sfxThump(){ noiseBurst(0.09,0.06,600); }
-function sfxClick(){ tone(520,0.04,'triangle',0.05); }
+function sfxClick(){ tone(620,0.035,'sine',0.05,780); tone(930,0.028,'sine',0.028,1150); }
 // world sfx — material-aware
 function blockSoundClass(id){ if(id==null) return 'default'; var b=blk(id); if(!b) return 'default'; var k=b.key||'';
   if(b.leaf||/LEAVES|LEAF|SAPLING|FLOWER|CACTUS|VINE|BUSH|MUSHROOM|KELP|CORAL/.test(k)) return 'leaf';
@@ -8221,8 +8295,8 @@ function sfxStep(id){ var c=blockSoundClass(id); var r=Math.random();
   else noiseBurst(0.07,0.04,420+r*260); }
 function sfxMine(){ noiseBurst(0.10,0.07,700+Math.random()*200); }
 function sfxBreak(id){ var c=blockSoundClass(id);
-  if(c==='wood'){ noiseBurst(0.14,0.09,820); tone(190,0.12,'square',0.05,110); }
-  else if(c==='stone'){ noiseBurst(0.17,0.12,1300); tone(120,0.1,'square',0.05,70); }
+  if(c==='wood'){ noiseBurst(0.14,0.09,820); tone(190,0.12,'square',0.05,110); tone(140,0.1,'sine',0.05,92); }
+  else if(c==='stone'){ noiseBurst(0.17,0.12,1300); tone(120,0.1,'square',0.05,70); tone(82,0.12,'sine',0.07,52); }
   else if(c==='metal'){ tone(420,0.09,'square',0.06,250); noiseBurst(0.08,0.06,1700); tone(820,0.06,'triangle',0.03,1200); }
   else if(c==='glass'){ noiseBurst(0.13,0.1,3200); tone(1100,0.09,'triangle',0.06,1700); tone(640,0.07,'triangle',0.04,900); }
   else if(c==='leaf'||c==='grass'){ noiseBurst(0.11,0.06,2000); }
@@ -8231,8 +8305,8 @@ function sfxBreak(id){ var c=blockSoundClass(id);
   else if(c==='wool'){ noiseBurst(0.12,0.06,300); }
   else { noiseBurst(0.18,0.11,900); tone(160,0.12,'square',0.04,90); } }
 function sfxPlace(id){ var c=blockSoundClass(id);
-  if(c==='wood'){ noiseBurst(0.07,0.06,640); tone(220,0.06,'square',0.035,150); }
-  else if(c==='stone'||c==='metal'){ noiseBurst(0.07,0.07,1100); tone(160,0.05,'square',0.03,110); }
+  if(c==='wood'){ noiseBurst(0.07,0.06,640); tone(220,0.06,'square',0.035,150); tone(120,0.05,'sine',0.04,85); }
+  else if(c==='stone'||c==='metal'){ noiseBurst(0.07,0.07,1100); tone(160,0.05,'square',0.03,110); tone(95,0.05,'sine',0.04,68); }
   else if(c==='glass'){ noiseBurst(0.06,0.06,2600); tone(880,0.05,'triangle',0.035,1300); }
   else if(c==='sand'||c==='dirt'||c==='grass'){ noiseBurst(0.08,0.06,420); }
   else if(c==='wool'){ noiseBurst(0.07,0.045,300); }
@@ -9193,6 +9267,7 @@ function loop(t){
   pollGamepad(gdt);
   if(!running){ try{ renderCharPreview(); }catch(_){} return; }
   now=t; var dt=(t-last)/1000; last=t; if(dt>0.1)dt=0.1; frame++;
+  if(_doorCd>0) _doorCd-=dt;   // door-use cooldown must tick every frame (doors could never close before)
   if(chunkMatT.uniforms.uTime) chunkMatT.uniforms.uTime.value = t*0.001;
   if(chunkMat.uniforms.uCamPos) chunkMat.uniforms.uCamPos.value.copy(camera.position);
   if(!uiOpen){
@@ -9347,8 +9422,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 147';
+var VERSION='Update 148';
 var CHANGELOG=[
+  { v:'Update 148', t:'Dwarf Cities, EE & Geothermal', items:['<b>Dwarven Cities</b> \u2014 rare, sprawling districts hidden in the UnderForge: gilded roads, brass-corner stone halls, glowing Runic Brass street lamps, and a central vault stocked with dwarven treasure. Dwarves and knights settle there. Two rare decoration blocks \u2014 <b>Gilded Stone</b> and glowing <b>Runic Brass</b> \u2014 can only be plundered from them','<b>Philosopher\u2019s Stone</b> (Equivalent Exchange) \u2014 craft it from redstone, Aetherium and a diamond, then tap blocks to transmute them: dirt \u2194 sand \u2194 gravel, cobble \u2194 stone, cycle wood types and wool colours','<b>Geothermal Generator</b> (IC2) \u2014 place it beside lava and it drinks the lava for a long, strong power burn. Feeds your grid like any generator','<b>Doors finally close</b> \u2014 the use-cooldown only counted down while mining, so a door could open but never shut. Fixed','<b>Structures keep their distance</b> \u2014 ruins, towers and fortresses can no longer generate in adjacent chunks, so they don\u2019t pile on top of each other','<b>Sound polish</b> \u2014 softer UI clicks, a warmer pickup chime, and chunkier low-end thumps when breaking and placing wood and stone'] },
   { v:'Update 147', t:'Big Fix & Polish Round', items:['<b>Glider!</b> Craft one from sticks + leather, hold it while falling, and soar down from tall places. It wears out with use like a tool','<b>Held items look right now</b> \u2014 everything shows its proper icon or block texture in hand (eggs, maps and more were invisible before), and held items/tools are noticeably bigger','<b>Bigger biomes &amp; taller mountains</b> \u2014 biomes are nearly twice the size, and mountain ranges now vary from rolling foothills to towering peaks (new terrain only)','<b>Knights fixed</b> \u2014 the sword is gripped in the hand (no more floating) and knights swing it with a proper attack animation','<b>Armored mobs fixed</b> \u2014 armor is textured and shaded like the body (no more flat white rectangles), and mobs no longer get stuck one solid colour after being hit','<b>Animals swim properly</b> \u2014 they sit down in the water instead of trotting across the surface','<b>Airship</b> \u2014 you now stand in the gondola basket instead of floating above it','<b>Bird eggs are rare</b> now and never pile up','<b>Boiled Egg</b> \u2014 cook an egg in the Cooking Pot for a quick snack','<b>Portal safety</b> \u2014 rift travel can no longer drop you inside terrain, and the Map now fits fully on screen','<b>Recipe Book on controller</b> \u2014 craftable recipes are focusable, so you can select and craft with A'] },
   { v:'Update 146', t:'The Matter Economy (Tekkit)', items:['<b>Recycler</b> \u2014 feed it any junk item and it turns some of it into <b>Scrap</b> (needs power). A classic Tekkit machine','<b>Mass Fabricator</b> \u2014 the endgame: it devours enormous amounts of power to fabricate <b>UU-Matter</b>. Drop Scrap in to speed it up dramatically','<b>UU-Matter</b> can be crafted into valuables \u2014 iron, gold, redstone, diamonds, even Aetherium \u2014 so a big enough power grid literally makes matter from energy','Both machines support pipes &amp; hoppers for full automation'] },
   { v:'Update 145', t:'Rocket Tech (Moon, Part 1)', items:['<b>The road to the Moon begins!</b> A new <b>Rocket Workbench</b> lets you assemble a rocket from crafted parts','<b>Rocket parts</b> \u2014 craft <b>Rocket Fuel</b> (coal + redstone), a <b>Nose Cone</b>, <b>Fuel Tanks</b>, a <b>Rocket Engine</b>, <b>Fins</b>, and an Aetherium <b>Heat Shield</b>, then combine them at the Workbench into a <b>Rocket</b>','The launch pad and the Moon dimension itself are coming in the next updates','Removed the Sky Barge (a truly flyable platform is a bigger project for later) \u2014 the rideable Airship remains'] },
