@@ -549,6 +549,10 @@ defBlock({key:'ANVIL', name:'Anvil', col:[66,68,78], top:[92,94,104], side:[54,5
 defBlock({key:'SWAMP_GRASS', name:'Swamp Grass', col:[72,92,52], top:[82,104,56], side:[74,66,48], solid:true, hard:0.5 });
 defBlock({key:'SWAMP_WATER', name:'Swamp Water', col:[54,88,66], top:[70,104,80], side:[44,72,56], solid:false, transparent:true, liquid:true });
 defBlock({key:'LILY_PAD', name:'Lily Pad', col:[74,140,70], solid:true, transparent:true, thin:false, shape:'lily', hard:0.1, tool:'axe' });   // solid so collision consults the thin lily box
+defBlock({key:'REDWOOD_LOG', name:'Redwood Log', col:[124,62,44], top:[150,96,66], side:[112,54,38], solid:true, tool:'axe', hard:2.2 });
+defBlock({key:'REDWOOD_PLANKS', name:'Redwood Planks', col:[168,92,64], solid:true, tool:'axe', hard:1.8 });
+defBlock({key:'REDWOOD_LEAVES', name:'Redwood Leaves', col:[38,96,44], solid:true, leaf:true, hard:0.3 });
+defBlock({key:'LAUNCH_PAD', name:'Launch Pad', col:[92,96,106], top:[70,74,84], side:[100,104,114], spec:[255,180,60], solid:true, tool:'pickaxe', tier:1, hard:3.5 });
 
 function blk(id){ return BLOCKS[id] || BLOCKS[0]; }
 function isSolid(id){ return blk(id).solid; }
@@ -696,6 +700,7 @@ mat('BREAD','Bread',[196,150,84],{food:6});
 mat('SWEET_BERRIES','Sweet Berries',[176,40,70],{food:3,stack:64});
 mat('EGG','Egg',[242,228,202],{stack:16});
 mat('BOILED_EGG','Boiled Egg',[246,238,214],{food:5,stack:16});
+mat('REDWOOD_SAPLING','Redwood Sapling',[70,130,60],{stack:64});
 mat('COCONUT','Coconut',[176,132,88],{food:4,stack:16});
 mat('BANANA','Banana',[236,206,72],{food:4,stack:16});
 mat('BAKED_POTATO','Baked Potato',[196,150,92],{food:6,stack:16});
@@ -759,7 +764,7 @@ mat('RUG','Rug',[160,90,100],{stack:16}); ITEMS.RUG.furnKind='rug';
 mat('BAKED_POTATO','Baked Potato',[200,154,92],{food:6});
 // fuels that are also blocks
 ITEMS.PLANKS.fuel = 15; ITEMS.LOG.fuel = 15; ITEMS.CRAFTING.fuel = 15;
-[['SPRUCE_LOG',15],['BIRCH_LOG',15],['ASH_LOG',15],['SPRUCE_PLANKS',15],['BIRCH_PLANKS',15],['ASH_PLANKS',15],['STICK',5],['WOOD_FENCE',15],['LADDER',10],['BOWL',5],['OAK_SAPLING',5],['SPRUCE_SAPLING',5],['BIRCH_SAPLING',5],['CHERRY_SAPLING',5],['BOOKSHELF',15],['SIGN',10],['CARPENTER',15]].forEach(function(p){ if(ITEMS[p[0]]) ITEMS[p[0]].fuel=p[1]; });
+[['REDWOOD_LOG',15],['REDWOOD_PLANKS',15],['REDWOOD_SAPLING',5],['SPRUCE_LOG',15],['BIRCH_LOG',15],['ASH_LOG',15],['SPRUCE_PLANKS',15],['BIRCH_PLANKS',15],['ASH_PLANKS',15],['STICK',5],['WOOD_FENCE',15],['LADDER',10],['BOWL',5],['OAK_SAPLING',5],['SPRUCE_SAPLING',5],['BIRCH_SAPLING',5],['CHERRY_SAPLING',5],['BOOKSHELF',15],['SIGN',10],['CARPENTER',15]].forEach(function(p){ if(ITEMS[p[0]]) ITEMS[p[0]].fuel=p[1]; });
 // smelting for ore/sand
 ITEMS.IRON_ORE.smeltTo='IRON_INGOT';
 ITEMS.LOG.smeltTo='CHARCOAL';
@@ -1224,6 +1229,7 @@ var World = {
     var sJungle = this.bnoise.fbm(wx*f+450, wz*f+1500, 2) - 0.06;
     var sMaple  = this.bnoise.fbm(wx*f-1500,wz*f+260, 2) - 0.05;
     var sWet    = this.bnoise.fbm(wx*f+1850,wz*f-1320,2) - 0.05;
+    var sRedwood= this.bnoise.fbm(wx*f+2300,wz*f-830, 2) - 0.14;
     var best=sPlains, bi=0;
     if(sOak>best){best=sOak;bi=1;}
     if(sMtn>best){best=sMtn;bi=2;}
@@ -1236,6 +1242,7 @@ var World = {
     if(sJungle>best){best=sJungle;bi=10;}
     if(sMaple>best){best=sMaple;bi=11;}
     if(sWet>best){best=sWet;bi=12;}
+    if(sRedwood>best){best=sRedwood;bi=13;}
     return bi;
   },
   _biomeH: function(bi, wx, wz, base){
@@ -1384,6 +1391,22 @@ var World = {
       var wx=cx*CHUNK+lx, wz=cz*CHUNK+lz;
       var biome=this.biomeAt(wx,wz);
       var h=this.heightAt(wx,wz);
+      if(biome===13){ // towering redwoods
+        if(h>SEA && hash3(wx,61,wz,this.seed^0x8ED)<0.03){
+          var rh=10+(hash3(wx,62,wz,this.seed)*7|0);
+          if(h+rh+3<WORLD_H){
+            for(var rt=1;rt<=rh;rt++) setLocal(blocks,lx,h+rt,lz,B.REDWOOD_LOG);
+            var rtp=h+rh;
+            for(var ry=-3;ry<=1;ry++){ var rr=(ry>=0)?1:2;
+              for(var rx2=-rr;rx2<=rr;rx2++) for(var rz2=-rr;rz2<=rr;rz2++){
+                if(rx2===0&&rz2===0&&ry<=0) continue;
+                if(Math.abs(rx2)===rr&&Math.abs(rz2)===rr&&hash3(wx+rx2,rtp+ry,wz+rz2,this.seed)<0.4) continue;
+                if(getLocal(blocks,lx+rx2,rtp+ry,lz+rz2)===B.AIR) setLocal(blocks,lx+rx2,rtp+ry,lz+rz2,B.REDWOOD_LEAVES); } }
+            setLocal(blocks,lx,rtp+2,lz,B.REDWOOD_LEAVES);
+          }
+        }
+        continue;
+      }
       if(biome===3){ // cactus
         if(h>SEA && hash3(wx,7,wz,this.seed^55)<0.015){
           var chh=2+Math.floor(hash3(wx,8,wz,this.seed)*3);   // 2..4 tall
@@ -1652,7 +1675,11 @@ var World = {
   genDwarvenCity: function(ch){
     if(this.dim!=='overworld') return;
     var cx=ch.cx, cz=ch.cz;
-    if(hash3(cx,501,cz,this.seed^0xD9A2) > 0.016) return;       // ~1.6% of chunks (rare)
+    var _fr=hash3(cx,501,cz,this.seed^0xD9A2);
+    if(_fr > 0.008) return;                                       // much rarer now
+    for(var _sx=-3;_sx<=3;_sx++) for(var _sz=-3;_sz<=3;_sz++){    // and never within 3 chunks of a stronger candidate
+      if(_sx===0&&_sz===0) continue;
+      if(hash3(cx+_sx,501,cz+_sz,this.seed^0xD9A2) < _fr) return; }
     var floorY = 14 + (hash3(cx,502,cz,this.seed)*8|0);          // y 14..21
     var H=7, x0=1,x1=14,z0=1,z1=14, dx,dz,dy,x,y,z;
     var surf = ch.hmap[8*CHUNK+8] || SEA;
@@ -1695,23 +1722,31 @@ var World = {
     if(!this.tiles[dk]){ var dit=newArray(27); this.fillDungeonLoot(dit, cx*16+fc, cz*16+fc+2); this.tiles[dk]={type:'chest', items:dit}; }
     // ladder entrance shaft from a free corner up to the surface (so you can find it)
     var ex=13, ez=2;
-    for(y=floorY+1; y<=surf; y++){ setLocal(ch.blocks, ex, y, ez, B.LADDER); this.tiles[this.ck(cx*16+ex,y,cz*16+ez)]={type:'shape', shape:'ladder', face:'north'}; }
-    if(surf+1<WORLD_H) setLocal(ch.blocks, ex, surf+1, ez, B.AIR);
-    // an ancient stone monument crowns the shaft (so the entrance feels like a barrow door, not a hole)
-    if(surf+8<WORLD_H){
+    var msurf = ch.hmap[ex*CHUNK+ez] || surf;
+    var onLand = msurf > SEA+1;
+    if(onLand){
+      for(y=floorY+1; y<=msurf; y++){ setLocal(ch.blocks, ex, y, ez, B.LADDER); this.tiles[this.ck(cx*16+ex,y,cz*16+ez)]={type:'shape', shape:'ladder', face:'north'}; }
+      if(msurf+1<WORLD_H) setLocal(ch.blocks, ex, msurf+1, ez, B.AIR);
+    } else {
+      setLocal(ch.blocks, ex, floorY+5, ez, B.STONE);   // underwater column: seal the hall instead of a ladder into the sea
+    }
+    // an ancient stone monument crowns the shaft - on land only, standing on solid foundations
+    if(onLand && msurf+8<WORLD_H){
       for(var mx=-2;mx<=2;mx++) for(var mz=-2;mz<=2;mz++){ var qx=ex+mx,qz=ez+mz; if(qx<0||qx>15||qz<0||qz>15) continue;
-        if(!(mx===0&&mz===0)) setLocal(ch.blocks,qx,surf,qz,B.STONE);
+        var gcol=ch.hmap[qx*CHUNK+qz]||msurf;
+        for(var fy=msurf-1; fy>gcol && fy>msurf-8; fy--) setLocal(ch.blocks,qx,fy,qz,B.STONE);   // foundations reach down to the real ground
+        if(!(mx===0&&mz===0)) setLocal(ch.blocks,qx,msurf,qz,B.STONE);
         var edge2=(Math.abs(mx)===2||Math.abs(mz)===2);
         for(var my=1;my<=4;my++){
-          if(edge2) setLocal(ch.blocks,qx,surf+my,qz, ((mx+mz+my)&1)?B.COBBLE:B.STONE);   // weathered walls
-          else setLocal(ch.blocks,qx,surf+my,qz,B.AIR);
+          if(edge2) setLocal(ch.blocks,qx,msurf+my,qz, ((mx+mz+my)&1)?B.COBBLE:B.STONE);   // weathered walls
+          else setLocal(ch.blocks,qx,msurf+my,qz,B.AIR);
         }
-        if(Math.abs(mx)<=1&&Math.abs(mz)<=1) setLocal(ch.blocks,qx,surf+5,qz,B.COBBLE);   // vaulted cap
+        if(Math.abs(mx)<=1&&Math.abs(mz)<=1) setLocal(ch.blocks,qx,msurf+5,qz,B.COBBLE);   // vaulted cap
       }
-      setLocal(ch.blocks,ex,surf+1,ez+2,B.AIR); setLocal(ch.blocks,ex,surf+2,ez+2,B.AIR);   // arched doorway (south)
-      if(ex-1>=0) setLocal(ch.blocks,ex-1,surf+3,ez+2,B.LANTERN);
-      if(ex+1<=15) setLocal(ch.blocks,ex+1,surf+3,ez+2,B.LANTERN);
-      setLocal(ch.blocks,ex,surf+6,ez,B.BRASS_BLOCK);                                       // crown finial
+      setLocal(ch.blocks,ex,msurf+1,ez+2,B.AIR); setLocal(ch.blocks,ex,msurf+2,ez+2,B.AIR);   // arched doorway (south)
+      if(ex-1>=0) setLocal(ch.blocks,ex-1,msurf+3,ez+2,B.LANTERN);
+      if(ex+1<=15) setLocal(ch.blocks,ex+1,msurf+3,ez+2,B.LANTERN);
+      setLocal(ch.blocks,ex,msurf+6,ez,B.BRASS_BLOCK);                                       // crown finial
     }
     // register the city so dwarves move in
     var sk=cx+','+cz; if(!dwarfSiteSet[sk]){ dwarfSiteSet[sk]=1; dwarfSites.push({x:cx*16+8+0.5, y:floorY+1, z:cz*16+8+0.5}); }
@@ -2905,7 +2940,7 @@ function updateAvatarHeld(){
 function cycleView(){ viewMode=(viewMode+1)%3; toast(['First person','Third person (behind)','Third person (front)'][viewMode]); }
 function updateAvatar(){
   var rk = Player.riding && Player.riding.kind;
-  if(rk==='plane' || rk==='boat' || rk==='airship' || rk==='car' || rk==='truck'){
+  if(rk==='plane' || rk==='boat' || rk==='airship' || rk==='car' || rk==='truck' || rk==='rocket'){
     playerAvatar.rotation.x=0;
     if(avatarLimbs.armL){ avatarLimbs.legL.rotation.x=-1.35; avatarLimbs.legR.rotation.x=-1.35;   // knees up, seated
       avatarLimbs.armL.rotation.x=-0.6; avatarLimbs.armR.rotation.x=-0.6; }                        // hands forward on controls
@@ -4308,6 +4343,13 @@ function doPlace(){
       }
       Player.riding=veh; veh.ridden=true; sfxClick(); toast((veh.kind==='truck'?'Truck':'Motorcar')+': drive with the move stick, SNEAK to hop out'); return;
     }
+    if(veh && veh.kind==='rocket'){
+      if(Player.sneaking){ scene.remove(veh.mesh); var _rvi=entities.indexOf(veh); if(_rvi>=0) entities.splice(_rvi,1); giveItem('ROCKET',1); sfxClick(); toast('Packed up the rocket'); return; }
+      if(invCount('ROCKET_FUEL')<4){ toast('The rocket needs 4 Rocket Fuel aboard to launch'); sfxClick(); return; }
+      invTake('ROCKET_FUEL',4);
+      Player.riding=veh; veh.ridden=true; veh.phase='count'; veh.pt=3.5; veh.vy=0; if(veh.padY==null) veh.padY=Math.floor(veh.pos.y);
+      sfxClick(); toast('Ignition sequence started\u2026 hold on!'); return;
+    }
     var rideT=mobInFront(3.6);
     if(rideT && rideT.kind==='horse' && rideT.tamed){ Player.riding=rideT; rideT.ridden=true; sfxClick(); toast('Riding \u2014 tap SNEAK to dismount'); return; }
   }
@@ -4488,7 +4530,7 @@ function doPlace(){
     var ground=World.getBlock(hit.x,hit.y,hit.z);
     var sx=hit.x+hit.nx, syp=hit.y+hit.ny, sz=hit.z+hit.nz;
     if((ground===B.GRASS||ground===B.DIRT) && hit.ny>0 && World.getBlock(sx,syp,sz)===B.AIR){
-      var swood = slot.key==='SPRUCE_SAPLING'?'spruce': slot.key==='BIRCH_SAPLING'?'birch': slot.key==='CHERRY_SAPLING'?'cherry':'oak';
+      var swood = slot.key==='SPRUCE_SAPLING'?'spruce': slot.key==='BIRCH_SAPLING'?'birch': slot.key==='CHERRY_SAPLING'?'cherry': slot.key==='REDWOOD_SAPLING'?'redwood':'oak';
       World.tiles[World.ck(sx,syp,sz)]={type:'sapling', t:0, wood:swood};
       consumeSlot(slot,1); renderHotbar();
       var sch=World.getChunk(sx>>4,sz>>4,false); if(sch) buildPlantMesh(sch);
@@ -4510,6 +4552,11 @@ function doPlace(){
     return;
   }
   // Philosopher's Stone: tap a block to transmute it (EE classic)
+  if(slot && slot.key==='ROCKET' && hit.id===B.LAUNCH_PAD){   // stand the rocket on its launch pad
+    if(World.getBlock(hit.x,hit.y+1,hit.z)===B.AIR){
+      var rk=spawnEnemy('rocket', hit.x+0.5, hit.y+1.05, hit.z+0.5); if(rk) rk.padY=hit.y+1;
+      if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(); toast('Rocket mounted \u2014 board it with 4 Rocket Fuel to launch!'); }
+    return; }
   if(slot && slot.key==='LILY_PAD'){   // place a lily pad on the water surface you're aiming at
     var _ld=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
     for(var _lt=0.5;_lt<REACH;_lt+=0.4){ var _lx=Math.floor(Player.pos.x+_ld.x*_lt), _ly=Math.floor(Player.pos.y+Player.eye+_ld.y*_lt), _lz=Math.floor(Player.pos.z+_ld.z*_lt);
@@ -4766,6 +4813,7 @@ function shapeless(ing, out, outQty){ RECIPES.push({type:'shapeless', ing:ing, o
 
 shapeless([{key:'LOG',qty:1}],'PLANKS',4);
 shapeless([{key:'SPRUCE_LOG',qty:1}],'SPRUCE_PLANKS',4);
+shapeless([{key:'REDWOOD_LOG',qty:1}],'REDWOOD_PLANKS',4);
 shapeless([{key:'BIRCH_LOG',qty:1}],'BIRCH_PLANKS',4);
 shapeless([{key:'ASH_LOG',qty:1}],'ASH_PLANKS',4);
 shapeless([{key:'CHERRY_LOG',qty:1}],'CHERRY_PLANKS',4);
@@ -4879,6 +4927,7 @@ shaped([['WOOL','WOOL','WOOL'],['IRON_INGOT','BRASS_BLOCK','IRON_INGOT'],['PLANK
 shaped([['LEATHER','STICK','LEATHER'],['STICK','STICK','STICK'],[null,'STICK',null]], 'GLIDER', 1);
 shaped([[null,'IRON_PLATE',null],['IRON_PLATE','REDSTONE','IRON_PLATE'],['IRON_INGOT','ENERGY_CELL','IRON_INGOT']], 'MOTORCAR', 1);
 shaped([['IRON_PLATE','IRON_PLATE','PLANKS'],['IRON_PLATE','REDSTONE','PLANKS'],['IRON_INGOT','ENERGY_CELL','IRON_INGOT']], 'TRUCK', 1);
+shaped([['IRON_PLATE','IRON_PLATE','IRON_PLATE'],['IRON_PLATE','BRASS_BLOCK','IRON_PLATE'],['COBBLE','COBBLE','COBBLE']], 'LAUNCH_PAD', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],[null,'IRON_INGOT',null],['IRON_INGOT',null,'IRON_INGOT']], 'PROPELLER', 1);
 shaped([['PLANKS','PROPELLER','PLANKS'],['PLANKS','PLANKS','PLANKS'],[null,'STICK',null]], 'WOODEN_PLANE', 1);
 shaped([['STEEL_INGOT','STEEL_INGOT','STEEL_INGOT'],['STEEL_INGOT','STICK','STEEL_INGOT'],[null,'STICK',null]], 'STEEL_BATTLEAXE', 1);
@@ -6696,6 +6745,14 @@ function makeAirship(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c
   for(var b=0;b<3;b++){ var blade=new THREE.Mesh(new THREE.BoxGeometry(1.0,0.16,0.05),bM); blade.position.set(0.5,0,0); var pv=new THREE.Group(); pv.add(blade); pv.rotation.z=b*2.094; prop.add(pv); }
   g.add(prop); g.userData.prop=prop; return g;
 }
+function makeRocket(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
+  p(1.0,2.6,1.0,0xe8eaee,0,1.5,0);                                   // body
+  p(0.86,0.5,0.86,0xc23b3b,0,3.0,0); p(0.6,0.5,0.6,0xc23b3b,0,3.4,0); p(0.3,0.4,0.3,0xc23b3b,0,3.75,0);   // nose cone
+  p(0.34,0.34,0.06,0x8ad0f0,0,2.1,0.51);                             // porthole
+  p(0.14,1.2,0.7,0xb84a3a,-0.56,0.6,0); p(0.14,1.2,0.7,0xb84a3a,0.56,0.6,0); p(0.7,1.2,0.14,0xb84a3a,0,0.6,-0.56); p(0.7,1.2,0.14,0xb84a3a,0,0.6,0.56);   // fins
+  p(0.7,0.3,0.7,0x4a4f55,0,0.05,0);                                  // engine bell
+  return g;
+}
 function makeWheelMesh(){ var m=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.15,10), new THREE.MeshBasicMaterial({color:0x22262a})); m.rotation.z=Math.PI/2; return m; }
 function makeCar(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   p(1.1,0.4,2.0,0xa03428,0,0.62,0);                     // body
@@ -7129,6 +7186,7 @@ var MOBDEF={
   airship:{hp:140,w:2.4,h:3.0,sp:0,dmg:0,passive:true},
   car:{hp:60,w:1.2,h:1.1,sp:0,dmg:0,passive:true},
   truck:{hp:80,w:1.3,h:1.2,sp:0,dmg:0,passive:true},
+  rocket:{hp:200,w:1.0,h:4.2,sp:0,dmg:0,passive:true},
   villager:{hp:20,w:0.6,h:1.9,sp:1.1,dmg:0,passive:true,villager:true},
   dwarf:{hp:20,w:0.6,h:1.3,sp:1.2,dmg:0,passive:true},
   forgewright:{hp:26,w:0.6,h:1.9,sp:0.7,dmg:0,passive:true},
@@ -7148,7 +7206,7 @@ function meshFor(kind){ switch(kind){
   case 'fox':return makeFox(); case 'boar':return makeBoar(); case 'rabbit':return makeRabbit(); case 'frog':return makeFrog(); case 'monkey':return makeMonkey(); case 'knight':return makeKnight(); case 'zombie_villager':return zombifyMesh(makeVillager()); case 'zombie_dwarf':return zombifyMesh(makeDwarf());
   case 'bee':return makeBee();
   case 'boat':return makeBoat();
-  case 'plane':return makePlane(); case 'airship':return makeAirship(); case 'car':return makeCar(); case 'truck':return makeTruck();
+  case 'plane':return makePlane(); case 'airship':return makeAirship(); case 'car':return makeCar(); case 'truck':return makeTruck(); case 'rocket':return makeRocket();
   case 'villager':return makeVillager();
   case 'dwarf':return makeDwarf();
   case 'forgewright':return makeForgewright();
@@ -7490,7 +7548,7 @@ function tickProjectiles(dt){
     if(p.friendly){
       var hitE=null, bestD=1e9;
       for(var j=0;j<entities.length;j++){ var e=entities[j];
-        if(e.kind==='boat'||e.kind==='plane'||e.kind==='airship'||e.kind==='car'||e.kind==='truck'||e.kind==='fish'||e===Player.riding) continue;
+        if(e.kind==='boat'||e.kind==='plane'||e.kind==='airship'||e.kind==='car'||e.kind==='truck'||e.kind==='rocket'||e.kind==='fish'||e===Player.riding) continue;
         if(e.hp==null || e.hp<=0) continue;
         var ex=p.pos.x-e.pos.x, ez=p.pos.z-e.pos.z, hd=ex*ex+ez*ez, hw=(e.width||0.7)*0.5+0.4;
         if(hd < hw*hw && p.pos.y > e.pos.y-0.3 && p.pos.y < e.pos.y+(e.height||1.2)+0.3 && hd<bestD){ bestD=hd; hitE=e; } }
@@ -7571,6 +7629,11 @@ function tickEntities(dt){
         if(e.mesh.userData.prop) e.mesh.userData.prop.rotation.z += dt*22;
         continue;
       }
+      if(e.kind==='rocket'){
+        e.pos.x=pp.x; e.pos.z=pp.z; e.pos.y=pp.y-2.6;    // riding near the nose
+        e.mesh.position.set(e.pos.x, e.pos.y, e.pos.z);
+        continue;
+      }
       if(e.kind==='car'||e.kind==='truck'){
         e.pos.x=pp.x; e.pos.z=pp.z; e.pos.y=pp.y+0.15;   // seated in the cab
         e.mesh.position.set(e.pos.x, e.pos.y-0.55, e.pos.z); e.mesh.rotation.set(0, Player.yaw+Math.PI, 0, 'YXZ');
@@ -7599,7 +7662,7 @@ function tickEntities(dt){
     if(e.kind==='boat'){ boatTick(e,dt); continue; }
     if(e.kind==='plane'){ planeTick(e,dt); continue; }
     if(e.kind==='airship'){ airshipTick(e,dt); continue; }
-    if(e.kind==='car'||e.kind==='truck'){ carTick(e,dt); continue; }
+    if(e.kind==='car'||e.kind==='truck'||e.kind==='rocket'){ carTick(e,dt); continue; }
     if(e.kind==='bird'){ birdTick(e,dt);
       if(e.hp<=0){ scene.remove(e.mesh); entities.splice(i,1); if(Math.random()<0.7) giveItem('FEATHER',1); giveXP(1); continue; }
       if(dist>92){ scene.remove(e.mesh); entities.splice(i,1); }
@@ -7740,7 +7803,7 @@ function mobInFront(maxd){
 function vehicleInFront(maxd){
   var dir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch,Player.yaw,0,'YXZ'));
   var best=null, bestD=1e9;
-  for(var i=0;i<entities.length;i++){ var e=entities[i]; if(e.kind!=='plane' && e.kind!=='boat' && e.kind!=='airship' && e.kind!=='car' && e.kind!=='truck') continue;
+  for(var i=0;i<entities.length;i++){ var e=entities[i]; if(e.kind!=='plane' && e.kind!=='boat' && e.kind!=='airship' && e.kind!=='car' && e.kind!=='truck' && e.kind!=='rocket') continue;
     var dx=e.pos.x-Player.pos.x, dy=(e.pos.y+0.4)-(Player.pos.y+Player.eye), dz=e.pos.z-Player.pos.z;
     var d=Math.sqrt(dx*dx+dy*dy+dz*dz); if(d>(maxd||4.4)) continue;
     var dot=(dx*dir.x+dy*dir.y+dz*dir.z)/(d||1);
@@ -7772,7 +7835,7 @@ function hitEntity(e){
 }
 var playerAtkCd=0;
 function attackEntities(){ var e=mobInFront(); if(!e) return false;
-  if((e.kind==='plane'||e.kind==='boat'||e.kind==='airship'||e.kind==='car'||e.kind==='truck') && !Player.riding){ doPlace(); return true; }   // tap a vehicle to board it, not attack it
+  if((e.kind==='plane'||e.kind==='boat'||e.kind==='airship'||e.kind==='car'||e.kind==='truck'||e.kind==='rocket') && !Player.riding){ doPlace(); return true; }   // tap a vehicle to board it, not attack it
   if(e.kind==='forgewright'){ return true; }   // the Forgewright is interact-only (Aether Forge)
   // villagers & dwarves CAN be attacked now (trading is on the use/interact button)
   if(playerAtkCd<=0){ hitEntity(e); playerAtkCd=0.42; triggerHandSwing(); }
@@ -8072,11 +8135,11 @@ function tryFeedAnimal(slot){
     if(tgt && tgt.passive && !tgt.baby && !(tgt.loveCd>0)){ consumeSlot(slot,1); renderHotbar(); tgt.love=12; sfxClick(); spawnHearts(tgt); breedCheck(tgt); return true; } }
   return false;
 }
-function saplingForLeaf(id){ return id===B.SPRUCE_LEAVES?'SPRUCE_SAPLING': id===B.BIRCH_LEAVES?'BIRCH_SAPLING': id===B.CHERRY_LEAVES?'CHERRY_SAPLING':'OAK_SAPLING'; }
+function saplingForLeaf(id){ return id===B.SPRUCE_LEAVES?'SPRUCE_SAPLING': id===B.BIRCH_LEAVES?'BIRCH_SAPLING': id===B.CHERRY_LEAVES?'CHERRY_SAPLING': id===B.REDWOOD_LEAVES?'REDWOOD_SAPLING':'OAK_SAPLING'; }
 function growSaplingTree(x,y,z,wood){
-  var logId = wood==='spruce'?B.SPRUCE_LOG: wood==='birch'?B.BIRCH_LOG: wood==='cherry'?B.CHERRY_LOG: B.LOG;
-  var leafId= wood==='spruce'?B.SPRUCE_LEAVES: wood==='birch'?B.BIRCH_LEAVES: wood==='cherry'?B.CHERRY_LEAVES: B.LEAVES;
-  var th=(wood==='spruce'?6:4)+(hash3(x,2,z,World.seed)*3|0);
+  var logId = wood==='spruce'?B.SPRUCE_LOG: wood==='birch'?B.BIRCH_LOG: wood==='cherry'?B.CHERRY_LOG: wood==='redwood'?B.REDWOOD_LOG: B.LOG;
+  var leafId= wood==='spruce'?B.SPRUCE_LEAVES: wood==='birch'?B.BIRCH_LEAVES: wood==='cherry'?B.CHERRY_LEAVES: wood==='redwood'?B.REDWOOD_LEAVES: B.LEAVES;
+  var th=(wood==='redwood'?10:wood==='spruce'?6:4)+(hash3(x,2,z,World.seed)*3|0);
   for(var t=0;t<th;t++) World.setBlock(x,y+t,z,logId,true);
   var top=y+th-1;
   if(wood==='spruce'){ // conical canopy
@@ -9177,6 +9240,7 @@ function physics(dt){
   var ridingPlane = riding && Player.riding.kind==='plane';
   var ridingAirship = riding && Player.riding.kind==='airship';
   var ridingCar = riding && (Player.riding.kind==='car'||Player.riding.kind==='truck');
+  var ridingRocket = riding && Player.riding.kind==='rocket';
   if(Player.riding && !riding) Player.riding=null;
   if(riding && (input.crouch || (!IS_MOBILE && (keys['ControlLeft']||keys['KeyC'])))){ dismountHorse(); riding=false; }
   var speed = ridingBoat?(Player.boatFloating?7.4:1.8):(riding?8.2:(Player.inWater?3.2:(Player.sneaking?2.4:(Player.sprinting?6.8:4.6))));
@@ -9286,6 +9350,21 @@ function physics(dt){
     var _cr=new THREE.Vector3(1,0,0).applyEuler(new THREE.Euler(0,Player.yaw,0,'YXZ'));
     var _cv=(Player.riding.kind==='truck')?7.5:9.5;
     Player.vel.x=(_cd.x*_cf+_cr.x*_cs)*_cv; Player.vel.z=(_cd.z*_cf+_cr.z*_cs)*_cv;
+  }
+  if(ridingRocket){
+    var _rk=Player.riding;
+    Player.vel.x=0; Player.vel.z=0;
+    if(_rk.phase==='count'){ Player.vel.y=0; _rk.pt-=dt; if(_rk.pt<=0){ _rk.phase='up'; _rk.vy=6; toast('LIFTOFF!'); } }
+    else if(_rk.phase==='up'){
+      _rk.vy=Math.min(34, _rk.vy+15*dt); Player.vel.y=_rk.vy; fellFrom=null;
+      if(Math.random()<0.8){ try{ spawnSteam(_rk.pos.x+(Math.random()-0.5)*0.8, Player.pos.y-3.4, _rk.pos.z+(Math.random()-0.5)*0.8, Math.random()<0.4?0xffb060:0xdfe6ee); }catch(_){ } }
+      if(Player.pos.y > WORLD_H+120){ _rk.phase='down'; toast('You touched the edge of space! The Moon itself arrives in the next update\u2026'); }
+    }
+    else if(_rk.phase==='down'){
+      Player.vel.y=-9; fellFrom=null;
+      if(Player.pos.y <= (_rk.padY||60)+0.5){ _rk.phase=null; Player.vel.y=0; Player.riding=null; _rk.ridden=false; toast('Touchdown. Welcome back, astronaut'); }
+    }
+    else { Player.vel.y=0; }
   }
   moveAxis('x', Player.vel.x*dt);
   moveAxis('z', Player.vel.z*dt);
@@ -9613,8 +9692,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 152';
+var VERSION='Update 153';
 var CHANGELOG=[
+  { v:'Update 153', t:'Redwoods, Liftoff & Forge Fixes', items:['<b>Redwood Grove biome!</b> A new forest of <b>towering redwoods</b> \u2014 thick russet trunks up to 16 blocks tall with high canopies. A full new wood set: Redwood logs, planks and saplings you can grow yourself','<b>MoonQuest Part 2 \u2014 the Launch Pad!</b> Craft a Launch Pad (iron plates + brass), mount your assembled Rocket on it, board with <b>4 Rocket Fuel</b>, and hold on: ignition countdown, flame-and-steam liftoff, up past the clouds to the edge of space \u2014 then a gentle descent back to the pad. The Moon dimension itself lands next update','<b>Dwarf-forge monuments fixed</b> \u2014 they\u2019re much rarer now, never spawn within 3 chunks of each other, only surface <b>on land</b> (underwater halls stay sealed secrets), and stand on stone foundations instead of floating over slopes'] },
   { v:'Update 152', t:'Minecraft-Style Cobblestone', items:['<b>Cobblestone rebuilt from scratch</b> \u2014 now a proper 16\u00d716 pixel-art texture: irregular flat grey stones in four shades with thin dark seams between them, just like Minecraft. No dots, no moss'] },
   { v:'Update 151', t:'Cobblestone Fixed (for real)', items:['<b>Cobblestone redone</b> \u2014 the last pass rendered as dots on black with huge green blotches. Now the stones fill the face edge-to-edge with <b>thin dark cracks</b> between them and <b>small moss flecks only inside the cracks</b>, like the reference'] },
   { v:'Update 150', t:'Slate Cobble, Hunger & Hive Polish', items:['<b>Cobblestone remade</b> \u2014 angular interlocked slate stones in a dark blue-grey, with thin cracks and <b>moss creeping through the seams</b>, matched to the reference','<b>Lily pads</b> now rest right on the water (no more dark ring under them) and have a proper pad icon in your inventory','<b>Hunger works like Minecraft now</b> \u2014 standing still barely drains it, walking drains normally, and <b>sprinting and jumping are what make you hungry</b>. Easy drains slower, Peaceful never drains','<b>Beehives look like beehives</b> \u2014 wooden slat bands with a dark entrance hole on the sides'] },
