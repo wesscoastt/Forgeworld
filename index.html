@@ -2616,8 +2616,9 @@ function buildChunkGeometry(chunk){
       I.push(s,s+1,s+2,s,s+2,s+3);
     }
   }
-  function emitBox(P,C,L,U,D,I, lx,ly,lz, x0,y0,z0,x1,y1,z1, texId, sky, blv){
+  function emitBox(P,C,L,U,D,I, lx,ly,lz, x0,y0,z0,x1,y1,z1, texId, sky, blv, uvv0, uvv1){
     var wx=cx*CHUNK+lx, wz=cz*CHUNK+lz;
+    var _v0=(uvv0==null)?0:uvv0, _v1=(uvv1==null)?1:uvv1;
     for(var f=0; f<6; f++){
       var fc=FACES[f], n=fc.dir;
       var flush=(n[0]===1&&x1===1)||(n[0]===-1&&x0===0)||(n[1]===1&&y1===1)||(n[1]===-1&&y0===0)||(n[2]===1&&z1===1)||(n[2]===-1&&z0===0);
@@ -2627,7 +2628,7 @@ function buildChunkGeometry(chunk){
         var co=fc.corners[v];
         P.push(lx+(co[0]?x1:x0), ly+(co[1]?y1:y0), lz+(co[2]?z1:z0));
         C.push(col[0]/255*shade, col[1]/255*shade, col[2]/255*shade);
-        L.push(sky/15, blv/15); U.push(UVC[v][0], UVC[v][1]); D.push(decor);
+        L.push(sky/15, blv/15); var _uy=UVC[v][1]; if(fc.cat===2){ _uy=_v0+(_v1-_v0)*_uy; } U.push(UVC[v][0], _uy); D.push(decor);
       }
       I.push(start,start+1,start+2, start,start+2,start+3);
     }
@@ -2714,16 +2715,18 @@ function buildChunkGeometry(chunk){
       var dir2=tile.dir, open=tile.open, hinge=tile.hinge||'l';
       if(tile.doorTop){ var bt=World.tiles[World.ck(wx,ly-1,wz)]; if(bt){ dir2=bt.dir; open=bt.open; hinge=bt.hinge||'l'; } }
       dir2=dir2||'north'; var T=0.18;
+      var dv0=tile.doorTop?0.5:0.0, dv1=tile.doorTop?1.0:0.5;   // top leaf shows upper half of the panel, bottom leaf the lower half
+      function dbox(x0,y0,z0,x1,y1,z1){ emitBox(P,C,L,U,D,I, lx,ly,lz, x0,y0,z0,x1,y1,z1, texId, sky, bl, dv0, dv1); }
       if(!open){
-        if(dir2==='south') box(0,0,1-T,1,1,1);
-        else if(dir2==='east') box(1-T,0,0,1,1,1);
-        else if(dir2==='west') box(0,0,0,T,1,1);
-        else box(0,0,0,1,1,T);
+        if(dir2==='south') dbox(0,0,1-T,1,1,1);
+        else if(dir2==='east') dbox(1-T,0,0,1,1,1);
+        else if(dir2==='west') dbox(0,0,0,T,1,1);
+        else dbox(0,0,0,1,1,T);
       } else {
         if(dir2==='north'||dir2==='south'){
-          if(hinge==='l') box(0,0,0,T,1,1); else box(1-T,0,0,1,1,1);
+          if(hinge==='l') dbox(0,0,0,T,1,1); else dbox(1-T,0,0,1,1,1);
         } else {
-          if(hinge==='l') box(0,0,0,1,1,T); else box(0,0,1-T,1,1,1);
+          if(hinge==='l') dbox(0,0,0,1,1,T); else dbox(0,0,1-T,1,1,1);
         }
       }
     }
@@ -2826,20 +2829,39 @@ function buildAvatarModel(L){ var g=new THREE.Group();
   p(0.1,0.1,0.02,0x14110f,-0.12,1.64,0.26); p(0.1,0.1,0.02,0x14110f,0.12,1.64,0.26);
   p(0.04,0.04,0.02,0xf4f4ff,-0.13,1.66,0.27); p(0.04,0.04,0.02,0xf4f4ff,0.11,1.66,0.27);
   p(0.18,0.035,0.02,0x6e3a2c,0,1.52,0.26);
-  L.torso=p(0.5,0.74,0.26,SHIRT,0,1.05,0);
+  L.torso=p(0.56,0.72,0.3,SHIRT,0,1.06,0);
   p(0.52,0.08,0.28,0x3a2c1c,0,0.72,0); p(0.1,0.06,0.03,0xd9b24a,0,0.72,0.15);   // belt + buckle
-  L.armL=limb(0.18,0.74,0.22,SKIN,-0.34,1.4,0);
-  L.armR=limb(0.18,0.74,0.22,SKIN,0.34,1.4,0);
-  var _slL=new THREE.Mesh(new THREE.BoxGeometry(0.21,0.32,0.25), L.torso.material); _slL.position.set(0,-0.14,0); L.armL.add(_slL);
-  var _slR=new THREE.Mesh(new THREE.BoxGeometry(0.21,0.32,0.25), L.torso.material); _slR.position.set(0,-0.14,0); L.armR.add(_slR);   // shirt sleeves (retint with the shirt)
-  L.legL=limb(0.2,0.74,0.24,PANTS,-0.12,0.68,0);
-  L.legR=limb(0.2,0.74,0.24,PANTS,0.12,0.68,0);
-  L.footL=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.13,0.3), new THREE.MeshBasicMaterial({color:0x2a2f52})); L.footL.position.set(0,-0.74,0.04); L.legL.add(L.footL);
-  L.footR=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.13,0.3), new THREE.MeshBasicMaterial({color:0x2a2f52})); L.footR.position.set(0,-0.74,0.04); L.legR.add(L.footR);
+  L.armL=limb(0.2,0.66,0.24,SKIN,-0.38,1.42,0);
+  L.armR=limb(0.2,0.66,0.24,SKIN,0.38,1.42,0);
+  var _slL=new THREE.Mesh(new THREE.BoxGeometry(0.23,0.44,0.27), L.torso.material); _slL.position.set(0,-0.2,0); L.armL.add(_slL);
+  var _slR=new THREE.Mesh(new THREE.BoxGeometry(0.23,0.44,0.27), L.torso.material); _slR.position.set(0,-0.2,0); L.armR.add(_slR);   // full shirt sleeves
+  L.legL=limb(0.24,0.7,0.26,PANTS,-0.14,0.7,0);
+  L.legR=limb(0.24,0.7,0.26,PANTS,0.14,0.7,0);
+  L.footL=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.13,0.3), new THREE.MeshBasicMaterial({color:0x2a2f52})); L.footL.position.set(0,-0.7,0.04); L.legL.add(L.footL);
+  L.footR=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.13,0.3), new THREE.MeshBasicMaterial({color:0x2a2f52})); L.footR.position.set(0,-0.7,0.04); L.legR.add(L.footR);
   return g;
 }
 var playerAvatar=buildAvatarModel(avatarLimbs); playerAvatar.visible=false;
 scene.add(playerAvatar);
+var _shadowTex=null;
+function shadowTexture(){ if(_shadowTex) return _shadowTex; var c=document.createElement('canvas'); c.width=c.height=64; var x=c.getContext('2d'); var g=x.createRadialGradient(32,32,2,32,32,31); g.addColorStop(0,'rgba(0,0,0,0.75)'); g.addColorStop(0.55,'rgba(0,0,0,0.45)'); g.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=g; x.fillRect(0,0,64,64); _shadowTex=new THREE.CanvasTexture(c); _shadowTex.needsUpdate=true; return _shadowTex; }
+function makeBlobShadow(sz){ var mat=new THREE.MeshBasicMaterial({map:shadowTexture(), transparent:true, opacity:0.7, depthWrite:false, depthTest:false, fog:false}); var m=new THREE.Mesh(new THREE.PlaneGeometry(sz,sz), mat); m.rotation.x=-Math.PI/2; m.renderOrder=999; scene.add(m); return m; }
+var playerShadow=makeBlobShadow(1.0);
+function groundYAt(wx,wy,wz){ var gx=Math.floor(wx), gz=Math.floor(wz); var top=Math.floor(wy); for(var gy=top; gy>top-24; gy--){ if(isSolid(World.getBlock(gx,gy,gz))) return gy+1; } return null; }
+function updateShadows(){
+  if(playerShadow){ var gy=groundYAt(Player.pos.x,Player.pos.y,Player.pos.z);
+    if(gy!=null){ var fall=Player.pos.y-gy; playerShadow.visible=(!cameraFirstPerson||true)&&fall<6; playerShadow.position.set(Player.pos.x,gy+0.05,Player.pos.z); var sc=Math.max(0.4,1.0-fall*0.09); playerShadow.scale.setScalar(sc); playerShadow.material.opacity=Math.max(0,0.6-fall*0.08); }
+    else playerShadow.visible=false;
+    if(cameraFirstPerson) playerShadow.visible=false;
+  }
+  for(var i=0;i<entities.length;i++){ var e=entities[i]; if(e.hp!=null&&e.hp<=0){ if(e._shadow){e._shadow.visible=false;} continue; }
+    if(e.kind==='fish'||e.kind==='plane'||e.kind==='airship'||e.kind==='rocket'){ if(e._shadow)e._shadow.visible=false; continue; }
+    var dxs=e.pos.x-Player.pos.x, dzs=e.pos.z-Player.pos.z; if(dxs*dxs+dzs*dzs>40*40){ if(e._shadow){e._shadow.visible=false;} continue; }
+    if(!e._shadow) e._shadow=makeBlobShadow((MOBDEF[e.kind]&&MOBDEF[e.kind].w?MOBDEF[e.kind].w*2.6:1.2));
+    var egy=groundYAt(e.pos.x,e.pos.y,e.pos.z);
+    if(egy!=null){ e._shadow.visible=true; e._shadow.position.set(e.pos.x,egy+0.05,e.pos.z); } else e._shadow.visible=false;
+  }
+}
 var playerHat=null; try{ playerHat=localStorage.getItem('fw_hat')||null; }catch(e){}
 var COSMETICS={
   shirt:[ {id:'teal',name:'Teal Tunic',col:0x2e8b9b,def:true}, {id:'red',name:'Red Jersey',col:0xc0392b,ach:'first_kill'}, {id:'green',name:'Ranger Green',col:0x3f7a3a,ach:'rancher'}, {id:'blue',name:'Diamond Blue',col:0x3fa0d0,ach:'diamonds'}, {id:'gold',name:'Golden Vest',col:0xd4af37,ach:'survivor'}, {id:'purple',name:'Royal Purple',col:0x7a3f9a,ach:'marksman'} ],
@@ -5311,22 +5333,8 @@ function spacer(h){ var d=document.createElement('div'); d.style.height=h+'px'; 
 
 function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER'||k==='ANY_PLANKS') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
 var palNameEl=null, invNameEl=null, lastSlotName='';
+function cosCss(cat,base){ var c=cosItem(cat, playerCos[cat]); if(c&&c.col!=null){ return '#'+('000000'+c.col.toString(16)).slice(-6); } return base; }
 function makeAvatarPreview(){
-  if(typeof THREE!=='undefined' && typeof buildAvatarModel==='function'){
-    var box=document.createElement('div'); box.style.cssText='width:96px;height:178px;background:linear-gradient(#10202e,#0a0e16);border:2px solid #0007;border-radius:6px;flex:none;overflow:hidden;';
-    var cv=document.createElement('canvas'); cv.width=96; cv.height=178; cv.style.cssText='width:96px;height:178px;'; box.appendChild(cv);
-    try{
-      var rr=new THREE.WebGLRenderer({canvas:cv, alpha:true, antialias:true}); rr.setClearColor(0x000000,0);
-      var sc=new THREE.Scene(); var cm=new THREE.PerspectiveCamera(30,96/178,0.1,50); cm.position.set(0,1.0,4.6); cm.lookAt(0,0.95,0);
-      var L2={}; var av=buildAvatarModel(L2); sc.add(av);
-      applyCosmeticsTo(av, L2, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, armor:(typeof inv!=='undefined'&&inv.armor)});
-      var spin=0; (function draw(){ if(!document.body.contains(cv)) return; spin+=0.02; av.rotation.y=spin; rr.render(sc,cm); requestAnimationFrame(draw); })();
-    }catch(_){ }
-    return box;
-  }
-  return _makeAvatarPreviewCSS();
-}
-function _makeAvatarPreviewCSS(){
   var box=document.createElement('div'); box.style.cssText='width:80px;height:178px;background:linear-gradient(#10202e,#0a0e16);border:2px solid #0007;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;';
   var fig=document.createElement('div'); fig.style.cssText='position:relative;width:50px;height:140px;';
   function aCol(slot, base){ if(slot && ITEMS[slot.key]){ var n=slot.key; if(n.indexOf('DIAMOND')>=0) return '#5fe9e0'; if(n.indexOf('IRON')>=0) return '#d2d2d2'; if(n.indexOf('GOLD')>=0) return '#e9d24a'; if(n.indexOf('LEATHER')>=0) return '#9a6a3a'; } return base; }
@@ -5335,10 +5343,11 @@ function _makeAvatarPreviewCSS(){
   pc(4,5,11,18,'#23150e'); pc(4,5,11,29,'#23150e');                               // eyes
   pc(2,2,12,19,'#eef6ff'); pc(2,2,12,30,'#eef6ff');                               // eye glints
   pc(9,2,20,21,'#6e3a2c');                                                        // mouth
-  pc(32,38,26,9, aCol(inv.armor[1],'#3a7d8c'));                                   // chest
+  pc(32,38,26,9, aCol(inv.armor[1], cosCss('shirt','#3a7d8c')));                  // chest = your shirt
+  pc(8,12,26,1, aCol(inv.armor[1], cosCss('shirt','#3a7d8c'))); pc(8,12,26,41, aCol(inv.armor[1], cosCss('shirt','#3a7d8c')));   // shirt sleeves over the shoulders
   pc(8,34,28,1,'#d6a47c'); pc(8,34,28,41,'#d6a47c');                              // arms
-  pc(13,34,66,10, aCol(inv.armor[2],'#37506e')); pc(13,34,66,27, aCol(inv.armor[2],'#37506e')); // legs
-  pc(13,14,100,10, aCol(inv.armor[3],'#444a52')); pc(13,14,100,27, aCol(inv.armor[3],'#444a52')); // boots
+  pc(13,34,66,10, aCol(inv.armor[2], cosCss('pants','#37506e'))); pc(13,34,66,27, aCol(inv.armor[2], cosCss('pants','#37506e'))); // legs = your pants
+  pc(13,14,100,10, aCol(inv.armor[3], cosCss('shoes','#444a52'))); pc(13,14,100,27, aCol(inv.armor[3], cosCss('shoes','#444a52'))); // boots = your shoes
   box.appendChild(fig); return box;
 }
 function makePaletteSlot(key){
@@ -9754,6 +9763,7 @@ function loop(t){
   renderer.autoClear=true;
   updateMobBars(dt); tickDmgNumbers(dt);
   updateTurbineRotors(dt);
+  try{ updateShadows(); }catch(_){ }
   renderer.render(scene,camera);
   if(!running){ try{ renderCharPreview(); }catch(_){} }
   updateWaypointHud();
@@ -9805,8 +9815,13 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 156';
+var VERSION='Update 161';
 var CHANGELOG=[
+  { v:'Update 161', t:'Better Character & Visible Shadows', items:['<b>Character reproportioned</b> \u2014 broader torso, shorter arms with full shirt sleeves (no more long bare arms), sturdier legs','<b>Shadows now draw on top of everything</b> (depth-test off) so they\u2019re always visible \u2014 bigger and darker under every creature'] },
+  { v:'Update 160', t:'Shadows Actually Show', items:['<b>Shadows fixed</b> \u2014 they were sinking into the ground / being eaten by fog. Now they draw with a polygon-offset on top of the floor, fog off, so the soft dark disc under you and every creature is clearly visible'] },
+  { v:'Update 159', t:'Fix Blue Speck & Shadows', items:['<b>Removed the floating blue speck</b> \u2014 a shirt-sleeve piece was sitting off the arm, both on the inventory doll and on your in-world model','<b>Shadows show now</b> \u2014 they were searching upward for the floor and missing it; now they land correctly under you and every creature, a bit darker and larger'] },
+  { v:'Update 158', t:'Fix Black Character', items:['<b>Fixed the black character panel</b> in the inventory \u2014 the little 3D render failed on some devices. It\u2019s back to the reliable paper-doll, now painted with your real shirt, pants and shoe colours so it still updates when you change clothes'] },
+  { v:'Update 157', t:'Door Texture & Shadows', items:['<b>Door texture fixed</b> \u2014 the full door pattern was drawn on both the top and bottom halves, so it looked doubled. Now the top leaf shows the top of the panel and the bottom leaf the bottom, forming one continuous door like Minecraft','<b>Shadows!</b> The player and every creature now cast a soft round shadow on the ground that shrinks as you jump or fall'] },
   { v:'Update 156', t:'Doll, Doors, Bench & Big Fixes', items:['<b>Inventory character is now a live 3D model of YOU</b> \u2014 spinning, wearing your real shirt, pants, hat and armor, updating in real time (no more teal placeholder)','<b>Fixed the floating orange squares</b> on dwarves/skeletons and the <b>white-covered mobs</b> \u2014 a hurt-flash bug was stranding add-on parts (eyes, armor) mid-flash','<b>Crafting Table &amp; Carpenter\u2019s Bench retextured from scratch</b> \u2014 real pixel-art: the table has a 3\u00d73 grid top and tool trim, the bench has plank slats with a tool rail. No more random dots, and they no longer share a texture','<b>Doors place like Minecraft</b> now (hinge on the near side, facing you) and <b>two side-by-side doors act as double doors</b> \u2014 opening one swings both','<b>Held item fixes:</b> a picked-up stack no longer flashes in the top-left corner, and its name label now clears properly when you put it down or reopen the inventory','Item names show when you hover or pick up, and clear when you move away'] },
   { v:'Update 155', t:'Controller Everywhere, Auto-Equip & Style', items:['<b>Controller works everywhere now</b> \u2014 the Wardrobe, the Skills screen, the Carpenter\u2019s Bench and the Cooking Pot are all fully navigable (craftable rows highlight green and press with A)','<b>Auto-Equip</b> \u2014 one button in the inventory\u2019s equipment panel puts on the best armor from your bags','<b>Helmets are open-faced now</b> \u2014 a proper cap with brow ring and cheek guards instead of a box over your whole face, and all armor pieces are shaded/textured like the body','<b>Character glow-up</b> \u2014 fuller hair (back and sides), real shirt sleeves that re-tint with whatever shirt you wear, and a belt with a brass buckle','<b>Recipe Book search</b> \u2014 type to filter recipes live and find exactly what you need','<b>Dragging an item now shows its name</b> under the icon so you always know what you grabbed','<b>Beds craft from any planks</b> (oak, spruce, birch, cherry, ash or redwood), the wool sets the blanket color like Minecraft \u2014 and you can now <b>dye a bed</b> (bed + dye) to recolor it','<b>Crafting Table &amp; Carpenter\u2019s Bench textures</b> \u2014 the table has its tool grid on top, the bench has slatted sides with a hanging tool rack','Typing in a search box no longer triggers game controls'] },
   { v:'Update 154', t:'THE MOON (MoonQuest Part 3)', items:['<b>The Moon is real.</b> Board your fueled rocket, ride the launch past the edge of the sky, and land on a <b>grey cratered moonscape</b> under a black, star-filled sky','<b>Low gravity</b> \u2014 a third of home. Bound across craters in huge floating leaps','<b>Moon resources</b> \u2014 dig through Moon Dust into Moon Rock to find glowing <b>Moonstone Ore</b>\u2026 and yes, veins of actual <b>Moon Cheese</b> (a hearty snack, of course)','<b>Getting home:</b> your rocket lands beside you on the Moon \u2014 board it with 4 more Rocket Fuel to fly back. Pack fuel for the round trip!','No weather, no mobs, no birdsong \u2014 just you, the dust and the stars. (Part 4 \u2014 space suits &amp; oxygen \u2014 comes later)'] },
