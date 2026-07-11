@@ -706,6 +706,7 @@ mat('EGG','Egg',[242,228,202],{stack:16});
 mat('BOILED_EGG','Boiled Egg',[246,238,214],{food:5,stack:16});
 mat('REDWOOD_SAPLING','Redwood Sapling',[70,130,60],{stack:64});
 mat('MOONSTONE','Moonstone',[182,198,244],{stack:64});
+mat('ANY_PLANKS','Any Planks',[178,140,86]);
 mat('CHEESE','Moon Cheese',[240,218,116],{food:8,stack:16});
 mat('COCONUT','Coconut',[176,132,88],{food:4,stack:16});
 mat('BANANA','Banana',[236,206,72],{food:4,stack:16});
@@ -2486,7 +2487,8 @@ function decorFor(id, f, frontF){
   if(id===B.BEEHIVE) return 28;
   if(isChest(id)){ if(f===frontF) face=3; return 1*8+face; }    // front faces placement direction
   if(id===B.FURNACE){ if(f===frontF) face=3; return 2*8+face; }
-  if(isCrafting(id)) return 3*8+face;
+  if(isCrafting(id)) return 32+face;
+  if(id===B.FURNITURE_BENCH) return 29;
   if(id===B.COAL_ORE) return 4*8+2;
   if(id===B.IRON_ORE) return 5*8+2;
   if(id===B.GOLD_ORE) return 6*8+2;
@@ -2820,12 +2822,16 @@ function buildAvatarModel(L){ var g=new THREE.Group();
   var SKIN=0xc99a6b, SHIRT=0x2e8b9b, PANTS=0x35407a;
   L.head=p(0.5,0.5,0.5,SKIN,0,1.62,0);
   p(0.52,0.12,0.52,0x6b4a2e,0,1.84,0);
+  p(0.52,0.28,0.06,0x6b4a2e,0,1.74,-0.24); p(0.06,0.2,0.52,0x6b4a2e,-0.24,1.78,0); p(0.06,0.2,0.52,0x6b4a2e,0.24,1.78,0);   // hair back + sides
   p(0.1,0.1,0.02,0x14110f,-0.12,1.64,0.26); p(0.1,0.1,0.02,0x14110f,0.12,1.64,0.26);
   p(0.04,0.04,0.02,0xf4f4ff,-0.13,1.66,0.27); p(0.04,0.04,0.02,0xf4f4ff,0.11,1.66,0.27);
   p(0.18,0.035,0.02,0x6e3a2c,0,1.52,0.26);
   L.torso=p(0.5,0.74,0.26,SHIRT,0,1.05,0);
+  p(0.52,0.08,0.28,0x3a2c1c,0,0.72,0); p(0.1,0.06,0.03,0xd9b24a,0,0.72,0.15);   // belt + buckle
   L.armL=limb(0.18,0.74,0.22,SKIN,-0.34,1.4,0);
   L.armR=limb(0.18,0.74,0.22,SKIN,0.34,1.4,0);
+  var _slL=new THREE.Mesh(new THREE.BoxGeometry(0.21,0.32,0.25), L.torso.material); _slL.position.set(0,-0.14,0); L.armL.add(_slL);
+  var _slR=new THREE.Mesh(new THREE.BoxGeometry(0.21,0.32,0.25), L.torso.material); _slR.position.set(0,-0.14,0); L.armR.add(_slR);   // shirt sleeves (retint with the shirt)
   L.legL=limb(0.2,0.74,0.24,PANTS,-0.12,0.68,0);
   L.legR=limb(0.2,0.74,0.24,PANTS,0.12,0.68,0);
   L.footL=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.13,0.3), new THREE.MeshBasicMaterial({color:0x2a2f52})); L.footL.position.set(0,-0.74,0.04); L.legL.add(L.footL);
@@ -2859,9 +2865,9 @@ function buildGlasses(id){ var g=new THREE.Group(); function b(w,h,d,c,x,y,z){ v
 }
 // apply a full cosmetic set to an avatar's limbs (used by the player model AND the menu preview)
 function armorTint(key){ if(!key) return null; if(key.indexOf('DIAMOND')>=0) return 0x5fe9e0; if(key.indexOf('IRON')>=0) return 0xd2d2d2; if(key.indexOf('GOLD')>=0) return 0xe9d24a; if(key.indexOf('LEATHER')>=0) return 0x9a6a3a; if(key.indexOf('CHAIN')>=0) return 0x8a8f98; return 0xbfc4cc; }
-function buildArmorPiece(kind, tint){ var g=new THREE.Group(); var m=new THREE.MeshBasicMaterial({color:tint});
+function buildArmorPiece(kind, tint){ var g=new THREE.Group(); var m=new THREE.MeshBasicMaterial({color:tint, map:(typeof mobNoiseTex!=='undefined'?mobNoiseTex:null)});
   function b(w,h,d,x,y,z){ var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); g.add(me); }
-  if(kind==='head'){ b(0.6,0.34,0.6,0,1.74,0); b(0.62,0.14,0.14,0,1.55,0.26); }
+  if(kind==='head'){ b(0.56,0.22,0.56,0,1.85,0); b(0.6,0.1,0.6,0,1.73,0); b(0.08,0.28,0.5,-0.27,1.56,-0.02); b(0.08,0.28,0.5,0.27,1.56,-0.02); b(0.6,0.26,0.1,0,1.57,-0.26); }   // open-face helm: cap, brow ring, cheek guards, back guard
   else if(kind==='chest'){ b(0.58,0.62,0.34,0,1.07,0); b(0.22,0.5,0.26,-0.34,1.4,0); b(0.22,0.5,0.26,0.34,1.4,0); }
   else if(kind==='legguard'){ b(0.25,0.52,0.29,0,-0.37,0); }   // limb-local (attached to a leg group so it swings)
   else if(kind==='boot'){ b(0.27,0.22,0.34,0,-0.72,0.03); }
@@ -3452,6 +3458,10 @@ function chunkFrag(alpha, grain){
     '  else if(id==25.0){ if(face<0.5){ if(uv.y<0.30){ col=mix(col, vec3(0.95,0.95,0.92), 0.85); col*=1.0-0.12*lineAt(uv.x,0.5,0.04); } else { col*=0.93+0.08*n2(uv*5.0); col*=1.0-0.34*lineAt(uv.y,0.30,0.02); } col*=1.0-0.14*lineAt(uv.x,0.5,0.02); } else if(face>1.5){ if(uv.y<0.40){ col=mix(col, vec3(0.46,0.31,0.17), 0.92); float leg=step(uv.x,0.14)+step(0.86,uv.x); col=mix(col, vec3(0.30,0.20,0.10), clamp(leg,0.0,1.0)); } else { col*=0.95+0.08*n2(uv*6.0); col*=1.0-0.18*lineAt(uv.y,0.40,0.02); if(uv.x<0.34 && uv.y>0.6) col=mix(col, vec3(0.95,0.95,0.92), 0.55); } } }',   // bed
     '  else if(id==26.0){ col*=0.86+0.2*n2(vec2(floor(uv.x*4.0),floor(uv.y*8.0))); col*=1.0-0.5*lineAt(uv.x,0.5,0.035); float pan=boxAt(uv,vec2(0.12,0.06),vec2(0.88,0.46))+boxAt(uv,vec2(0.12,0.54),vec2(0.88,0.94)); col*=1.0-0.16*pan; float frp=boxAt(uv,vec2(0.18,0.1),vec2(0.82,0.42))+boxAt(uv,vec2(0.18,0.58),vec2(0.82,0.9)); col*=0.9+0.16*frp; float hl=boxAt(uv,vec2(0.76,0.46),vec2(0.88,0.56)); col=mix(col, vec3(0.2,0.17,0.1), hl); col*=1.0-0.2*lineAt(uv.y,0.5,0.03); }',   // door panels
     '  else if(id==28.0){ float band=fract(uv.y*3.0); col*=(band<0.16)?0.58:(0.94+0.12*n2(uv*8.0)); col*=0.92+0.1*n2(uv*3.0); if(face>1.5){ vec2 hc=vec2(abs(uv.x-0.5), abs(uv.y-0.24)); if(max(hc.x,hc.y)<0.11) col*=vec3(0.22,0.18,0.14)*1.4; } }',
+    '  else if(id==29.0){ col*=0.9+0.16*n2(uv*vec2(8.0,2.0)); float sl2=step(0.9,fract(uv.x*4.0)); col*=1.0-0.28*sl2; if(face>1.5 && uv.y>0.55){ float t2=step(0.94,n2(floor(uv*vec2(6.0,3.0))+9.0)); col=mix(col,vec3(0.26,0.28,0.32),t2*0.85); } }',
+    '  else if(id==32.0){ col*=0.92+0.14*n2(uv*7.0); float gl=step(0.9,fract(uv.x*3.0))+step(0.9,fract(uv.y*3.0)); col*=1.0-0.45*clamp(gl,0.0,1.0); }',
+    '  else if(id==33.0){ col*=0.85+0.2*n2(uv*5.0); }',
+    '  else if(id==34.0){ col*=0.9+0.16*n2(uv*vec2(6.0,2.0)); if(uv.y>0.82) col*=0.72; float td=step(0.96,n2(floor(uv*8.0)+3.0)); col=mix(col,vec3(0.3,0.32,0.36),td*0.8); }',
     '  else if(id==27.0){ if(face>1.5){ col*=0.80+0.22*abs(sin(uv.x*18.85)); col*=1.0-0.22*lineAt(fract(uv.x*4.0),0.0,0.05); col*=1.0-0.24*step(0.86,n2(vec2(floor(uv.x*5.0),floor(uv.y*9.0)))); if(uv.y>0.93) col*=1.08; } else { col*=0.9+0.12*n2(uv*5.0); col*=1.0-0.16*step(0.8,n2(uv*6.0)); } }',
     '  return col; }'
   ] : [];
@@ -3840,6 +3850,7 @@ function tryToggleFly(){
 var pointerLocked=false;
 
 document.addEventListener('keydown',function(e){
+  if(document.activeElement && document.activeElement.tagName==='INPUT' && document.activeElement.type==='text'){ if(e.code==='Escape') document.activeElement.blur(); return; }
   var _t=e.target; if(_t && (_t.tagName==='INPUT'||_t.tagName==='TEXTAREA'||_t.isContentEditable)) return;
   if(uiOpen && e.code!=='KeyE' && e.code!=='Escape') return;
   var wasDown=keys[e.code];
@@ -4904,10 +4915,11 @@ shaped([['PLANKS','PLANKS','PLANKS'],['PLANKS','REDSTONE','PLANKS'],['PLANKS','P
 shaped([[null,'IRON_INGOT',null],['IRON_INGOT','REDSTONE','IRON_INGOT'],[null,'IRON_INGOT',null]], 'COMPASS', 1);
 shapeless([{key:'IRON_INGOT',qty:1},{key:'COAL',qty:1}], 'FLINT_STEEL', 1);
 shaped([[null,'IRON_INGOT'],['IRON_INGOT',null]], 'SHEARS', 1);
-shaped([['WOOL','WOOL','WOOL'],['PLANKS','PLANKS','PLANKS']], 'BED', 1);
+shaped([['WOOL','WOOL','WOOL'],['ANY_PLANKS','ANY_PLANKS','ANY_PLANKS']], 'BED', 1);
 [['WHITE','White',0xe6e6e6,'WOOL'],['YELLOW','Yellow',0xd9c24a,'YELLOW_WOOL'],['BLUE','Blue',0x4363b8,'BLUE_WOOL'],['GREEN','Green',0x459a52,'GREEN_WOOL'],['PURPLE','Purple',0x9a4fb0,'PURPLE_WOOL'],['PINK','Pink',0xd98ab0,'PINK_WOOL']].forEach(function(c){
   mat(c[0]+'_BED', c[1]+' Bed', [(c[2]>>16)&255,(c[2]>>8)&255,c[2]&255], {stack:1, bedColor:c[2]});
-  shaped([[c[3],c[3],c[3]],['PLANKS','PLANKS','PLANKS']], c[0]+'_BED', 1);
+  shaped([[c[3],c[3],c[3]],['ANY_PLANKS','ANY_PLANKS','ANY_PLANKS']], c[0]+'_BED', 1);
+  var _dk=c[0]+'_DYE'; if(ITEMS[_dk]||true) shapeless([{key:'BED',qty:1},{key:_dk,qty:1}], c[0]+'_BED', 1);   // dye a bed's blanket
 });
 shapeless([{key:'COPPER_INGOT',qty:2},{key:'GOLD_ORE',qty:1}],'BRASS_INGOT',2);
 shaped([['BRASS_INGOT','AETHERIUM','BRASS_INGOT'],['AETHERIUM','BRASS_INGOT','AETHERIUM'],['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT']], 'AETHER_FORGE', 1);
@@ -5032,6 +5044,7 @@ function trimRows(rows){
   var out=[]; for(var y2=minr;y2<=maxr;y2++){ var row=[]; for(var x2=minc;x2<=maxc;x2++) row.push(rows[y2][x2]||null); out.push(row); }
   return out;
 }
+var CRAFT_GROUPS={ ANY_PLANKS:{PLANKS:1,SPRUCE_PLANKS:1,BIRCH_PLANKS:1,CHERRY_PLANKS:1,ASH_PLANKS:1,REDWOOD_PLANKS:1} };
 function matchShaped(cells, w){
   var t=trim(cells,w); if(!t) return null;
   for(var r=0;r<RECIPES.length;r++){ var rec=RECIPES[r]; if(rec.type!=='shaped') continue;
@@ -5041,7 +5054,7 @@ function matchShaped(cells, w){
     var ok=true;
     for(var y=0;y<rr.length&&ok;y++) for(var x=0;x<rr[0].length&&ok;x++){
       var want=rr[y][x]||null; var have=t[y][x]||null;
-      if(want!==have) ok=false;
+      if(want!==have){ var wg=CRAFT_GROUPS[want]; if(!(wg && have && wg[have])) ok=false; }
     }
     if(ok) return rec;
   }
@@ -5100,6 +5113,8 @@ function setHeld(){
   heldEl.style.display='block';
   heldEl.querySelector('.ic').src=iconFor(cursor.key);
   heldEl.querySelector('.qty').textContent=cursor.qty>1?cursor.qty:'';
+  var _hn=heldEl.querySelector('.nm'); if(!_hn){ _hn=document.createElement('div'); _hn.className='nm'; _hn.style.cssText='position:absolute;top:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;color:#fff;text-shadow:0 1px 2px #000;background:#000a;padding:1px 5px;border-radius:4px;pointer-events:none;'; heldEl.appendChild(_hn); }
+  _hn.textContent=(ITEMS[cursor.key]?ITEMS[cursor.key].name:cursor.key);
 }
 document.addEventListener('mousemove', function(e){ if(cursor){ heldEl.style.left=e.clientX+'px'; heldEl.style.top=e.clientY+'px'; } });
 document.addEventListener('touchmove', function(e){ if(cursor&&e.touches[0]){ heldEl.style.left=e.touches[0].clientX+'px'; heldEl.style.top=e.touches[0].clientY+'px'; } },{passive:true});
@@ -5155,6 +5170,18 @@ function clickOffhand(){
     inv.offhand[0]=placed;
   } else if(s){ cursor=s; inv.offhand[0]=null; }
   setHeld(); rerenderScreen();
+}
+function armorRank(key){ if(!key) return 0; if(key.indexOf('DIAMOND')>=0) return 4; if(key.indexOf('IRON')>=0) return 3; if(key.indexOf('GOLD')>=0) return 2; return 1; }
+function autoEquipArmor(){
+  var SUF=['_HELMET','_CHESTPLATE','_LEGGINGS','_BOOTS'];
+  var arrs=[inv.hotbar,inv.main], changed=false;
+  for(var si=0;si<4;si++){
+    var cur=inv.armor[si], bestR=cur?armorRank(cur.key):0, best=null,bA=null,bI=-1;
+    for(var a=0;a<arrs.length;a++) for(var i=0;i<arrs[a].length;i++){ var it=arrs[a][i];
+      if(it && it.key && it.key.indexOf(SUF[si])>0 && armorRank(it.key)>bestR){ bestR=armorRank(it.key); best=it; bA=arrs[a]; bI=i; } }
+    if(best){ var old=inv.armor[si]; inv.armor[si]={key:best.key,qty:1}; bA[bI]= old?{key:old.key,qty:1}:null; changed=true; }
+  }
+  if(changed){ try{ applyPlayerCosmetics(); }catch(_){ } sfxClick(); toast('Armored up!'); openInventory(true); } else { toast('No better armor in your bags'); }
 }
 function clickArmorSlot(i){ setTimeout(function(){ try{ applyPlayerCosmetics(); }catch(e){} },0);
   var slotType=['head','chest','legs','feet'][i], here=inv.armor[i];
@@ -5267,7 +5294,7 @@ function machineLayout(p, widget){
 }
 function spacer(h){ var d=document.createElement('div'); d.style.height=h+'px'; return d; }
 
-function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
+function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER'||k==='ANY_PLANKS') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
 var palNameEl=null, invNameEl=null, lastSlotName='Tap an item to see its name';
 function makeAvatarPreview(){
   var box=document.createElement('div'); box.style.cssText='width:80px;height:178px;background:linear-gradient(#10202e,#0a0e16);border:2px solid #0007;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;';
@@ -5353,6 +5380,9 @@ function openInventory(keep){
     var _hh=document.createElement('button'); _hh.className='tog'+(hideHelmet?' on':''); _hh.textContent=hideHelmet?'Helmet: Off':'Hide Helmet'; _hh.style.cssText='font-size:10px;padding:3px 7px;'; _hh.title='Hide the helmet so hats/hair show';
     _hh.onclick=function(){ hideHelmet=!hideHelmet; try{ localStorage.setItem('fw_hidehelm', hideHelmet?'1':'0'); }catch(e){} try{ applyPlayerCosmetics(); }catch(e){} openInventory(true); };
     acol.appendChild(_hh);
+    var _ae=document.createElement('button'); _ae.className='tog'; _ae.textContent='Auto-Equip'; _ae.style.cssText='font-size:10px;padding:3px 7px;'; _ae.title='Equip the best armor from your inventory';
+    _ae.onclick=function(){ autoEquipArmor(); };
+    acol.appendChild(_ae);
     prow.appendChild(acol);
     prow.appendChild(makeAvatarPreview());
     var ocol=document.createElement('div'); ocol.style.cssText='display:flex; flex-direction:column; align-items:center; gap:4px; justify-content:flex-end;';
@@ -5467,8 +5497,8 @@ function recipeBookBtn(){ var b=document.createElement('button'); b.className='m
 var recipeShowAll=false;
 function invCount(key){ var a=inv.main.concat(inv.hotbar), n=0; for(var i=0;i<a.length;i++) if(a[i]&&a[i].key===key) n+=a[i].qty; return n; }
 function recipeNeeds(r){ var need={}; if(r.type==='shaped'){ for(var y=0;y<r.rows.length;y++)for(var x=0;x<r.rows[y].length;x++){ var k=r.rows[y][x]; if(k) need[k]=(need[k]||0)+1; } } else { r.ing.forEach(function(g){ need[g.key]=(need[g.key]||0)+g.qty; }); } return need; }
-function canCraftR(r){ var need=recipeNeeds(r); for(var k in need) if(invCount(k)<need[k]) return false; return true; }
-function removeInv(key,n){ var arrs=[inv.hotbar,inv.main]; for(var a=0;a<arrs.length;a++){ var ar=arrs[a]; for(var i=0;i<ar.length;i++){ if(n<=0)break; if(ar[i]&&ar[i].key===key){ var t=Math.min(n,ar[i].qty); ar[i].qty-=t; n-=t; if(ar[i].qty<=0)ar[i]=null; } } } }
+function canCraftR(r){ var need=recipeNeeds(r); for(var k in need){ var g=CRAFT_GROUPS[k], c=0; if(g){ for(var m2 in g) c+=invCount(m2); } else c=invCount(k); if(c<need[k]) return false; } return true; }
+function removeInv(key,n){ var _gg=CRAFT_GROUPS[key]; if(_gg){ for(var _gm in _gg){ if(n<=0) break; var _h=Math.min(n, invCount(_gm)); if(_h>0){ removeInv(_gm,_h); n-=_h; } } return; } var arrs=[inv.hotbar,inv.main]; for(var a=0;a<arrs.length;a++){ var ar=arrs[a]; for(var i=0;i<ar.length;i++){ if(n<=0)break; if(ar[i]&&ar[i].key===key){ var t=Math.min(n,ar[i].qty); ar[i].qty-=t; n-=t; if(ar[i].qty<=0)ar[i]=null; } } } }
 function craftFromBook(r){ if(!canCraftR(r)) return false; var need=recipeNeeds(r); for(var k in need) removeInv(k,need[k]); giveItem(r.out,r.qty); rpgAddXP('crafting',3); sfxClick(); renderHotbar(); return true; }
 function miniIcon(key, qty){ if(!key||!ITEMS[key]) return ''; var h='<img class="ic" src="'+iconFor(key)+'">'; if(qty>1) h+='<span class="qty">'+qty+'</span>'; return h; }
 function recipeRow(r){
@@ -5513,6 +5543,11 @@ function openRecipeBook(){
   var creative=(gameMode==='creative');
   var sub=document.createElement('div'); sub.style.cssText='font-size:12px;opacity:0.8;margin-bottom:8px;';
   sub.textContent= creative ? 'How to craft & smelt everything' : 'Tap a highlighted recipe to craft it instantly'; p.appendChild(sub);
+  var srch=document.createElement('input'); srch.type='text'; srch.placeholder='Search recipes\u2026';
+  srch.style.cssText='width:100%;box-sizing:border-box;margin:6px 0;padding:7px 9px;font-size:13px;border-radius:6px;border:1px solid #2b2b2b;background:#e8e8e8;color:#111;';
+  srch.oninput=function(){ var q=this.value.toLowerCase(); var rows2=p.querySelectorAll('[data-rname]');
+    for(var qi=0;qi<rows2.length;qi++){ rows2[qi].style.display = (!q || rows2[qi].getAttribute('data-rname').indexOf(q)>=0) ? '' : 'none'; } };
+  p.appendChild(srch);
   var tog=document.createElement('div'); tog.style.cssText='display:flex;gap:6px;margin-bottom:8px;';
   function mkTog(label,active,fn){ var b=document.createElement('button'); b.className='mbtn'; b.textContent=label;
     b.style.cssText='flex:1;margin:0;padding:7px 0;font-size:13px;'+(active?'background:#3f7d4a;border-color:#2c5a34;':'opacity:.7;'); b.onclick=fn; return b; }
@@ -5527,6 +5562,7 @@ function openRecipeBook(){
     if(!recipeShowAll && !ok) return;
     shown++;
     var row=recipeRow(r);
+    row.setAttribute('data-rname', ((ITEMS[r.out]?ITEMS[r.out].name:r.out)||'').toLowerCase());
     if(ok && !creative){
       row.style.cursor='pointer'; row.style.borderColor='#5cc24a'; row.style.background='#16321a'; row.setAttribute('role','button');
       var _rl=row.querySelectorAll('.rname,.ring'); for(var _ri=0;_ri<_rl.length;_ri++){ _rl[_ri].style.color = _rl[_ri].className==='ring' ? '#a9c9a9' : '#f2fbf2'; }   // readable on the green craftable row
@@ -5994,6 +6030,7 @@ function openCookingPot(){
     var bt=document.createElement('button'); bt.className='tog'+(can?' on':''); bt.textContent='Cook'; bt.style.cssText='padding:6px 14px;'; bt.disabled=!can;
     bt.onclick=function(){ if(!Object.keys(rc.cost).every(function(k){ return invCount(k)>=rc.cost[k]; })) return;
       Object.keys(rc.cost).forEach(function(k){ invTake(k, rc.cost[k]); }); giveItem(rc.item, qy); sfxClick(); openCookingPot(); };
+    if(can){ row.setAttribute('role','button'); row.style.borderColor='#5cc24a'; row.style.borderWidth='2px'; row.style.borderStyle='solid'; row.onclick=function(ev){ if(ev && ev.target===bt) return; bt.onclick(); }; }
     row.appendChild(ic); row.appendChild(tx); row.appendChild(bt); p.appendChild(row);
   });
   p.appendChild(closeBtn(0)); screenEl.appendChild(p); bindScreenBg();
@@ -6012,6 +6049,7 @@ function openFurnitureBench(){
     var bt=document.createElement('button'); bt.className='tog'+(can?' on':''); bt.textContent='Build'; bt.style.cssText='padding:6px 14px;'; bt.disabled=!can;
     bt.onclick=function(){ if(!Object.keys(rc.cost).every(function(k){ return invCount(k)>=rc.cost[k]; })) return;
       Object.keys(rc.cost).forEach(function(k){ invTake(k, rc.cost[k]); }); giveItem(rc.item,1); sfxClick(); openFurnitureBench(); };
+    if(can){ row.setAttribute('role','button'); row.style.borderColor='#5cc24a'; row.style.borderWidth='2px'; row.style.borderStyle='solid'; row.onclick=function(ev){ if(ev && ev.target===bt) return; bt.onclick(); }; }
     row.appendChild(ic); row.appendChild(tx); row.appendChild(bt); p.appendChild(row);
   });
   p.appendChild(closeBtn(0)); screenEl.appendChild(p); bindScreenBg();
@@ -9435,7 +9473,7 @@ function gpBtn(b){ return !!(b && (b.pressed || b.value>0.5)); }
 var gpLast=0, gpFocusEl=null, gpNavCd=0, gpFocusPos=null, gpFocusCont=null;
 function gpVisible(el){ return !!(el && !el.classList.contains('hidden') && el.getClientRects().length>0); }
 function gpUIContainer(){
-  var ids=['settings','achscreen','guidescreen','death','pause'];
+  var ids=['settings','achscreen','guidescreen','death','pause','wardrobeOv','rpgScreen'];
   for(var i=0;i<ids.length;i++){ var el=document.getElementById(ids[i]); if(gpVisible(el)) return el; }
   var se=document.getElementById('screen'); if(uiOpen && gpVisible(se) && se.children.length) return se;
   var cw=document.getElementById('createworld'); if(gpVisible(cw)) return cw;
@@ -9737,8 +9775,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 154';
+var VERSION='Update 155';
 var CHANGELOG=[
+  { v:'Update 155', t:'Controller Everywhere, Auto-Equip & Style', items:['<b>Controller works everywhere now</b> \u2014 the Wardrobe, the Skills screen, the Carpenter\u2019s Bench and the Cooking Pot are all fully navigable (craftable rows highlight green and press with A)','<b>Auto-Equip</b> \u2014 one button in the inventory\u2019s equipment panel puts on the best armor from your bags','<b>Helmets are open-faced now</b> \u2014 a proper cap with brow ring and cheek guards instead of a box over your whole face, and all armor pieces are shaded/textured like the body','<b>Character glow-up</b> \u2014 fuller hair (back and sides), real shirt sleeves that re-tint with whatever shirt you wear, and a belt with a brass buckle','<b>Recipe Book search</b> \u2014 type to filter recipes live and find exactly what you need','<b>Dragging an item now shows its name</b> under the icon so you always know what you grabbed','<b>Beds craft from any planks</b> (oak, spruce, birch, cherry, ash or redwood), the wool sets the blanket color like Minecraft \u2014 and you can now <b>dye a bed</b> (bed + dye) to recolor it','<b>Crafting Table &amp; Carpenter\u2019s Bench textures</b> \u2014 the table has its tool grid on top, the bench has slatted sides with a hanging tool rack','Typing in a search box no longer triggers game controls'] },
   { v:'Update 154', t:'THE MOON (MoonQuest Part 3)', items:['<b>The Moon is real.</b> Board your fueled rocket, ride the launch past the edge of the sky, and land on a <b>grey cratered moonscape</b> under a black, star-filled sky','<b>Low gravity</b> \u2014 a third of home. Bound across craters in huge floating leaps','<b>Moon resources</b> \u2014 dig through Moon Dust into Moon Rock to find glowing <b>Moonstone Ore</b>\u2026 and yes, veins of actual <b>Moon Cheese</b> (a hearty snack, of course)','<b>Getting home:</b> your rocket lands beside you on the Moon \u2014 board it with 4 more Rocket Fuel to fly back. Pack fuel for the round trip!','No weather, no mobs, no birdsong \u2014 just you, the dust and the stars. (Part 4 \u2014 space suits &amp; oxygen \u2014 comes later)'] },
   { v:'Update 153', t:'Redwoods, Liftoff & Forge Fixes', items:['<b>Redwood Grove biome!</b> A new forest of <b>towering redwoods</b> \u2014 thick russet trunks up to 16 blocks tall with high canopies. A full new wood set: Redwood logs, planks and saplings you can grow yourself','<b>MoonQuest Part 2 \u2014 the Launch Pad!</b> Craft a Launch Pad (iron plates + brass), mount your assembled Rocket on it, board with <b>4 Rocket Fuel</b>, and hold on: ignition countdown, flame-and-steam liftoff, up past the clouds to the edge of space \u2014 then a gentle descent back to the pad. The Moon dimension itself lands next update','<b>Dwarf-forge monuments fixed</b> \u2014 they\u2019re much rarer now, never spawn within 3 chunks of each other, only surface <b>on land</b> (underwater halls stay sealed secrets), and stand on stone foundations instead of floating over slopes'] },
   { v:'Update 152', t:'Minecraft-Style Cobblestone', items:['<b>Cobblestone rebuilt from scratch</b> \u2014 now a proper 16\u00d716 pixel-art texture: irregular flat grey stones in four shades with thin dark seams between them, just like Minecraft. No dots, no moss'] },
