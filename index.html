@@ -2487,7 +2487,7 @@ function decorFor(id, f, frontF){
   if(id===B.BEEHIVE) return 28;
   if(isChest(id)){ if(f===frontF) face=3; return 1*8+face; }    // front faces placement direction
   if(id===B.FURNACE){ if(f===frontF) face=3; return 2*8+face; }
-  if(isCrafting(id)) return 32+face;
+  if(isCrafting(id)) return 35+face;
   if(id===B.FURNITURE_BENCH) return 29;
   if(id===B.COAL_ORE) return 4*8+2;
   if(id===B.IRON_ORE) return 5*8+2;
@@ -3458,10 +3458,13 @@ function chunkFrag(alpha, grain){
     '  else if(id==25.0){ if(face<0.5){ if(uv.y<0.30){ col=mix(col, vec3(0.95,0.95,0.92), 0.85); col*=1.0-0.12*lineAt(uv.x,0.5,0.04); } else { col*=0.93+0.08*n2(uv*5.0); col*=1.0-0.34*lineAt(uv.y,0.30,0.02); } col*=1.0-0.14*lineAt(uv.x,0.5,0.02); } else if(face>1.5){ if(uv.y<0.40){ col=mix(col, vec3(0.46,0.31,0.17), 0.92); float leg=step(uv.x,0.14)+step(0.86,uv.x); col=mix(col, vec3(0.30,0.20,0.10), clamp(leg,0.0,1.0)); } else { col*=0.95+0.08*n2(uv*6.0); col*=1.0-0.18*lineAt(uv.y,0.40,0.02); if(uv.x<0.34 && uv.y>0.6) col=mix(col, vec3(0.95,0.95,0.92), 0.55); } } }',   // bed
     '  else if(id==26.0){ col*=0.86+0.2*n2(vec2(floor(uv.x*4.0),floor(uv.y*8.0))); col*=1.0-0.5*lineAt(uv.x,0.5,0.035); float pan=boxAt(uv,vec2(0.12,0.06),vec2(0.88,0.46))+boxAt(uv,vec2(0.12,0.54),vec2(0.88,0.94)); col*=1.0-0.16*pan; float frp=boxAt(uv,vec2(0.18,0.1),vec2(0.82,0.42))+boxAt(uv,vec2(0.18,0.58),vec2(0.82,0.9)); col*=0.9+0.16*frp; float hl=boxAt(uv,vec2(0.76,0.46),vec2(0.88,0.56)); col=mix(col, vec3(0.2,0.17,0.1), hl); col*=1.0-0.2*lineAt(uv.y,0.5,0.03); }',   // door panels
     '  else if(id==28.0){ float band=fract(uv.y*3.0); col*=(band<0.16)?0.58:(0.94+0.12*n2(uv*8.0)); col*=0.92+0.1*n2(uv*3.0); if(face>1.5){ vec2 hc=vec2(abs(uv.x-0.5), abs(uv.y-0.24)); if(max(hc.x,hc.y)<0.11) col*=vec3(0.22,0.18,0.14)*1.4; } }',
-    '  else if(id==29.0){ col*=0.9+0.16*n2(uv*vec2(8.0,2.0)); float sl2=step(0.9,fract(uv.x*4.0)); col*=1.0-0.28*sl2; if(face>1.5 && uv.y>0.55){ float t2=step(0.94,n2(floor(uv*vec2(6.0,3.0))+9.0)); col=mix(col,vec3(0.26,0.28,0.32),t2*0.85); } }',
-    '  else if(id==32.0){ col*=0.92+0.14*n2(uv*7.0); float gl=step(0.9,fract(uv.x*3.0))+step(0.9,fract(uv.y*3.0)); col*=1.0-0.45*clamp(gl,0.0,1.0); }',
-    '  else if(id==33.0){ col*=0.85+0.2*n2(uv*5.0); }',
-    '  else if(id==34.0){ col*=0.9+0.16*n2(uv*vec2(6.0,2.0)); if(uv.y>0.82) col*=0.72; float td=step(0.96,n2(floor(uv*8.0)+3.0)); col=mix(col,vec3(0.3,0.32,0.36),td*0.8); }',
+    '  else if(id==29.0){ vec2 P=floor(uv*16.0); float pl=step(2.0,mod(P.y,4.0)); col*=0.86+0.14*pl; col*=0.94+0.12*n2(vec2(P.x,floor(P.y/4.0))*3.7); if(mod(P.y,4.0)<1.0) col*=0.55; if(face>1.5){ float rail=step(11.0,P.y)*step(P.y,12.0); col=mix(col, vec3(0.24,0.26,0.3), rail*0.8); float peg=step(0.5,mod(floor(P.x/3.0),2.0))*step(9.0,P.y)*step(P.y,10.0); col=mix(col, vec3(0.16,0.17,0.2), peg*0.7); } else { float tl=step(1.0,mod(P.x,4.0))*step(1.0,mod(P.y,4.0)); col=mix(col*0.8, col*1.1, tl); } }',
+    '  else if(id==32.0){ vec2 P=floor(uv*16.0); col*=0.9+0.1*n2(P*2.1); float grid=step(P.x,0.0)+step(15.0,P.x)+step(P.y,0.0)+step(15.0,P.y); col*=1.0-0.4*clamp(grid,0.0,1.0); }',
+    '  else if(id==33.0){ col*=0.85+0.15*n2(uv*5.0); }',
+    '  else if(id==34.0){ col*=0.88+0.14*n2(uv*vec2(6.0,2.0)); }',
+    '  else if(id==35.0){ vec2 P=floor(uv*16.0); col*=0.92+0.1*n2(P*2.3); float gx=step(3.0,mod(P.x,4.0)), gy=step(3.0,mod(P.y,4.0)); float grid=clamp(gx+gy,0.0,1.0); col*=1.0-0.5*grid; float ring=step(3.0,P.x)*step(P.x,12.0)*step(3.0,P.y)*step(P.y,12.0)*(step(mod(P.x,9.0),3.0)+step(9.0,mod(P.x,9.0))); col=mix(col, vec3(0.2,0.14,0.08), 0.0); float border=step(P.x,0.0)+step(15.0,P.x)+step(P.y,0.0)+step(15.0,P.y); col*=1.0-0.55*clamp(border,0.0,1.0); }',
+    '  else if(id==36.0){ vec2 P=floor(uv*16.0); float pl=step(2.0,mod(P.y,4.0)); col*=0.86+0.14*pl; if(mod(P.y,4.0)<1.0) col*=0.55; }',
+    '  else if(id==37.0){ vec2 P=floor(uv*16.0); col*=0.9+0.1*n2(P*2.0); float top=step(P.y,3.0); vec3 tool=mix(col, vec3(0.55,0.35,0.18), step(0.5,mod(floor(P.x/2.0),2.0))*top*0.6); col=mix(col, tool, top); float pl2=step(2.0,mod(P.y,4.0))*step(4.0,P.y); col*=(P.y>3.0)?(0.85+0.15*pl2):1.0; if(mod(P.y,4.0)<1.0 && P.y>4.0) col*=0.6; }',
     '  else if(id==27.0){ if(face>1.5){ col*=0.80+0.22*abs(sin(uv.x*18.85)); col*=1.0-0.22*lineAt(fract(uv.x*4.0),0.0,0.05); col*=1.0-0.24*step(0.86,n2(vec2(floor(uv.x*5.0),floor(uv.y*9.0)))); if(uv.y>0.93) col*=1.08; } else { col*=0.9+0.12*n2(uv*5.0); col*=1.0-0.16*step(0.8,n2(uv*6.0)); } }',
     '  return col; }'
   ] : [];
@@ -4747,11 +4750,15 @@ function placeShape(pid, pb, hit, nx,ny,nz){
   } else if(pb.shape==='door'){
     if(!isSolid(World.getBlock(nx,ny-1,nz))) return false;                 // needs a floor beneath
     if(isSolid(World.getBlock(nx,ny+1,nz))) return false;                  // needs 2-tall clear space (don't overwrite the block above)
-    var ddir=playerFacing(), hinge=resolveDoorHinge(nx,ny,nz,ddir);
-    if(hinge==='l'){   // if no partner door set the hinge, favour an adjacent wall so the door swings into the opening
-      var perp = (ddir==='north'||ddir==='south') ? [[1,0],[-1,0]] : [[0,1],[0,-1]];
-      if(isSolid(World.getBlock(nx+perp[0][0],ny,nz+perp[0][1])) && !isSolid(World.getBlock(nx+perp[1][0],ny,nz+perp[1][1]))) hinge='r';
-    }
+    var ddir=playerFacing();
+    var perp = (ddir==='north'||ddir==='south') ? [[1,0],[-1,0]] : [[0,1],[0,-1]];
+    var lc=World.tiles[World.ck(nx+perp[0][0],ny,nz+perp[0][1])];
+    var rc=World.tiles[World.ck(nx+perp[1][0],ny,nz+perp[1][1])];
+    var hinge='l';
+    if(lc && lc.type==='door' && lc.dir===ddir && lc.hinge==='l'){ hinge='r'; }        // partner door on the left -> we become the right leaf (double door)
+    else if(rc && rc.type==='door' && rc.dir===ddir && rc.hinge==='r'){ hinge='l'; }
+    else if(isSolid(World.getBlock(nx+perp[1][0],ny,nz+perp[1][1])) && !isSolid(World.getBlock(nx+perp[0][0],ny,nz+perp[0][1]))) hinge='r';
+    else hinge=resolveDoorHinge(nx,ny,nz,ddir);
     World.tiles[World.ck(nx,ny,nz)]={type:'door', shape:'door', dir:ddir, open:false, hinge:hinge};
     World.tiles[World.ck(nx,ny+1,nz)]={type:'door', shape:'door', doorTop:true};
     World.setBlock(nx,ny,nz,pid,true);
@@ -4760,7 +4767,15 @@ function placeShape(pid, pb, hit, nx,ny,nz){
   return true;
 }
 var _doorCd=0;
+function toggleDoorLeaf(x,y,z,setTo){ var t=World.tiles[World.ck(x,y,z)]; if(t&&t.doorTop){ y=y-1; t=World.tiles[World.ck(x,y,z)]; } if(!t||t.type!=='door') return; t.open=(setTo==null)?!t.open:setTo; var _c=World.getChunk(x>>4,z>>4,false); if(_c){ _c.dirty=true; } }
 function toggleDoor(x,y,z){
+  var _bt=World.tiles[World.ck(x,y,z)]; var _by=y; if(_bt&&_bt.doorTop){ _by=y-1; _bt=World.tiles[World.ck(x,_by,z)]; }
+  if(_bt&&_bt.type==='door'){ var _d=_bt.dir, _pp=(_d==='north'||_d==='south')?[[1,0],[-1,0]]:[[0,1],[0,-1]], _newopen=!_bt.open;
+    for(var _pi=0;_pi<2;_pi++){ var _nx=x+_pp[_pi][0], _nz=z+_pp[_pi][1], _pt=World.tiles[World.ck(_nx,_by,_nz)];
+      if(_pt&&_pt.type==='door'&&_pt.dir===_d&&_pt.hinge!==_bt.hinge){ toggleDoorLeaf(_nx,_by,_nz,_newopen); } } }
+  return _toggleDoor(x,y,z);
+}
+function _toggleDoor(x,y,z){
   if(_doorCd>0) return;   // prevent held-use from flickering the door open/closed
   _doorCd=0.35;
   var t=World.tiles[World.ck(x,y,z)]; var bx=x,by=y,bz=z;
@@ -5098,7 +5113,7 @@ function makeGridSlot(arr, i, onClick){
   d.innerHTML=slotHTML(arr[i]);
   liveSlots.push({el:d, arr:arr, i:i});
   function showName(){ var it=arr[i]; if(it&&ITEMS[it.key]) lastSlotName=ITEMS[it.key].name; if(invNameEl) invNameEl.textContent=lastSlotName; }
-  d.addEventListener('mousedown', function(e){ e.preventDefault(); showName(); onClick(i, e.button); });
+  d.addEventListener('mousedown', function(e){ e.preventDefault(); showName(); onClick(i, e.button); if(cursor){ var _r=d.getBoundingClientRect(); heldEl.style.left=(_r.left+_r.width/2)+'px'; heldEl.style.top=(_r.top+_r.height/2)+'px'; } });
   var pressT=null, didLong=false;
   d.addEventListener('touchstart', function(e){ e.preventDefault(); didLong=false;
     pressT=setTimeout(function(){ didLong=true; onClick(i, 2); /* split half */ if(navigator.vibrate) navigator.vibrate(15); }, 320);
@@ -5109,12 +5124,12 @@ function makeGridSlot(arr, i, onClick){
   return d;
 }
 function setHeld(){
-  if(!cursor){ heldEl.style.display='none'; return; }
+  if(!cursor){ heldEl.style.display='none'; if(heldEl.querySelector('.nm')) heldEl.querySelector('.nm').textContent=''; return; }
   heldEl.style.display='block';
   heldEl.querySelector('.ic').src=iconFor(cursor.key);
   heldEl.querySelector('.qty').textContent=cursor.qty>1?cursor.qty:'';
   var _hn=heldEl.querySelector('.nm'); if(!_hn){ _hn=document.createElement('div'); _hn.className='nm'; _hn.style.cssText='position:absolute;top:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;color:#fff;text-shadow:0 1px 2px #000;background:#000a;padding:1px 5px;border-radius:4px;pointer-events:none;'; heldEl.appendChild(_hn); }
-  _hn.textContent=(ITEMS[cursor.key]?ITEMS[cursor.key].name:cursor.key);
+  _hn.textContent=cursor?(ITEMS[cursor.key]?ITEMS[cursor.key].name:cursor.key):'';
 }
 document.addEventListener('mousemove', function(e){ if(cursor){ heldEl.style.left=e.clientX+'px'; heldEl.style.top=e.clientY+'px'; } });
 document.addEventListener('touchmove', function(e){ if(cursor&&e.touches[0]){ heldEl.style.left=e.touches[0].clientX+'px'; heldEl.style.top=e.touches[0].clientY+'px'; } },{passive:true});
@@ -5295,8 +5310,23 @@ function machineLayout(p, widget){
 function spacer(h){ var d=document.createElement('div'); d.style.height=h+'px'; return d; }
 
 function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER'||k==='ANY_PLANKS') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
-var palNameEl=null, invNameEl=null, lastSlotName='Tap an item to see its name';
+var palNameEl=null, invNameEl=null, lastSlotName='';
 function makeAvatarPreview(){
+  if(typeof THREE!=='undefined' && typeof buildAvatarModel==='function'){
+    var box=document.createElement('div'); box.style.cssText='width:96px;height:178px;background:linear-gradient(#10202e,#0a0e16);border:2px solid #0007;border-radius:6px;flex:none;overflow:hidden;';
+    var cv=document.createElement('canvas'); cv.width=96; cv.height=178; cv.style.cssText='width:96px;height:178px;'; box.appendChild(cv);
+    try{
+      var rr=new THREE.WebGLRenderer({canvas:cv, alpha:true, antialias:true}); rr.setClearColor(0x000000,0);
+      var sc=new THREE.Scene(); var cm=new THREE.PerspectiveCamera(30,96/178,0.1,50); cm.position.set(0,1.0,4.6); cm.lookAt(0,0.95,0);
+      var L2={}; var av=buildAvatarModel(L2); sc.add(av);
+      applyCosmeticsTo(av, L2, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, armor:(typeof inv!=='undefined'&&inv.armor)});
+      var spin=0; (function draw(){ if(!document.body.contains(cv)) return; spin+=0.02; av.rotation.y=spin; rr.render(sc,cm); requestAnimationFrame(draw); })();
+    }catch(_){ }
+    return box;
+  }
+  return _makeAvatarPreviewCSS();
+}
+function _makeAvatarPreviewCSS(){
   var box=document.createElement('div'); box.style.cssText='width:80px;height:178px;background:linear-gradient(#10202e,#0a0e16);border:2px solid #0007;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;';
   var fig=document.createElement('div'); fig.style.cssText='position:relative;width:50px;height:140px;';
   function aCol(slot, base){ if(slot && ITEMS[slot.key]){ var n=slot.key; if(n.indexOf('DIAMOND')>=0) return '#5fe9e0'; if(n.indexOf('IRON')>=0) return '#d2d2d2'; if(n.indexOf('GOLD')>=0) return '#e9d24a'; if(n.indexOf('LEATHER')>=0) return '#9a6a3a'; } return base; }
@@ -5323,7 +5353,7 @@ function makePaletteSlot(key){
   return d;
 }
 function openInventory(keep){
-  openScreen(); currentScreen='inv'; invNameEl=null;
+  openScreen(); currentScreen='inv'; invNameEl=null; lastSlotName=''; if(heldEl&&heldEl.querySelector('.nm')) heldEl.querySelector('.nm').textContent='';
   screenEl.innerHTML=''; var p=document.createElement('div'); p.className='panel';
   var h=document.createElement('h2'); h.textContent= gameMode==='creative'?'Creative Inventory':'Inventory'; p.appendChild(h);
   if(gameMode==='creative'){
@@ -6573,7 +6603,7 @@ function makeZombie(){
   return g;
 }
 function zombifyMesh(g){ if(g.__mats){ for(var i=0;i<g.__mats.length;i++){ var m=g.__mats[i]; m.color.setHex(mixHex(m.color.getHex(),0x5a8f3a,0.5)); m.__base=m.color.getHex(); } }
-  var eM=new THREE.MeshBasicMaterial({color:0xffb43a}); var q1=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.02),eM); q1.position.set(-0.11,1.6,0.27); g.add(q1); var q2=q1.clone(); q2.position.x=0.11; g.add(q2); return g; }
+  var eM=new THREE.MeshBasicMaterial({color:0xffb43a}); eM.__base=0xffb43a; if(g.__mats)g.__mats.push(eM); var q1=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.02),eM); q1.position.set(-0.11,1.6,0.27); g.add(q1); var q2=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.02),eM); q2.position.set(0.11,1.6,0.27); g.add(q2); return g; }
 function makeSpooler(){
   // tiny clockwork critter (front = +z): low brass body, flat splayed copper legs, spinning thread reels
   var g=new THREE.Group(); g.__mats=[];
@@ -6734,7 +6764,7 @@ function birdTick(e,dt){
   e.pos.x += Math.cos(e.wdir)*e.speed*dt; e.pos.z += Math.sin(e.wdir)*e.speed*dt;
   e.mesh.position.copy(e.pos); e.mesh.rotation.y=-e.wdir+Math.PI/2;
   var flap=Math.sin(now*0.02)*0.6; if(e.mesh.userData.wings){ e.mesh.userData.wings[0].rotation.z=flap; e.mesh.userData.wings[1].rotation.z=-flap; }
-  if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++){ if(red){ mm[mi].color.setHex(0xffb0a8); } else if(mm[mi].__base!=null){ mm[mi].color.setHex(mm[mi].__base); } } } }
+  if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++){ if(mm[mi].__base==null) mm[mi].__base=mm[mi].color.getHex(); if(red){ mm[mi].__flash=mm[mi].__base; mm[mi].color.setHex(mixHex(mm[mi].__base,0xffffff,0.55)); } else { mm[mi].color.setHex(mm[mi].__base); } } } }
 }
 function maybeBirdEggs(){
   for(var i=0;i<entities.length;i++){ var e=entities[i]; if(e.kind!=='bird') continue;
@@ -6968,7 +6998,7 @@ function fishTick(e,dt){
   e.mesh.position.copy(e.pos);
   e.mesh.rotation.y=-e.heading;                                   // model faces +x
   if(e.mesh.userData.tail) e.mesh.userData.tail.rotation.y=Math.sin(now*0.013)*0.55;  // tail swish
-  if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++){ if(red){ mm[mi].color.setHex(0xffb0a8); } else if(mm[mi].__base!=null){ mm[mi].color.setHex(mm[mi].__base); } } } }
+  if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++){ if(mm[mi].__base==null) mm[mi].__base=mm[mi].color.getHex(); if(red){ mm[mi].__flash=mm[mi].__base; mm[mi].color.setHex(mixHex(mm[mi].__base,0xffffff,0.55)); } else { mm[mi].color.setHex(mm[mi].__base); } } } }
 }
 function partMesh(g,w,h,d,hex,x,y,z){ var m=new THREE.MeshBasicMaterial({color:hex, map:mobNoiseTex, side:THREE.DoubleSide}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); m.__base=hex; g.__mats.push(m); g.add(me); return me; }
 function eyePair(g,y,z,spread,w,pupil){ function p(W,H,D,c,x,yy,zz){ return partMesh(g,W,H,D,c,x,yy,zz); }
@@ -9775,8 +9805,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 155';
+var VERSION='Update 156';
 var CHANGELOG=[
+  { v:'Update 156', t:'Doll, Doors, Bench & Big Fixes', items:['<b>Inventory character is now a live 3D model of YOU</b> \u2014 spinning, wearing your real shirt, pants, hat and armor, updating in real time (no more teal placeholder)','<b>Fixed the floating orange squares</b> on dwarves/skeletons and the <b>white-covered mobs</b> \u2014 a hurt-flash bug was stranding add-on parts (eyes, armor) mid-flash','<b>Crafting Table &amp; Carpenter\u2019s Bench retextured from scratch</b> \u2014 real pixel-art: the table has a 3\u00d73 grid top and tool trim, the bench has plank slats with a tool rail. No more random dots, and they no longer share a texture','<b>Doors place like Minecraft</b> now (hinge on the near side, facing you) and <b>two side-by-side doors act as double doors</b> \u2014 opening one swings both','<b>Held item fixes:</b> a picked-up stack no longer flashes in the top-left corner, and its name label now clears properly when you put it down or reopen the inventory','Item names show when you hover or pick up, and clear when you move away'] },
   { v:'Update 155', t:'Controller Everywhere, Auto-Equip & Style', items:['<b>Controller works everywhere now</b> \u2014 the Wardrobe, the Skills screen, the Carpenter\u2019s Bench and the Cooking Pot are all fully navigable (craftable rows highlight green and press with A)','<b>Auto-Equip</b> \u2014 one button in the inventory\u2019s equipment panel puts on the best armor from your bags','<b>Helmets are open-faced now</b> \u2014 a proper cap with brow ring and cheek guards instead of a box over your whole face, and all armor pieces are shaded/textured like the body','<b>Character glow-up</b> \u2014 fuller hair (back and sides), real shirt sleeves that re-tint with whatever shirt you wear, and a belt with a brass buckle','<b>Recipe Book search</b> \u2014 type to filter recipes live and find exactly what you need','<b>Dragging an item now shows its name</b> under the icon so you always know what you grabbed','<b>Beds craft from any planks</b> (oak, spruce, birch, cherry, ash or redwood), the wool sets the blanket color like Minecraft \u2014 and you can now <b>dye a bed</b> (bed + dye) to recolor it','<b>Crafting Table &amp; Carpenter\u2019s Bench textures</b> \u2014 the table has its tool grid on top, the bench has slatted sides with a hanging tool rack','Typing in a search box no longer triggers game controls'] },
   { v:'Update 154', t:'THE MOON (MoonQuest Part 3)', items:['<b>The Moon is real.</b> Board your fueled rocket, ride the launch past the edge of the sky, and land on a <b>grey cratered moonscape</b> under a black, star-filled sky','<b>Low gravity</b> \u2014 a third of home. Bound across craters in huge floating leaps','<b>Moon resources</b> \u2014 dig through Moon Dust into Moon Rock to find glowing <b>Moonstone Ore</b>\u2026 and yes, veins of actual <b>Moon Cheese</b> (a hearty snack, of course)','<b>Getting home:</b> your rocket lands beside you on the Moon \u2014 board it with 4 more Rocket Fuel to fly back. Pack fuel for the round trip!','No weather, no mobs, no birdsong \u2014 just you, the dust and the stars. (Part 4 \u2014 space suits &amp; oxygen \u2014 comes later)'] },
   { v:'Update 153', t:'Redwoods, Liftoff & Forge Fixes', items:['<b>Redwood Grove biome!</b> A new forest of <b>towering redwoods</b> \u2014 thick russet trunks up to 16 blocks tall with high canopies. A full new wood set: Redwood logs, planks and saplings you can grow yourself','<b>MoonQuest Part 2 \u2014 the Launch Pad!</b> Craft a Launch Pad (iron plates + brass), mount your assembled Rocket on it, board with <b>4 Rocket Fuel</b>, and hold on: ignition countdown, flame-and-steam liftoff, up past the clouds to the edge of space \u2014 then a gentle descent back to the pad. The Moon dimension itself lands next update','<b>Dwarf-forge monuments fixed</b> \u2014 they\u2019re much rarer now, never spawn within 3 chunks of each other, only surface <b>on land</b> (underwater halls stay sealed secrets), and stand on stone foundations instead of floating over slopes'] },
