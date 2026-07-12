@@ -426,7 +426,7 @@ defBlock({key:'WATER', name:'Water', col:[46,104,170], top:[74,152,196], side:[3
 defBlock({key:'LOG', name:'Oak Log', col:[102,76,44], top:[160,128,82], side:[96,72,42], solid:true, tool:'axe', hard:1.2 , log:true });
 defBlock({key:'LEAVES', name:'Oak Leaves', col:[54,118,46], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'PLANKS', name:'Oak Planks', col:[176,140,86], top:[182,146,92], solid:true, tool:'axe', hard:1.0 });
-defBlock({key:'GLASS', name:'Glass', col:[198,222,236], top:[206,228,240], side:[190,216,232], solid:true, transparent:true, hard:0.4, glass:true });
+defBlock({key:'GLASS', name:'Glass', col:[236,242,245], top:[240,245,248], side:[232,239,243], solid:true, transparent:true, hard:0.4, glass:true });
 defBlock({key:'COAL_ORE', name:'Coal Ore', col:[60,60,64], spec:[26,26,28], solid:true, tool:'pickaxe', tier:1, hard:2.2, drop:'COAL' });
 defBlock({key:'IRON_ORE', name:'Iron Ore', col:[140,128,118], spec:[206,170,140], solid:true, tool:'pickaxe', tier:2, hard:2.6 });
 defBlock({key:'GOLD_ORE', name:'Gold Ore', col:[140,132,96], spec:[226,196,84], solid:true, tool:'pickaxe', tier:3, hard:2.8 });
@@ -3609,7 +3609,7 @@ var chunkMat=new THREE.ShaderMaterial({
 });
 var chunkMatT=chunkMat.clone();
 chunkMatT.transparent=true; chunkMatT.depthWrite=false;
-chunkMatT.fragmentShader=chunkFrag('0.9', false);
+chunkMatT.fragmentShader=chunkFrag('0.97', false);
 chunkMatT.uniforms={ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTime:{value:0}, uTorch:torchU, uTorchN:torchNU, uTorchFlk:torchFlkU };
 chunkMatT.needsUpdate=true;
 function setRenderDist(n){ RENDER_DIST=n; var fn=(n-1)*CHUNK, ff=(n+0.4)*CHUNK;
@@ -9680,7 +9680,7 @@ function physics(dt){
     var adir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch*0.7,Player.yaw,0,'YXZ'));
     var sdir=new THREE.Vector3(1,0,0).applyEuler(new THREE.Euler(0,Player.yaw,0,'YXZ'));
     var asp=6.5;
-    var _av=Player.riding; if(_av.avx==null){ _av.avx=0; _av.avz=0; _av.avy=0; }
+    var _av=Player.riding; if(!_av){ Player.vel.x=0; Player.vel.z=0; } else { if(_av.avx==null){ _av.avx=0; _av.avz=0; _av.avy=0; }
     var _wishx=(adir.x*fIn2 + sdir.x*sIn2)*asp, _wishz=(adir.z*fIn2 + sdir.z*sIn2)*asp;
     var _wishy=adir.y*fIn2*asp*0.5 + ((input.jump||keys['Space'])?4.2:0) + (Player.sneaking?0:0);
     // heavy airship inertia: eases toward the target velocity and drifts when you let go
@@ -9688,7 +9688,7 @@ function physics(dt){
     _av.avz += (_wishz-_av.avz)*Math.min(1,dt*0.8);
     _av.avy += (_wishy-_av.avy)*Math.min(1,dt*1.2);
     if(Math.abs(fIn2)<0.05 && Math.abs(sIn2)<0.05){ _av.avx*=(1-Math.min(1,dt*0.5)); _av.avz*=(1-Math.min(1,dt*0.5)); }   // slow gentle drift to a stop
-    Player.vel.x=_av.avx; Player.vel.z=_av.avz; Player.vel.y=_av.avy;   // constant altitude when idle (no gravity)
+    Player.vel.x=_av.avx; Player.vel.z=_av.avz; Player.vel.y=_av.avy; }   // constant altitude when idle (no gravity)
     Player.inWater=false; fellFrom=null;
   }
   if(!riding && !Player.onGround && !Player.inWater && Player.vel.y<-4){   // glider: hold it while falling to soar down
@@ -10068,8 +10068,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 178';
+var VERSION='Update 179';
 var CHANGELOG=[
+  { v:'Update 179', t:'Fixes: Glass & Vehicle Exit', items:['<b>Fixed the crash</b> when sneaking out of the airship (a null vehicle reference)','<b>Glass is nearly clear</b> now \u2014 much higher transparency and a neutral, barely-there tint instead of blue'] },
   { v:'Update 178', t:'Bye Cars, Weighty Boats & Airships', items:['<b>Removed the Motorcar &amp; Truck</b> for now \u2014 they looked rough. They\u2019ll come back when they\u2019re done right','<b>Boats have weight</b> now \u2014 they take a moment to build up speed and glide a long way when you let go, like a real boat on water','<b>Airship feels like flying</b> \u2014 momentum-based cruising that eases in and drifts to a stop, holds its altitude when idle, and sways gently in the air'] },
   { v:'Update 177', t:'Muscle Cars & Real Driving', items:['<b>Cars look like proper muscle cars now</b> \u2014 long low body, raised cabin with real windows, bumpers, headlights/taillights, a racing stripe and chrome wheel hubs','<b>Real driving mechanics</b> \u2014 forward/back is the throttle (accelerate up to top speed, coast to a stop) and left/right actually <b>steers</b> the car, which only turns while you\u2019re moving and reverses when backing up','<b>Motorcar &amp; Truck have proper icons</b> in the inventory and hand'] },
   { v:'Update 176', t:'Sit on Real Chairs', items:['<b>Sitting moved to actual furniture</b> \u2014 build a Chair, Stool or Sofa at the Carpenter\u2019s Bench, place it, and tap it to sit. Tap SNEAK (or JUMP) to stand up. (Stairs/slabs no longer act as seats)'] },
