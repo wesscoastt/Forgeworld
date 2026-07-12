@@ -885,6 +885,17 @@ function iconFor(key){
       x.fillStyle=css([90,190,90]); x.fillRect(15,18,5,3);
       _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key];
     }
+    if(it.key==='MOTORCAR'||it.key==='TRUCK'){
+      var bcar=(it.key==='TRUCK')?[90,100,120]:[196,60,50];
+      x.fillStyle=css([20,20,24]); x.fillRect(3,20,26,6);                  // shadow/ground
+      x.fillStyle=css(bcar); x.fillRect(4,13,24,8);                        // body
+      x.fillStyle=css([bcar[0]*0.7|0,bcar[1]*0.7|0,bcar[2]*0.7|0]); x.fillRect(9,9,14,5);   // cabin
+      x.fillStyle=css([190,215,230]); x.fillRect(11,10,10,3);              // window
+      x.fillStyle=css([28,28,32]); x.fillRect(7,20,5,5); x.fillRect(20,20,5,5);   // wheels
+      x.fillStyle=css([230,230,235]); x.fillRect(8,21,3,3); x.fillRect(21,21,3,3);
+      x.fillStyle=css([255,240,190]); x.fillRect(26,15,2,3);               // headlight
+      _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key];
+    }
     if(it.block===B.LILY_PAD){
       x.fillStyle=css([61,117,57]); x.fillRect(6,8,20,16); x.fillRect(8,6,16,20);   // pad
       x.fillStyle=css([79,145,70]); x.fillRect(9,9,14,14);                            // inner leaf
@@ -7054,14 +7065,23 @@ function makeRocket(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,
 }
 function makeWheelMesh(){ var m=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.15,10), new THREE.MeshBasicMaterial({color:0x22262a})); m.rotation.z=Math.PI/2; return m; }
 function makeCar(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
-  p(1.1,0.4,2.0,0xa03428,0,0.62,0);                     // body
-  p(1.0,0.34,0.85,0x7a241c,0,0.98,-0.4);                // seat back
-  p(0.9,0.3,0.06,0xcfe4f0,0,1.02,0.15);                 // windscreen
-  p(0.94,0.16,0.28,0xb08d3a,0,0.62,1.02);               // brass grille
-  p(0.12,0.12,0.12,0xffe9a0,-0.36,0.68,1.1); p(0.12,0.12,0.12,0xffe9a0,0.36,0.68,1.1);   // headlamps
-  p(0.08,0.42,0.08,0x4a4f55,-0.42,1.02,-0.92);          // exhaust
-  var ws=[[-0.6,0.3,0.68],[0.6,0.3,0.68],[-0.6,0.3,-0.68],[0.6,0.3,-0.68]], wl=[];
-  for(var i=0;i<4;i++){ var w=makeWheelMesh(); w.position.set(ws[i][0],ws[i][1],ws[i][2]); g.add(w); wl.push(w); }
+  var BODY=0xc0392b, DARK=0x7a241c, GLASS=0x223038, CHR=0xd8dde2;
+  p(1.06,0.3,2.7,BODY,0,0.42,0);                        // low main body (long, sleek)
+  p(1.02,0.22,1.5,DARK,0,0.62,0);                       // lower waist accent
+  p(0.92,0.34,1.15,BODY,0,0.74,-0.15);                  // raised cabin roof
+  p(0.86,0.3,0.04,GLASS,0,0.74,0.44);                   // windshield
+  p(0.86,0.3,0.04,GLASS,0,0.74,-0.72);                  // rear window
+  p(0.04,0.28,1.1,GLASS,0.44,0.74,-0.14); p(0.04,0.28,1.1,GLASS,-0.44,0.74,-0.14);  // side windows
+  p(1.0,0.16,0.14,0x1a1a1e,0,0.4,1.34);                 // front bumper / grille
+  p(1.0,0.12,0.12,0x2a2a2e,0,0.4,-1.34);                // rear bumper
+  p(0.22,0.09,0.05,0xfff2c0,-0.34,0.46,1.36); p(0.22,0.09,0.05,0xfff2c0,0.34,0.46,1.36);  // headlights
+  p(0.2,0.08,0.04,0xe0402e,-0.34,0.46,-1.36); p(0.2,0.08,0.04,0xe0402e,0.34,0.46,-1.36);  // taillights
+  p(0.16,0.5,2.4,mixHex(BODY,0xffffff,0.15),0,0.5,0);   // racing stripe down the middle
+  p(0.9,0.06,0.5,0x14100e,0,0.9,-0.2);                  // (seat area, when open)
+  var ws=[[-0.56,0.26,0.86],[0.56,0.26,0.86],[-0.56,0.26,-0.86],[0.56,0.26,-0.86]], wl=[];
+  for(var i=0;i<4;i++){ var w=makeWheelMesh(); w.position.set(ws[i][0],ws[i][1],ws[i][2]); g.add(w);
+    var hub=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.16,8), new THREE.MeshBasicMaterial({color:CHR})); hub.rotation.z=Math.PI/2; hub.position.copy(w.position); g.add(hub);
+    wl.push(w); }
   g.userData.wheels=wl; return g;
 }
 function makeTruck(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
@@ -9674,13 +9694,19 @@ function physics(dt){
       _gs.gdur--; if(_gs.gdur<=0){ inv.hotbar[hotbarSel]=null; renderHotbar(); toast('Your glider wore out and fell apart!'); try{ sfxBreakTool&&sfxBreakTool(); }catch(_){ } }
     }
   }
-  if(ridingCar){   // redstone motor: fast ground driving (gravity still applies)
+  if(ridingCar){   // real car handling: throttle forward/back, steer left/right
     var _cf=IS_MOBILE?(input.fwd||0):((keys['KeyW']?1:0)-(keys['KeyS']?1:0));
     var _cs=IS_MOBILE?(input.strafe||0):((keys['KeyD']?1:0)-(keys['KeyA']?1:0));
+    var _rd=Player.riding;
+    _rd.speed=(_rd.speed||0);
+    var _top=(_rd.kind==='truck')?8.0:11.0, _acc=14*dt;
+    if(_cf>0) _rd.speed=Math.min(_top, _rd.speed+_acc);
+    else if(_cf<0) _rd.speed=Math.max(-_top*0.5, _rd.speed-_acc);
+    else _rd.speed*= (1 - Math.min(1,dt*2.2));                       // coast to a stop
+    // steering only bites when you're actually moving, and reverses in reverse
+    if(Math.abs(_rd.speed)>0.3){ Player.yaw -= _cs * dt * 1.9 * (_rd.speed>0?1:-1) * Math.min(1,Math.abs(_rd.speed)/4); }
     var _cd=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(0,Player.yaw,0,'YXZ'));
-    var _cr=new THREE.Vector3(1,0,0).applyEuler(new THREE.Euler(0,Player.yaw,0,'YXZ'));
-    var _cv=(Player.riding.kind==='truck')?7.5:9.5;
-    Player.vel.x=(_cd.x*_cf+_cr.x*_cs)*_cv; Player.vel.z=(_cd.z*_cf+_cr.z*_cs)*_cv;
+    Player.vel.x=_cd.x*_rd.speed; Player.vel.z=_cd.z*_rd.speed;
   }
   if(ridingRocket){
     var _rk=Player.riding;
@@ -10035,8 +10061,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 176';
+var VERSION='Update 177';
 var CHANGELOG=[
+  { v:'Update 177', t:'Muscle Cars & Real Driving', items:['<b>Cars look like proper muscle cars now</b> \u2014 long low body, raised cabin with real windows, bumpers, headlights/taillights, a racing stripe and chrome wheel hubs','<b>Real driving mechanics</b> \u2014 forward/back is the throttle (accelerate up to top speed, coast to a stop) and left/right actually <b>steers</b> the car, which only turns while you\u2019re moving and reverses when backing up','<b>Motorcar &amp; Truck have proper icons</b> in the inventory and hand'] },
   { v:'Update 176', t:'Sit on Real Chairs', items:['<b>Sitting moved to actual furniture</b> \u2014 build a Chair, Stool or Sofa at the Carpenter\u2019s Bench, place it, and tap it to sit. Tap SNEAK (or JUMP) to stand up. (Stairs/slabs no longer act as seats)'] },
   { v:'Update 175', t:'Sitting & Clearer Glass', items:['<b>Sit down!</b> Tap any stairs or slab to sit on it, then tap SNEAK (or JUMP) to stand back up','<b>Glass is much clearer</b> now \u2014 more transparent and a softer, less milky-white tint','Mined blocks still tumble out as items you pick up off the ground'] },
   { v:'Update 174', t:'Painting Polish', items:['<b>Blank painting is white now</b>, not pink (the empty fill was pointing at the wrong palette colour)','<b>Painting has its own icon</b> in the inventory and hand \u2014 a framed little canvas','<b>Nicer paint editor</b> \u2014 wooden frame around the canvas and a clearer header'] },
