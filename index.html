@@ -2856,7 +2856,7 @@ function buildAvatarModel(L){ var g=new THREE.Group();
   p(0.04,0.04,0.02,0xf4f4ff,-0.13,1.66,0.27); p(0.04,0.04,0.02,0xf4f4ff,0.11,1.66,0.27);
   p(0.18,0.035,0.02,0x6e3a2c,0,1.52,0.26);
   L.torso=p(0.56,0.72,0.3,SHIRT,0,1.06,0);
-  p(0.52,0.08,0.28,0x3a2c1c,0,0.72,0); p(0.1,0.06,0.03,0xd9b24a,0,0.72,0.15);   // belt + buckle
+  p(0.54,0.08,0.31,0x3a2c1c,0,0.72,0); p(0.09,0.05,0.02,0xd9b24a,0,0.72,0.16);   // belt + flush buckle
   L.armL=limb(0.2,0.66,0.24,SKIN,-0.38,1.42,0);
   L.armR=limb(0.2,0.66,0.24,SKIN,0.38,1.42,0);
   var _slL=new THREE.Mesh(new THREE.BoxGeometry(0.23,0.44,0.27), L.torso.material); _slL.position.set(0,-0.2,0); L.armL.add(_slL);
@@ -3045,11 +3045,13 @@ function triggerHandSwing(){ handAnim=0.26; }
 function updateHand(){
   var sp=Math.hypot(Player.vel.x,Player.vel.z);
   var bob=Math.sin(now*0.009)*Math.min(0.05, sp*0.014);
+  var _chew=(eatAnim>0)?Math.sin((0.34-eatAnim)/0.34*Math.PI):0;   // 0..1..0 bob toward the mouth
   handAnim=Math.max(0,handAnim-0.018);
+  if(eatAnim>0) eatAnim=Math.max(0,eatAnim-0.02);
   var sw=Math.sin((1-handAnim/0.26)*Math.PI)*(handAnim>0?1:0);
   // positioned bottom-right corner, smaller (mobile-style), angled inward/up
-  handMesh.position.set(0.66, -0.56+bob-sw*0.1, -0.66);
-  handMesh.rotation.set(0.55 - sw*1.3, 0.42, 0.22);
+  handMesh.position.set(0.66 - _chew*0.34, -0.56+bob-sw*0.1 + _chew*0.28, -0.66 + _chew*0.16);   // eating raises the food toward the mouth
+  handMesh.rotation.set(0.55 - sw*1.3 - _chew*0.8, 0.42 - _chew*0.3, 0.22);
   handMesh.scale.setScalar(0.8);
   var s=inv.hotbar[hotbarSel], it=s?ITEMS[s.key]:null;
   if(it && it.block!=null && !blk(it.block).thin && !blk(it.block).shape && s.key!=='BED'){
@@ -4131,7 +4133,7 @@ function blockBreakTime(blockId){
   return Math.max(0.05, time);
 }
 var mineSndCd=0;
-var eatHold=0, eatChewCd=0;   // hold-to-eat progress + chew-sound timer
+var eatHold=0, eatChewCd=0, eatAnim=0;   // hold-to-eat progress + chew-sound timer + mouth-raise anim
 function tickMining(dt){
   if(playerAtkCd>0) playerAtkCd-=dt;
   if(mineSndCd>0) mineSndCd-=dt;
@@ -4141,7 +4143,7 @@ function tickMining(dt){
   if(_fs && ITEMS[_fs.key] && ITEMS[_fs.key].food && Player.hunger<Player.maxHunger){
     mining.target=null; mining.progress=0;
     eatHold += dt; eatChewCd -= dt;
-    if(eatChewCd<=0){ eatChewCd=0.32; try{ sfxEat(); }catch(e){} triggerHandSwing(); }   // chewing feedback
+    if(eatChewCd<=0){ eatChewCd=0.32; try{ sfxEat(); }catch(e){} eatAnim=0.34; }   // chewing: raise food to mouth
     if(eatHold>=1.1){ eatHold=0; tryEat(_fs); }                                            // finish the bite
     return;
   }
@@ -5179,6 +5181,7 @@ function makeGridSlot(arr, i, onClick){
   d.innerHTML=slotHTML(arr[i]);
   liveSlots.push({el:d, arr:arr, i:i});
   function showName(){ var it=arr[i]; if(it&&ITEMS[it.key]) lastSlotName=ITEMS[it.key].name; if(invNameEl) invNameEl.textContent=lastSlotName; }
+  d.addEventListener('mouseenter', function(){ showName(); });
   d.addEventListener('mousedown', function(e){ e.preventDefault(); showName(); onClick(i, e.button); if(cursor){ var _r=d.getBoundingClientRect(); heldEl.style.left=(_r.left+_r.width/2)+'px'; heldEl.style.top=(_r.top+_r.height/2)+'px'; } });
   var pressT=null, didLong=false;
   d.addEventListener('touchstart', function(e){ e.preventDefault(); didLong=false;
@@ -7187,8 +7190,11 @@ function makeSheep(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x
   g.userData.legs=[l1,l4]; g.userData.woolBody=woolBody; g.userData.woolTop=woolTop; g.userData.woolColor=wool; return g; }
 function setSheepSheared(e, on){
   var u=e.mesh && e.mesh.userData; if(!u || !u.woolBody) return;
-  if(on){ u.woolTop.visible=false; if(u.woolBody.material) u.woolBody.material.color.setHex(0xe6c7b4); }
-  else { u.woolTop.visible=true; if(u.woolBody.material) u.woolBody.material.color.setHex(u.woolColor); }
+  if(on){ u.woolTop.visible=false; if(u.woolBody.material) u.woolBody.material.color.setHex(0xd9a9a2);   // bare pink skin
+    if(u.woolBody.__baseScale==null) u.woolBody.__baseScale={x:u.woolBody.scale.x,y:u.woolBody.scale.y,z:u.woolBody.scale.z};
+    u.woolBody.scale.set(u.woolBody.__baseScale.x*0.72, u.woolBody.__baseScale.y*0.7, u.woolBody.__baseScale.z*0.82); }   // thinner body = looks naked
+  else { u.woolTop.visible=true; if(u.woolBody.material) u.woolBody.material.color.setHex(u.woolColor);
+    if(u.woolBody.__baseScale) u.woolBody.scale.set(u.woolBody.__baseScale.x,u.woolBody.__baseScale.y,u.woolBody.__baseScale.z); }
 }
 function makeChicken(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
   p(0.34,0.36,0.42,0xf2f2f4,0,0.42,0); p(0.26,0.28,0.26,0xf6f6f8,0,0.66,0.16);
@@ -9878,8 +9884,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 166';
+var VERSION='Update 167';
 var CHANGELOG=[
+  { v:'Update 167', t:'Naked Sheep, Hover Names & Eating', items:['<b>Sheared sheep look naked</b> now \u2014 the body slims down to bare pink skin instead of staying full and fluffy','<b>Item names show on hover</b> (mouse over any slot) as well as on tap','<b>Fixed the speck by the character\u2019s collar</b> on the menu \u2014 the belt buckle was poking through; it sits flush now','<b>Better eating animation</b> \u2014 food now rises toward your mouth with a chew motion instead of a mining jab'] },
   { v:'Update 166', t:'Real Texture Fix, Daggers & Wood Variants', items:['<b>Crafting Table &amp; Carpenter\u2019s Bench FINALLY fixed</b> \u2014 the decor values were mis-packed so they were rendering ore/wrong branches (the dots). Table now uses its proper 3\u00d73 grid texture; the bench has clean plank slats with a tool rail and saw','<b>Dagger crafting fixed</b> \u2014 Spruce/Birch/Cherry daggers had recipes but no item (blank name, no icon). All daggers exist now with proper icons','<b>Wood variety!</b> Stairs, fences, fence gates and slabs now come in <b>Spruce, Birch, Cherry and Redwood</b> too','Glass opacity and the door swing/seam fixes from last update are in this build (the previous one may have been cached)'] },
   { v:'Update 165', t:'Clearer Glass & Door Fixes', items:['<b>Glass is clearer</b> \u2014 lighter tint and more see-through','<b>Doors swing the right way</b> now (toward their hinge side, like Minecraft) instead of opening backwards','<b>Fixed the line through the door texture</b> \u2014 the panel now maps cleanly across the whole leaf with no seam'] },
   { v:'Update 164', t:'Bench/Table Textures & Smart Chopping', items:['<b>Crafting Table &amp; Carpenter\u2019s Bench textures actually redone</b> \u2014 removed the noise that was showing as random dots. The table now has a clean 3\u00d73 grid top with a tool strip on the sides; the bench has clean plank slats with a saw and tool rail','<b>Smarter tree chopping</b> \u2014 breaking a log now cuts that log and everything <b>above</b> it; only when you break the <b>very bottom</b> log does the whole tree come down. Works with any tool, not just an axe'] },
