@@ -553,6 +553,22 @@ defBlock({key:'LILY_PAD', name:'Lily Pad', col:[74,140,70], solid:true, transpar
 defBlock({key:'REDWOOD_LOG', name:'Redwood Log', col:[124,62,44], top:[150,96,66], side:[112,54,38], solid:true, tool:'axe', hard:2.2 });
 defBlock({key:'REDWOOD_PLANKS', name:'Redwood Planks', col:[168,92,64], solid:true, tool:'axe', hard:1.8 });
 defBlock({key:'REDWOOD_LEAVES', name:'Redwood Leaves', col:[38,96,44], solid:true, leaf:true, hard:0.3 });
+defBlock({key:'SPRUCE_STAIRS', name:'Spruce Stairs', col:[114, 84, 50], solid:true, tool:'axe', hard:1.0, shape:'stairs', tex:'SPRUCE_PLANKS' });
+defBlock({key:'SPRUCE_FENCE', name:'Spruce Fence', col:[114, 84, 50], solid:true, hard:1.0, shape:'fence', tex:'SPRUCE_PLANKS' });
+defBlock({key:'SPRUCE_GATE', name:'Spruce Fence Gate', col:[114, 84, 50], solid:true, hard:1.0, shape:'gate', tex:'SPRUCE_PLANKS' });
+defBlock({key:'SPRUCE_SLAB', name:'Spruce Slab', col:[114, 84, 50], solid:true, tool:'axe', hard:1.0, shape:'slab', tex:'SPRUCE_PLANKS' });
+defBlock({key:'BIRCH_STAIRS', name:'Birch Stairs', col:[200, 180, 132], solid:true, tool:'axe', hard:1.0, shape:'stairs', tex:'BIRCH_PLANKS' });
+defBlock({key:'BIRCH_FENCE', name:'Birch Fence', col:[200, 180, 132], solid:true, hard:1.0, shape:'fence', tex:'BIRCH_PLANKS' });
+defBlock({key:'BIRCH_GATE', name:'Birch Fence Gate', col:[200, 180, 132], solid:true, hard:1.0, shape:'gate', tex:'BIRCH_PLANKS' });
+defBlock({key:'BIRCH_SLAB', name:'Birch Slab', col:[200, 180, 132], solid:true, tool:'axe', hard:1.0, shape:'slab', tex:'BIRCH_PLANKS' });
+defBlock({key:'CHERRY_STAIRS', name:'Cherry Stairs', col:[214, 150, 150], solid:true, tool:'axe', hard:1.0, shape:'stairs', tex:'CHERRY_PLANKS' });
+defBlock({key:'CHERRY_FENCE', name:'Cherry Fence', col:[214, 150, 150], solid:true, hard:1.0, shape:'fence', tex:'CHERRY_PLANKS' });
+defBlock({key:'CHERRY_GATE', name:'Cherry Fence Gate', col:[214, 150, 150], solid:true, hard:1.0, shape:'gate', tex:'CHERRY_PLANKS' });
+defBlock({key:'CHERRY_SLAB', name:'Cherry Slab', col:[214, 150, 150], solid:true, tool:'axe', hard:1.0, shape:'slab', tex:'CHERRY_PLANKS' });
+defBlock({key:'REDWOOD_STAIRS', name:'Redwood Stairs', col:[168, 92, 64], solid:true, tool:'axe', hard:1.0, shape:'stairs', tex:'REDWOOD_PLANKS' });
+defBlock({key:'REDWOOD_FENCE', name:'Redwood Fence', col:[168, 92, 64], solid:true, hard:1.0, shape:'fence', tex:'REDWOOD_PLANKS' });
+defBlock({key:'REDWOOD_GATE', name:'Redwood Fence Gate', col:[168, 92, 64], solid:true, hard:1.0, shape:'gate', tex:'REDWOOD_PLANKS' });
+defBlock({key:'REDWOOD_SLAB', name:'Redwood Slab', col:[168, 92, 64], solid:true, tool:'axe', hard:1.0, shape:'slab', tex:'REDWOOD_PLANKS' });
 defBlock({key:'LAUNCH_PAD', name:'Launch Pad', col:[92,96,106], top:[70,74,84], side:[100,104,114], spec:[255,180,60], solid:true, tool:'pickaxe', tier:1, hard:3.5 });
 defBlock({key:'MOON_DUST', name:'Moon Dust', col:[203,203,209], top:[212,212,218], side:[194,194,200], solid:true, tool:'shovel', hard:0.7 });
 defBlock({key:'MOON_ROCK', name:'Moon Rock', col:[136,136,144], side:[128,128,136], solid:true, tool:'pickaxe', tier:1, hard:2.4 });
@@ -842,6 +858,7 @@ if(ITEMS.CACTUS) ITEMS.CACTUS.smeltTo='GREEN_DYE';   // smelt cactus for green d
   tool(p+'_SHOVEL', n+' Shovel','shovel',tier,c,base,spd,dur);
   tool(p+'_SWORD', n+' Sword','sword',tier,c,base+3,1.0,dur);
   tool(p+'_HOE', n+' Hoe','hoe',tier,c,base,1.0,dur);
+  tool(p+'_DAGGER', n+' Dagger','sword',tier,c,base+1,1.5,Math.floor(dur*0.7));
 });
 
 function item(key){ return ITEMS[key]; }
@@ -2496,8 +2513,8 @@ function decorFor(id, f, frontF){
   if(id===B.BEEHIVE) return 28;
   if(isChest(id)){ if(f===frontF) face=3; return 1*8+face; }    // front faces placement direction
   if(id===B.FURNACE){ if(f===frontF) face=3; return 2*8+face; }
-  if(isCrafting(id)) return 35+face;
-  if(id===B.FURNITURE_BENCH) return 29;
+  if(isCrafting(id)) return 3*8+face;
+  if(id===B.FURNITURE_BENCH) return 29*8+face;
   if(id===B.COAL_ORE) return 4*8+2;
   if(id===B.IRON_ORE) return 5*8+2;
   if(id===B.GOLD_ORE) return 6*8+2;
@@ -3490,13 +3507,7 @@ function chunkFrag(alpha, grain){
     '  else if(id==25.0){ if(face<0.5){ if(uv.y<0.30){ col=mix(col, vec3(0.95,0.95,0.92), 0.85); col*=1.0-0.12*lineAt(uv.x,0.5,0.04); } else { col*=0.93+0.08*n2(uv*5.0); col*=1.0-0.34*lineAt(uv.y,0.30,0.02); } col*=1.0-0.14*lineAt(uv.x,0.5,0.02); } else if(face>1.5){ if(uv.y<0.40){ col=mix(col, vec3(0.46,0.31,0.17), 0.92); float leg=step(uv.x,0.14)+step(0.86,uv.x); col=mix(col, vec3(0.30,0.20,0.10), clamp(leg,0.0,1.0)); } else { col*=0.95+0.08*n2(uv*6.0); col*=1.0-0.18*lineAt(uv.y,0.40,0.02); if(uv.x<0.34 && uv.y>0.6) col=mix(col, vec3(0.95,0.95,0.92), 0.55); } } }',   // bed
     '  else if(id==26.0){ col*=0.86+0.2*n2(vec2(floor(uv.x*4.0),floor(uv.y*8.0))); col*=1.0-0.5*lineAt(uv.x,0.5,0.035); float pan=boxAt(uv,vec2(0.12,0.06),vec2(0.88,0.46))+boxAt(uv,vec2(0.12,0.54),vec2(0.88,0.94)); col*=1.0-0.16*pan; float frp=boxAt(uv,vec2(0.18,0.1),vec2(0.82,0.42))+boxAt(uv,vec2(0.18,0.58),vec2(0.82,0.9)); col*=0.9+0.16*frp; float hl=boxAt(uv,vec2(0.76,0.46),vec2(0.88,0.56)); col=mix(col, vec3(0.2,0.17,0.1), hl); col*=1.0-0.2*lineAt(uv.y,0.5,0.03); }',   // door panels
     '  else if(id==28.0){ float band=fract(uv.y*3.0); col*=(band<0.16)?0.58:(0.94+0.12*n2(uv*8.0)); col*=0.92+0.1*n2(uv*3.0); if(face>1.5){ vec2 hc=vec2(abs(uv.x-0.5), abs(uv.y-0.24)); if(max(hc.x,hc.y)<0.11) col*=vec3(0.22,0.18,0.14)*1.4; } }',
-    '  else if(id==29.0){ vec2 P=floor(uv*16.0); float band=step(2.0,mod(P.y,5.0)); col*=band>0.5?1.0:0.8; if(mod(P.y,5.0)<1.0) col*=0.5; if(face>1.5){ float rail=step(9.0,P.y)*step(P.y,10.0); col=mix(col, vec3(0.22,0.16,0.1), rail); float sawA=step(4.0,P.x)*step(P.x,7.0)*step(11.0,P.y)*step(P.y,13.0); float sawB=step(9.0,P.x)*step(P.x,12.0)*step(11.0,P.y)*step(P.y,12.0); col=mix(col, vec3(0.55,0.56,0.6), clamp(sawA+sawB,0.0,1.0)); } else { float edge=step(P.x,0.0)+step(15.0,P.x)+step(P.y,0.0)+step(15.0,P.y); col*=1.0-0.4*clamp(edge,0.0,1.0); } }',
-    '  else if(id==32.0){ vec2 P=floor(uv*16.0); col*=0.9+0.1*n2(P*2.1); float grid=step(P.x,0.0)+step(15.0,P.x)+step(P.y,0.0)+step(15.0,P.y); col*=1.0-0.4*clamp(grid,0.0,1.0); }',
-    '  else if(id==33.0){ col*=0.85+0.15*n2(uv*5.0); }',
-    '  else if(id==34.0){ col*=0.88+0.14*n2(uv*vec2(6.0,2.0)); }',
-    '  else if(id==35.0){ vec2 P=floor(uv*16.0); float gx=step(4.0,mod(P.x+1.0,5.0)); float gy=step(4.0,mod(P.y+1.0,5.0)); float grid=clamp(gx+gy,0.0,1.0); col*=1.0-0.55*grid; float border=step(P.x,0.0)+step(15.0,P.x)+step(P.y,0.0)+step(15.0,P.y); col*=1.0-0.5*clamp(border,0.0,1.0); }',
-    '  else if(id==36.0){ vec2 P=floor(uv*16.0); float pl=step(2.0,mod(P.y,4.0)); col*=0.86+0.14*pl; if(mod(P.y,4.0)<1.0) col*=0.55; }',
-    '  else if(id==37.0){ vec2 P=floor(uv*16.0); float top=step(13.0,P.y); vec3 tools=mix(col*0.7, vec3(0.5,0.32,0.16), step(0.5,mod(floor(P.x/2.0),2.0))); col=mix(col, tools, top); float band=step(2.0,mod(P.y,4.0)); if(P.y<13.0) col*=band>0.5?1.0:0.82; if(mod(P.y,4.0)<1.0 && P.y<13.0) col*=0.55; float border=step(P.x,0.0)+step(15.0,P.x); col*=1.0-0.4*clamp(border,0.0,1.0); }',
+    '  else if(id==29.0){ if(face>1.5){ col*=1.0-0.32*lineAt(uv.y,0.28,0.03); col*=1.0-0.32*lineAt(uv.y,0.62,0.03); col*=1.0-0.18*lineAt(uv.x,0.5,0.025); float rail=step(0.6,uv.y)*step(uv.y,0.66); col=mix(col, vec3(0.22,0.16,0.1), rail); float saw=step(0.28,uv.x)*step(uv.x,0.5)*step(0.72,uv.y)*step(uv.y,0.82); col=mix(col, vec3(0.6,0.62,0.66), saw); } else if(face<0.5){ col*=1.0-0.2*lineAt(uv.x,0.5,0.03); col*=0.96+0.06*step(0.5,uv.y); } }',
     '  else if(id==27.0){ if(face>1.5){ col*=0.80+0.22*abs(sin(uv.x*18.85)); col*=1.0-0.22*lineAt(fract(uv.x*4.0),0.0,0.05); col*=1.0-0.24*step(0.86,n2(vec2(floor(uv.x*5.0),floor(uv.y*9.0)))); if(uv.y>0.93) col*=1.08; } else { col*=0.9+0.12*n2(uv*5.0); col*=1.0-0.16*step(0.8,n2(uv*6.0)); } }',
     '  return col; }'
   ] : [];
@@ -4906,6 +4917,23 @@ function shapeless(ing, out, outQty){ RECIPES.push({type:'shapeless', ing:ing, o
 shapeless([{key:'LOG',qty:1}],'PLANKS',4);
 shapeless([{key:'SPRUCE_LOG',qty:1}],'SPRUCE_PLANKS',4);
 shapeless([{key:'REDWOOD_LOG',qty:1}],'REDWOOD_PLANKS',4);
+shaped([['SPRUCE_PLANKS',null,null],['SPRUCE_PLANKS','SPRUCE_PLANKS',null],['SPRUCE_PLANKS','SPRUCE_PLANKS','SPRUCE_PLANKS']], 'SPRUCE_STAIRS', 4);
+shaped([['SPRUCE_PLANKS','STICK','SPRUCE_PLANKS'],['SPRUCE_PLANKS','STICK','SPRUCE_PLANKS']], 'SPRUCE_FENCE', 3);
+shaped([['STICK','SPRUCE_PLANKS','STICK'],['STICK','SPRUCE_PLANKS','STICK']], 'SPRUCE_GATE', 1);
+shaped([['SPRUCE_PLANKS','SPRUCE_PLANKS','SPRUCE_PLANKS']], 'SPRUCE_SLAB', 6);
+shaped([['BIRCH_PLANKS',null,null],['BIRCH_PLANKS','BIRCH_PLANKS',null],['BIRCH_PLANKS','BIRCH_PLANKS','BIRCH_PLANKS']], 'BIRCH_STAIRS', 4);
+shaped([['BIRCH_PLANKS','STICK','BIRCH_PLANKS'],['BIRCH_PLANKS','STICK','BIRCH_PLANKS']], 'BIRCH_FENCE', 3);
+shaped([['STICK','BIRCH_PLANKS','STICK'],['STICK','BIRCH_PLANKS','STICK']], 'BIRCH_GATE', 1);
+shaped([['BIRCH_PLANKS','BIRCH_PLANKS','BIRCH_PLANKS']], 'BIRCH_SLAB', 6);
+shaped([['CHERRY_PLANKS',null,null],['CHERRY_PLANKS','CHERRY_PLANKS',null],['CHERRY_PLANKS','CHERRY_PLANKS','CHERRY_PLANKS']], 'CHERRY_STAIRS', 4);
+shaped([['CHERRY_PLANKS','STICK','CHERRY_PLANKS'],['CHERRY_PLANKS','STICK','CHERRY_PLANKS']], 'CHERRY_FENCE', 3);
+shaped([['STICK','CHERRY_PLANKS','STICK'],['STICK','CHERRY_PLANKS','STICK']], 'CHERRY_GATE', 1);
+shaped([['CHERRY_PLANKS','CHERRY_PLANKS','CHERRY_PLANKS']], 'CHERRY_SLAB', 6);
+shaped([['REDWOOD_PLANKS',null,null],['REDWOOD_PLANKS','REDWOOD_PLANKS',null],['REDWOOD_PLANKS','REDWOOD_PLANKS','REDWOOD_PLANKS']], 'REDWOOD_STAIRS', 4);
+shaped([['REDWOOD_PLANKS','STICK','REDWOOD_PLANKS'],['REDWOOD_PLANKS','STICK','REDWOOD_PLANKS']], 'REDWOOD_FENCE', 3);
+shaped([['STICK','REDWOOD_PLANKS','STICK'],['STICK','REDWOOD_PLANKS','STICK']], 'REDWOOD_GATE', 1);
+shaped([['REDWOOD_PLANKS','REDWOOD_PLANKS','REDWOOD_PLANKS']], 'REDWOOD_SLAB', 6);
+
 shapeless([{key:'BIRCH_LOG',qty:1}],'BIRCH_PLANKS',4);
 shapeless([{key:'ASH_LOG',qty:1}],'ASH_PLANKS',4);
 shapeless([{key:'CHERRY_LOG',qty:1}],'CHERRY_PLANKS',4);
@@ -9850,8 +9878,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 165';
+var VERSION='Update 166';
 var CHANGELOG=[
+  { v:'Update 166', t:'Real Texture Fix, Daggers & Wood Variants', items:['<b>Crafting Table &amp; Carpenter\u2019s Bench FINALLY fixed</b> \u2014 the decor values were mis-packed so they were rendering ore/wrong branches (the dots). Table now uses its proper 3\u00d73 grid texture; the bench has clean plank slats with a tool rail and saw','<b>Dagger crafting fixed</b> \u2014 Spruce/Birch/Cherry daggers had recipes but no item (blank name, no icon). All daggers exist now with proper icons','<b>Wood variety!</b> Stairs, fences, fence gates and slabs now come in <b>Spruce, Birch, Cherry and Redwood</b> too','Glass opacity and the door swing/seam fixes from last update are in this build (the previous one may have been cached)'] },
   { v:'Update 165', t:'Clearer Glass & Door Fixes', items:['<b>Glass is clearer</b> \u2014 lighter tint and more see-through','<b>Doors swing the right way</b> now (toward their hinge side, like Minecraft) instead of opening backwards','<b>Fixed the line through the door texture</b> \u2014 the panel now maps cleanly across the whole leaf with no seam'] },
   { v:'Update 164', t:'Bench/Table Textures & Smart Chopping', items:['<b>Crafting Table &amp; Carpenter\u2019s Bench textures actually redone</b> \u2014 removed the noise that was showing as random dots. The table now has a clean 3\u00d73 grid top with a tool strip on the sides; the bench has clean plank slats with a saw and tool rail','<b>Smarter tree chopping</b> \u2014 breaking a log now cuts that log and everything <b>above</b> it; only when you break the <b>very bottom</b> log does the whole tree come down. Works with any tool, not just an axe'] },
   { v:'Update 163', t:'Armor Fix, Daggers, Spooky Horses & Caves', items:['<b>Enemy armor fixed</b> \u2014 it was rendering as a flat tiled slab; now every piece is slim flat-shaded plate that hugs the mob (helm, chestplate with shoulder pads, leg guards, boots)','<b>Daggers</b> \u2014 craft a fast, light blade in any material (quick swings, less damage than a sword)','<b>Spoolers stay</b> for String, and <b>Cobwebs</b> now appear in some structures \u2014 break them with a sword to get String','<b>Zombie &amp; Skeleton Horses</b> \u2014 a rare, eerie surface spawn at night','<b>Minecraft-style spawning</b> \u2014 hostiles now appear in any dark spot (including caves in daytime), scaled by difficulty','<b>More caves!</b> Bigger cave systems plus long winding tunnels, so they\u2019re far easier to find when you dig down'] },
