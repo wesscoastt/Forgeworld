@@ -569,6 +569,7 @@ defBlock({key:'REDWOOD_STAIRS', name:'Redwood Stairs', col:[168, 92, 64], solid:
 defBlock({key:'REDWOOD_FENCE', name:'Redwood Fence', col:[168, 92, 64], solid:true, hard:1.0, shape:'fence', tex:'REDWOOD_PLANKS' });
 defBlock({key:'REDWOOD_GATE', name:'Redwood Fence Gate', col:[168, 92, 64], solid:true, hard:1.0, shape:'gate', tex:'REDWOOD_PLANKS' });
 defBlock({key:'REDWOOD_SLAB', name:'Redwood Slab', col:[168, 92, 64], solid:true, tool:'axe', hard:1.0, shape:'slab', tex:'REDWOOD_PLANKS' });
+defBlock({key:'PAINTING', name:'Painting', col:[120,96,60], solid:true, tool:'axe', hard:0.6 });
 defBlock({key:'LAUNCH_PAD', name:'Launch Pad', col:[92,96,106], top:[70,74,84], side:[100,104,114], spec:[255,180,60], solid:true, tool:'pickaxe', tier:1, hard:3.5 });
 defBlock({key:'MOON_DUST', name:'Moon Dust', col:[203,203,209], top:[212,212,218], side:[194,194,200], solid:true, tool:'shovel', hard:0.7 });
 defBlock({key:'MOON_ROCK', name:'Moon Rock', col:[136,136,144], side:[128,128,136], solid:true, tool:'pickaxe', tier:1, hard:2.4 });
@@ -875,6 +876,15 @@ function iconFor(key){
   if(it.block != null){
     var b = blk(it.block);
     var top = b.top||b.col, side=b.side||b.col, front=b.col;
+    if(it.block===B.PAINTING){
+      x.fillStyle=css([110,80,48]); x.fillRect(3,3,26,26);       // wood frame
+      x.fillStyle=css([150,116,70]); x.fillRect(4,4,24,24);
+      x.fillStyle='#f4f4f4'; x.fillRect(7,7,18,18);              // white canvas
+      x.fillStyle=css([210,70,70]); x.fillRect(10,16,4,4);       // little dabs of art
+      x.fillStyle=css([70,120,210]); x.fillRect(17,10,4,4);
+      x.fillStyle=css([90,190,90]); x.fillRect(15,18,5,3);
+      _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key];
+    }
     if(it.block===B.LILY_PAD){
       x.fillStyle=css([61,117,57]); x.fillRect(6,8,20,16); x.fillRect(8,6,16,20);   // pad
       x.fillStyle=css([79,145,70]); x.fillRect(9,9,14,14);                            // inner leaf
@@ -2847,18 +2857,23 @@ var mobNoiseTex=(function(){ var s=8, cv=document.createElement('canvas'); cv.wi
 function buildAvatarModel(L){ var g=new THREE.Group();
   function p(w,h,d,c,x,y,z){ var m=new THREE.MeshBasicMaterial({color:c, map:mobNoiseTex}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); g.add(me); return me; }
   function limb(w,h,d,c,px,py,pz){ var grp=new THREE.Group(); grp.position.set(px,py,pz);
-    var m=new THREE.MeshBasicMaterial({color:c, map:mobNoiseTex}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(0,-h/2,0); grp.add(me); g.add(grp); return grp; }
+    var m=new THREE.MeshBasicMaterial({color:c, map:mobNoiseTex}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(0,-h/2,0); grp.add(me); grp.__skin=me; g.add(grp); return grp; }
   var SKIN=0xc99a6b, SHIRT=0x2e8b9b, PANTS=0x35407a;
-  L.head=p(0.5,0.5,0.5,SKIN,0,1.62,0);
-  p(0.52,0.12,0.52,0x6b4a2e,0,1.84,0);
-  p(0.52,0.28,0.06,0x6b4a2e,0,1.74,-0.24); p(0.06,0.2,0.52,0x6b4a2e,-0.24,1.78,0); p(0.06,0.2,0.52,0x6b4a2e,0.24,1.78,0);   // hair back + sides
-  p(0.1,0.1,0.02,0x14110f,-0.12,1.64,0.26); p(0.1,0.1,0.02,0x14110f,0.12,1.64,0.26);
+  L.head=p(0.5,0.5,0.5,SKIN,0,1.62,0); L._skinParts=[L.head];
+  L._hair=[];
+  L._hair.push(p(0.54,0.14,0.54,0x6b4a2e,0,1.85,0));                                   // top
+  L._hair.push(p(0.54,0.3,0.07,0x6b4a2e,0,1.74,-0.24));                                 // back
+  L._hair.push(p(0.07,0.22,0.54,0x6b4a2e,-0.25,1.78,0)); L._hair.push(p(0.07,0.22,0.54,0x6b4a2e,0.25,1.78,0));   // sides
+  L._hairFront=p(0.54,0.08,0.06,0x6b4a2e,0,1.82,0.25); L._hair.push(L._hairFront);      // fringe (hidden for bald/short)
+  L._hairTall=p(0.2,0.34,0.2,0x6b4a2e,0,2.05,0); L._hair.push(L._hairTall);             // mohawk/tall crest (hidden by default)
+  L._eyeL=p(0.1,0.1,0.02,0x14110f,-0.12,1.64,0.26); L._eyeR=p(0.1,0.1,0.02,0x14110f,0.12,1.64,0.26);
   p(0.04,0.04,0.02,0xf4f4ff,-0.13,1.66,0.27); p(0.04,0.04,0.02,0xf4f4ff,0.11,1.66,0.27);
-  p(0.18,0.035,0.02,0x6e3a2c,0,1.52,0.26);
+  L._mouth=p(0.18,0.035,0.02,0x1a1414,0,1.52,0.26);
   L.torso=p(0.56,0.72,0.3,SHIRT,0,1.06,0);
   p(0.54,0.08,0.31,0x3a2c1c,0,0.72,0); p(0.09,0.05,0.02,0xd9b24a,0,0.72,0.16);   // belt + flush buckle
   L.armL=limb(0.2,0.66,0.24,SKIN,-0.38,1.42,0);
   L.armR=limb(0.2,0.66,0.24,SKIN,0.38,1.42,0);
+  if(L._skinParts){ if(L.armL.__skin)L._skinParts.push(L.armL.__skin); if(L.armR.__skin)L._skinParts.push(L.armR.__skin); }
   var _slL=new THREE.Mesh(new THREE.BoxGeometry(0.23,0.44,0.27), L.torso.material); _slL.position.set(0,-0.2,0); L.armL.add(_slL);
   var _slR=new THREE.Mesh(new THREE.BoxGeometry(0.23,0.44,0.27), L.torso.material); _slR.position.set(0,-0.2,0); L.armR.add(_slR);   // full shirt sleeves
   L.legL=limb(0.24,0.7,0.26,PANTS,-0.14,0.7,0);
@@ -2895,7 +2910,15 @@ var COSMETICS={
   shoes:[ {id:'navy',name:'Navy Boots',col:0x2a2f52,def:true}, {id:'brown',name:'Leather Boots',col:0x6b4a2e,ach:'getting_wood'}, {id:'redsh',name:'Red Sneakers',col:0xc0392b,ach:'stone_age'}, {id:'goldsh',name:'Golden Boots',col:0xd4af37,ach:'diamonds'} ],
   pants:[ {id:'blue',name:'Blue Jeans',col:0x35407a,def:true}, {id:'black',name:'Black Trousers',col:0x24262e,ach:'lighting_up'}, {id:'khaki',name:'Explorer Khaki',col:0x9a7b4a,ach:'time_to_mine'}, {id:'crimson',name:'Crimson Pants',col:0x8a2f3a,ach:'first_kill'} ]
 };
-var playerCos={shirt:'teal',glasses:'none',shoes:'navy',pants:'blue'};
+var SKIN_TONES=[{id:'light',name:'Light',col:0xe6b892},{id:'tan',name:'Tan',col:0xc99a6b},{id:'medium',name:'Medium',col:0xa9764b},{id:'brown',name:'Brown',col:0x7a5432},{id:'dark',name:'Dark',col:0x513824},{id:'pale',name:'Pale',col:0xf0d0ba},{id:'olive',name:'Olive',col:0xb59a6a},{id:'green',name:'Alien',col:0x6ab04a},{id:'blue',name:'Frost',col:0x8fb8d6}];
+var FACE_STYLES=[{id:'neutral',name:'Neutral'},{id:'smile',name:'Smile'},{id:'grin',name:'Big Grin'},{id:'grumpy',name:'Grumpy'},{id:'wide',name:'Wide Eyes'},{id:'wink',name:'Wink'},{id:'glow',name:'Glowing'}];
+var HAIR_COLORS=[{id:'brown',name:'Brown',col:0x6b4a2e},{id:'black',name:'Black',col:0x1c1712},{id:'blonde',name:'Blonde',col:0xd8b45a},{id:'ginger',name:'Ginger',col:0xb5561f},{id:'white',name:'White',col:0xe6e6ea},{id:'gray',name:'Gray',col:0x9a9a9a},{id:'blue',name:'Blue',col:0x3a63c8},{id:'green',name:'Green',col:0x3f9a4a},{id:'pink',name:'Pink',col:0xe87ab0},{id:'purple',name:'Purple',col:0x9a4fb0}];
+var HAIR_TYPES=[{id:'short',name:'Short'},{id:'full',name:'Full'},{id:'bald',name:'Bald'},{id:'mohawk',name:'Mohawk'},{id:'long',name:'Long'}];
+function hairColor(id){ for(var i=0;i<HAIR_COLORS.length;i++) if(HAIR_COLORS[i].id===id) return HAIR_COLORS[i]; return HAIR_COLORS[0]; }
+function hairType(id){ for(var i=0;i<HAIR_TYPES.length;i++) if(HAIR_TYPES[i].id===id) return HAIR_TYPES[i]; return HAIR_TYPES[1]; }
+function skinTone(id){ for(var i=0;i<SKIN_TONES.length;i++) if(SKIN_TONES[i].id===id) return SKIN_TONES[i]; return SKIN_TONES[1]; }
+function faceStyle(id){ for(var i=0;i<FACE_STYLES.length;i++) if(FACE_STYLES[i].id===id) return FACE_STYLES[i]; return FACE_STYLES[0]; }
+var playerCos={shirt:'teal',glasses:'none',shoes:'navy',pants:'blue',skin:'tan',face:'neutral',haircol:'brown',hairtype:'full'};
 try{ var _pc=localStorage.getItem('fw_cos'); if(_pc) playerCos=JSON.parse(_pc); }catch(e){}
 var cosGlobal={}; try{ cosGlobal=JSON.parse(localStorage.getItem('fw_cosowned')||'{}'); }catch(e){}
 var hatsOwned={}; try{ hatsOwned=JSON.parse(localStorage.getItem('fw_hatsowned')||'{}'); }catch(e){}
@@ -2923,6 +2946,44 @@ function buildArmorPiece(kind, tint){ var g=new THREE.Group();
   return g;
 }
 function applyCosmeticsTo(root, L, state){
+  if(state.skin && L._skinParts){ var _st=skinTone(state.skin); for(var _si=0;_si<L._skinParts.length;_si++){ var _sp=L._skinParts[_si]; if(_sp&&_sp.material) _sp.material.color.setHex(_st.col); } }
+  if(state.haircol!=null || state.hairtype!=null){ var _hc=hairColor(state.haircol||'brown').col, _ht=hairType(state.hairtype||'full').id;
+    if(L._hair){ for(var _hi=0;_hi<L._hair.length;_hi++){ if(L._hair[_hi]&&L._hair[_hi].material) L._hair[_hi].material.color.setHex(_hc); } }
+    // hair type toggles which pieces show
+    var showFront=(_ht==='full'||_ht==='long'||_ht==='short'), showBackLong=(_ht==='long'||_ht==='full'), showMohawk=(_ht==='mohawk'), bald=(_ht==='bald');
+    if(L._hair){ for(var _h2=0;_h2<L._hair.length;_h2++){ if(L._hair[_h2]) L._hair[_h2].visible=!bald; } }
+    if(L._hairFront) L._hairFront.visible=showFront && !bald;
+    if(L._hairTall) L._hairTall.visible=showMohawk;
+    if(showMohawk && L._hair){ for(var _h3=0;_h3<4;_h3++){ if(L._hair[_h3]&&_h3!==0) L._hair[_h3].visible=false; } if(L._hair[0]) L._hair[0].visible=false; }
+    if(L._hair && L._hair[1]){ L._hair[1].scale.y=showBackLong?1.8:1.0; L._hair[1].position.y=showBackLong?1.66:1.74; }   // long hair drops down the back
+  }
+  if(state.face){ var _fs=faceStyle(state.face);
+    var mo=L._mouth, eL=L._eyeL, eR=L._eyeR;
+    if(mo&&mo.material){
+      // reset
+      mo.material.color.setHex(0x1a1414); mo.scale.set(1,1,1); mo.position.set(0,1.52,0.26); mo.rotation.z=0;
+      if(L._mouth2){ if(L._mouth2.parent)L._mouth2.parent.remove(L._mouth2); L._mouth2=null; }
+      if(state.face==='smile'||state.face==='grin'){
+        // build a curved smile from three little segments
+        L._mouth2=new THREE.Group(); L._mouth2.position.set(0,1.5,0.26);
+        var mc=0x1a1414, big=(state.face==='grin'), seg=[[-0.08,0.02],[-0.04,-0.005],[0,-0.02],[0.04,-0.005],[0.08,0.02]];
+        for(var _mi=0;_mi<5;_mi++){ var sm=new THREE.Mesh(new THREE.BoxGeometry(0.045,big?0.05:0.035,0.02), new THREE.MeshBasicMaterial({color:mc})); sm.position.set(seg[_mi][0], seg[_mi][1]*(big?2.4:1.6), 0.01); L._mouth2.add(sm); }
+        mo.visible=false; root.add(L._mouth2);
+      } else { mo.visible=true;
+        if(state.face==='grumpy'){ mo.scale.set(1.1,0.7,1); mo.position.y=1.49; mo.rotation.z=0; 
+          // frown: raise the ends by nudging position; approximate with a downward arch via wider box
+          mo.material.color.setHex(0x5a2a24); }
+      }
+    }
+    if(eL&&eL.material){
+      eL.material.color.setHex(0x14110f); eR.material.color.setHex(0x14110f);
+      eL.scale.set(1,1,1); eR.scale.set(1,1,1);
+      if(state.face==='wide'){ eL.scale.set(1.5,1.5,1); eR.scale.set(1.5,1.5,1); }
+      if(state.face==='wink'){ eR.scale.set(1,0.15,1); }
+      if(state.face==='grumpy'){ eL.scale.set(1.2,0.6,1); eR.scale.set(1.2,0.6,1); }
+      if(state.face==='glow'){ eL.material.color.setHex(0xffb43a); eR.material.color.setHex(0xffb43a); }
+    }
+  }
   if(L._armor){ for(var _a=0;_a<L._armor.length;_a++){ var _ap=L._armor[_a]; _ap.parent.remove(_ap.node); } } L._armor=[];
   var _arm=state.armor||[null,null,null,null];
   function _reg(parent, node){ if(parent){ parent.add(node); L._armor.push({parent:parent, node:node}); } }
@@ -2938,7 +2999,7 @@ function applyCosmeticsTo(root, L, state){
   if(L._glasses){ L.head.remove(L._glasses); L._glasses=null; }
   var gl=cosItem('glasses',state.glasses); if(gl&&gl.id!=='none'&&L.head){ L._glasses=buildGlasses(gl.id); L.head.add(L._glasses); }
 }
-function applyPlayerHat(){ applyCosmeticsTo(playerAvatar, avatarLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, armor:(typeof inv!=='undefined'&&inv.armor)});
+function applyPlayerHat(){ applyCosmeticsTo(playerAvatar, avatarLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, skin:playerCos.skin, face:playerCos.face, haircol:playerCos.haircol, hairtype:playerCos.hairtype, armor:(typeof inv!=='undefined'&&inv.armor)});
   try{ var _sh=cosItem('shirt',playerCos.shirt); if(_sh&&_sh.col!=null&&typeof sleeveMat!=='undefined') sleeveMat.color.setHex(_sh.col); }catch(_){ }   // first-person sleeve matches your shirt
 }
 // ---- main-menu character preview (its own tiny renderer + avatar) ----
@@ -2952,7 +3013,7 @@ function initCharPreview(){
   previewAvatar=buildAvatarModel(previewLimbs); previewScene.add(previewAvatar);
   updateCharPreview();
 }
-function updateCharPreview(){ if(!previewAvatar) return; applyCosmeticsTo(previewAvatar, previewLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, armor:(typeof inv!=='undefined'&&inv.armor)}); }
+function updateCharPreview(){ if(!previewAvatar) return; applyCosmeticsTo(previewAvatar, previewLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, skin:playerCos.skin, face:playerCos.face, haircol:playerCos.haircol, hairtype:playerCos.hairtype, armor:(typeof inv!=='undefined'&&inv.armor)}); }
 function renderCharPreview(){ if(!previewRenderer){ initCharPreview(); if(!previewRenderer) return; } previewAvatar.rotation.y += 0.012; previewRenderer.render(previewScene, previewCam); }
 function applyPlayerCosmetics(){ applyPlayerHat(); if(typeof updateCharPreview==='function') updateCharPreview(); }
 applyPlayerHat();
@@ -2962,12 +3023,20 @@ function openWardrobe(){
   var ov=document.getElementById('wardrobeOv');
   if(!ov){ ov=document.createElement('div'); ov.id='wardrobeOv'; ov.style.cssText='position:fixed;inset:0;z-index:61;background:radial-gradient(circle at 50% 30%,#141d2eF2,#070b12F8);display:flex;align-items:center;justify-content:center;padding:16px;'; document.body.appendChild(ov); }
   ov.style.display='flex';
-  var tabs=['hat','shirt','pants','glasses','shoes'], tabNames={hat:'Hats',shirt:'Shirts',pants:'Pants',glasses:'Glasses',shoes:'Shoes'};
+  var tabs=['skin','hairtype','haircol','face','hat','shirt','pants','glasses','shoes'], tabNames={skin:'Skin',hairtype:'Hair',haircol:'Hair Color',face:'Face',hat:'Hats',shirt:'Shirts',pants:'Pants',glasses:'Glasses',shoes:'Shoes'};
   var tabBar=''; for(var t=0;t<tabs.length;t++){ tabBar+='<button class="wtab'+(_wardTab===tabs[t]?' on':'')+'" data-tab="'+tabs[t]+'">'+tabNames[tabs[t]]+'</button>'; }
   var cards='';
   if(_wardTab==='hat'){ var owned=hatOwnedSet(), ids=Object.keys(HATS);
     cards+='<div class="wcard'+(!playerHat?' on':'')+'" data-val="">No Hat</div>';
     for(var i=0;i<ids.length;i++){ var id=ids[i], have=!!owned[id]; cards+='<div class="wcard'+(playerHat===id?' on':'')+(have?'':' locked')+'" data-val="'+(have?id:'')+'">'+HATS[id].name+(have?'':' \uD83D\uDD12')+'</div>'; }
+  } else if(_wardTab==='skin'){ for(var ski=0;ski<SKIN_TONES.length;ski++){ var stn=SKIN_TONES[ski], selk=(playerCos.skin===stn.id);
+      cards+='<div class="wcard'+(selk?' on':'')+'" data-val="'+stn.id+'"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#'+('000000'+stn.col.toString(16)).slice(-6)+';margin-right:6px;vertical-align:middle"></span>'+stn.name+'</div>'; }
+  } else if(_wardTab==='face'){ for(var fci=0;fci<FACE_STYLES.length;fci++){ var fst=FACE_STYLES[fci], self=(playerCos.face===fst.id);
+      cards+='<div class="wcard'+(self?' on':'')+'" data-val="'+fst.id+'">'+fst.name+'</div>'; }
+  } else if(_wardTab==='haircol'){ for(var hci=0;hci<HAIR_COLORS.length;hci++){ var hco=HAIR_COLORS[hci], selh=(playerCos.haircol===hco.id);
+      cards+='<div class="wcard'+(selh?' on':'')+'" data-val="'+hco.id+'"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#'+('000000'+hco.col.toString(16)).slice(-6)+';margin-right:6px;vertical-align:middle"></span>'+hco.name+'</div>'; }
+  } else if(_wardTab==='hairtype'){ for(var hti=0;hti<HAIR_TYPES.length;hti++){ var hty=HAIR_TYPES[hti], selt=(playerCos.hairtype===hty.id);
+      cards+='<div class="wcard'+(selt?' on':'')+'" data-val="'+hty.id+'">'+hty.name+'</div>'; }
   } else { var arr=COSMETICS[_wardTab];
     for(var j=0;j<arr.length;j++){ var it=arr[j], own=cosOwned(it), selc=(playerCos[_wardTab]===it.id);
       var sw=(it.col!=null)?'<span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#'+('000000'+it.col.toString(16)).slice(-6)+';margin-right:6px;vertical-align:middle"></span>':'';
@@ -3544,17 +3613,23 @@ var selBox=new THREE.LineSegments(new THREE.EdgesGeometry(selGeo), selMat);
 selBox.visible=false; scene.add(selBox);
 // progressive crack textures (Minecraft destroy-stage style)
 function makeCrackTex(stage){
-  var s=32, cv=document.createElement('canvas'); cv.width=cv.height=s; var x=cv.getContext('2d');
-  x.clearRect(0,0,s,s);
-  var seed=1337; function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/4294967296; }
-  x.strokeStyle='rgba(0,0,0,0.8)'; x.lineCap='round';
-  var clusters=2+stage*2;
-  for(var c=0;c<clusters;c++){
-    var sx=rnd()*s, sy=rnd()*s; x.lineWidth=1+rnd()*1.5;
-    x.beginPath(); x.moveTo(sx,sy);
-    var segs=2+((rnd()*3)|0);
-    for(var k=0;k<segs;k++){ sx+=(rnd()-0.5)*14; sy+=(rnd()-0.5)*14; x.lineTo(sx,sy); }
-    x.stroke();
+  var N=16, px=8, cv=document.createElement('canvas'); cv.width=cv.height=N*px; var x=cv.getContext('2d');
+  x.clearRect(0,0,N*px,N*px);
+  var seed=99+stage*777; function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/4294967296; }
+  // grow jagged cracks from the centre outward; more branches & length each stage
+  var frac=(stage+1)/6;
+  function pix(ix,iy,a,shade){ if(ix<0||iy<0||ix>=N||iy>=N) return; x.fillStyle='rgba('+shade+','+shade+','+shade+','+a+')'; x.fillRect(ix*px,iy*px,px,px); }
+  var branches=2+stage*2;
+  for(var b2=0;b2<branches;b2++){
+    var ang=rnd()*6.28, cx=8, cy=8, len=Math.floor((3+rnd()*5)*frac)+2;
+    for(var l=0;l<len;l++){
+      ang+=(rnd()-0.5)*1.1;
+      cx+=Math.cos(ang); cy+=Math.sin(ang);
+      var ix=Math.round(cx), iy=Math.round(cy);
+      pix(ix,iy,0.82,10);                                  // dark crack core
+      if(rnd()<0.5) pix(ix+(rnd()<0.5?1:-1),iy,0.35,40);   // lighter chip beside it
+      if(rnd()<0.3) pix(ix,iy+1,0.28,90);                  // subtle highlight (spalled edge)
+    }
   }
   var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; t.needsUpdate=true;
   return t;
@@ -4201,6 +4276,7 @@ function tryHarvest(matureOnly){
   sfxBreak(); triggerHandSwing(); return true;
 }
 function breakBlock(hit){
+  if(hit && World.getBlock(hit.x,hit.y,hit.z)===B.PAINTING){ var _pk=paintingKey(hit.x,hit.y,hit.z); if(_paintMeshes[_pk]){ scene.remove(_paintMeshes[_pk]); _paintMeshes[_pk]=null; } }
   var id=hit.id; var b=blk(id);
   if(id===B.BED){ var _bt=World.tiles[World.ck(hit.x,hit.y,hit.z)]; var _bd=(_bt&&_bt.drop)|| (function(){ var h=World.tiles[World.ck(hit.x,hit.y,hit.z)]; return 'BED'; })(); if(_bt&&_bt.type==='bedhead'){ var _ff=World.tiles[World.ck(_bt.fx,_bt.fy,_bt.fz)]; if(_ff&&_ff.drop) _bd=_ff.drop; } breakBed(hit.x,hit.y,hit.z); if(gameMode!=='creative') spawnDrop(hit.x,hit.y,hit.z,_bd||'BED',1); damageTool(); sfxBreak(); return; }
   if(id===B.FURN){ breakFurniture(hit.x,hit.y,hit.z); damageTool(); sfxBreak(); return; }
@@ -4220,11 +4296,15 @@ function breakBlock(hit){
   }
   // TreeCapitator: chopping a log with an axe fells the whole connected tree
   if(gameMode!=='creative' && isLogId(id)){
-    var bottom = !isLogId(World.getBlock(hit.x,hit.y-1,hit.z));   // very bottom log -> fell the whole tree; otherwise only cut upward
-    var felled=treeCapitate(hit.x,hit.y,hit.z, bottom);
-    for(var di=0; di<Math.min(felled,6); di++) damageTool();
-    if(id===B.LOG) unlock('getting_wood');
-    sfxBreak(); return;
+    var heldT=inv.hotbar[hotbarSel]; var hasAxe=heldT && ITEMS[heldT.key] && ITEMS[heldT.key].tool==='axe';
+    if(hasAxe){
+      var bottom = !isLogId(World.getBlock(hit.x,hit.y-1,hit.z));   // bottom log -> fell whole tree; higher up -> cut this log and everything above
+      var felled=treeCapitate(hit.x,hit.y,hit.z, bottom);
+      for(var di=0; di<Math.min(felled,6); di++) damageTool();
+      if(id===B.LOG) unlock('getting_wood');
+      sfxBreak(); return;
+    }
+    // no axe: break just this single log (fall through to the normal single-block drop)
   }
   // drop
   if(id===B.COBWEB){ var _heldw=inv.hotbar[hotbarSel]; var _sw=_heldw&&ITEMS[_heldw.key]&&ITEMS[_heldw.key].tool==='sword';
@@ -4506,6 +4586,7 @@ function doPlace(){
   if(hit.id===B.BED){ sleepInBed(hit); return; }
   if(hit.id===B.BEEHIVE){ harvestHive(hit.x,hit.y,hit.z); return; }
   if(hit.id===B.FURN){ var _fk=World.ck(hit.x,hit.y,hit.z); var _ftile=World.tiles[_fk]; if(_ftile && _ftile.items){ openChest(_fk, true); return; } }
+  if(hit.id===B.PAINTING){ openPaintEditor(hit.x,hit.y,hit.z); return; }
   if(hit.id===B.ROCKET_WORKBENCH){ openRocketWorkbench(); return; }
   if(hit.id===B.COOKING_POT){ openCookingPot(); return; }
   if(hit.id===B.COMPOSTER){ var _cck=World.ck(hit.x,hit.y,hit.z); var _cct=World.tiles[_cck]||(World.tiles[_cck]={type:'composter',lvl:0});
@@ -4716,6 +4797,7 @@ function doPlace(){
   if(pid===B.ELECTRIC_FURNACE) World.tiles[World.ck(nx,ny,nz)]={type:'elecfurnace', input:null, output:null, cook:0};
   if(pid===B.RECYCLER) World.tiles[World.ck(nx,ny,nz)]={type:'recycler', input:null, output:null, cook:0};
   if(pid===B.MASS_FABRICATOR) World.tiles[World.ck(nx,ny,nz)]={type:'massfab', input:null, output:null, cook:0};
+  if(pid===B.PAINTING){ var pf=playerFacing(); var _blank=[]; for(var _pz=0;_pz<256;_pz++) _blank.push(3); World.tiles[World.ck(nx,ny,nz)]={type:'painting', dir:pf, pix:_blank}; setTimeout(function(){ try{ openPaintEditor(nx,ny,nz); }catch(_){ } }, 60); }
   if(pid===B.GENERATOR) World.tiles[World.ck(nx,ny,nz)]={type:'generator', slot:null, burn:0, burnMax:0, energy:0};
   if(pid===B.GEOTHERMAL) World.tiles[World.ck(nx,ny,nz)]={type:'generator', geo:true, slot:null, burn:0, burnMax:0, energy:0};
   if(pid===B.SOLAR_PANEL) World.tiles[World.ck(nx,ny,nz)]={type:'generator', solar:true, energy:0};
@@ -4733,6 +4815,55 @@ function doPlace(){
   if(pid===B.TORCH) unlock('lighting_up');
   if(pid===B.FURNACE) unlock('hot_topic');
   sfxPlace(pid);
+}
+// ---- PAINTINGS: 16-colour pixel art on a block face ----
+var PAINT_PAL=[0x1a1414,0x4a4a4a,0x9a9a9a,0xe8e8e8, 0x8a2f2f,0xd23b3b,0xe8873a,0xe8c93a, 0x3f7a3a,0x5cc24a,0x2f9a8a,0x3fbfc8, 0x2a3560,0x3f63c8,0x8a4fb0,0xe87ab0];
+var _paintTex={};
+function paintingTexture(pix){
+  var N=16, px=6, cv=document.createElement('canvas'); cv.width=cv.height=N*px; var x=cv.getContext('2d');
+  for(var i=0;i<256;i++){ var c=PAINT_PAL[pix[i]|0]||0xe8e8e8; x.fillStyle='#'+('000000'+c.toString(16)).slice(-6); x.fillRect((i%N)*px,((i/N)|0)*px,px,px); }
+  var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; t.needsUpdate=true; return t;
+}
+function paintingKey(x,y,z){ return x+','+y+','+z; }
+var _paintMeshes={};
+function refreshPainting(x,y,z){
+  var k=paintingKey(x,y,z), t=World.tiles[World.ck(x,y,z)]; 
+  if(_paintMeshes[k]){ scene.remove(_paintMeshes[k]); _paintMeshes[k]=null; }
+  if(!t || t.type!=='painting') return;
+  var m=new THREE.Mesh(new THREE.PlaneGeometry(0.92,0.92), new THREE.MeshBasicMaterial({map:paintingTexture(t.pix), side:THREE.DoubleSide}));
+  var d=t.dir||'north', o=0.505;
+  if(d==='north'){ m.position.set(x+0.5,y+0.5,z+1+o-0.5); }
+  else if(d==='south'){ m.position.set(x+0.5,y+0.5,z-o+0.5); m.rotation.y=Math.PI; }
+  else if(d==='east'){ m.position.set(x-o+0.5,y+0.5,z+0.5); m.rotation.y=-Math.PI/2; }
+  else { m.position.set(x+1+o-0.5,y+0.5,z+0.5); m.rotation.y=Math.PI/2; }
+  m.renderOrder=3; scene.add(m); _paintMeshes[k]=m;
+}
+function refreshAllPaintings(){ for(var k in _paintMeshes){ if(_paintMeshes[k]){ scene.remove(_paintMeshes[k]); } } _paintMeshes={}; for(var tk in World.tiles){ var t=World.tiles[tk]; if(t&&t.type==='painting'){ var pa=tk.split(','); refreshPainting(+pa[0],+pa[1],+pa[2]); } } }
+var _paintCur=5, _paintXYZ=null;
+function openPaintEditor(x,y,z){
+  var t=World.tiles[World.ck(x,y,z)]; if(!t||t.type!=='painting') return; _paintXYZ=[x,y,z];
+  openScreen(); currentScreen='paint'; screenEl.innerHTML=''; var p=document.createElement('div'); p.className='panel';
+  var h=document.createElement('h2'); h.textContent='\uD83C\uDFA8 Paint Your Canvas'; p.appendChild(h);
+  var sub=document.createElement('div'); sub.className='small'; sub.style.cssText='text-align:center;opacity:.75;margin-bottom:8px;'; sub.textContent='Tap or drag to paint \u2022 pick a colour below'; p.appendChild(sub);
+  var frame=document.createElement('div'); frame.style.cssText='background:linear-gradient(#7a5a34,#5a3f24);padding:10px;border-radius:8px;width:min(74vmin,340px);margin:0 auto;box-shadow:inset 0 0 0 3px #3a2814;';
+  var grid=document.createElement('div'); grid.style.cssText='display:grid;grid-template-columns:repeat(16,1fr);width:100%;aspect-ratio:1/1;border:2px solid #0008;touch-action:none;background:#f4f4f4;';
+  var cells=[];
+  function paintCell(i){ t.pix[i]=_paintCur; cells[i].style.background='#'+('000000'+PAINT_PAL[_paintCur].toString(16)).slice(-6); }
+  var painting=false;
+  for(var i=0;i<256;i++){ (function(i){ var c=document.createElement('div'); c.style.cssText='width:100%;padding-bottom:100%;background:#'+('000000'+(PAINT_PAL[t.pix[i]|0]||0xe8e8e8).toString(16)).slice(-6)+';';
+    c.addEventListener('pointerdown',function(e){ e.preventDefault(); painting=true; paintCell(i); });
+    c.addEventListener('pointerenter',function(){ if(painting) paintCell(i); });
+    cells.push(c); grid.appendChild(c); })(i); }
+  window.addEventListener('pointerup',function(){ painting=false; },{once:false});
+  frame.appendChild(grid); p.appendChild(frame);
+  var pal=document.createElement('div'); pal.style.cssText='display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:12px 0;';
+  for(var ci=0;ci<PAINT_PAL.length;ci++){ (function(ci){ var sw=document.createElement('button'); sw.style.cssText='width:30px;height:30px;border-radius:6px;border:3px solid '+(ci===_paintCur?'#fff':'#0006')+';background:#'+('000000'+PAINT_PAL[ci].toString(16)).slice(-6)+';'; sw.onclick=function(){ _paintCur=ci; var bs=pal.querySelectorAll('button'); for(var q=0;q<bs.length;q++) bs[q].style.borderColor='#0006'; sw.style.borderColor='#fff'; }; pal.appendChild(sw); })(ci); }
+  p.appendChild(pal);
+  var row=document.createElement('div'); row.style.cssText='display:flex;gap:8px;';
+  var clr=document.createElement('button'); clr.className='mbtn'; clr.textContent='Clear'; clr.onclick=function(){ for(var i=0;i<256;i++){ t.pix[i]=3; cells[i].style.background='#e8e8e8'; } };
+  var done=document.createElement('button'); done.className='mbtn primary'; done.textContent='Done'; done.onclick=function(){ refreshPainting(x,y,z); try{ saveGame(true); }catch(_){ } closeScreen(); };
+  row.appendChild(clr); row.appendChild(done); p.appendChild(row);
+  screenEl.appendChild(p); bindScreenBg();
 }
 function playerFacing(){ var lx=-Math.sin(Player.yaw), lz=-Math.cos(Player.yaw); if(Math.abs(lx)>Math.abs(lz)) return lx>0?'east':'west'; return lz>0?'south':'north'; }
 function placeFrontFace(){ var pf=playerFacing(); return pf==='north'?4:(pf==='south'?5:(pf==='east'?1:0)); }
@@ -4919,6 +5050,7 @@ function shapeless(ing, out, outQty){ RECIPES.push({type:'shapeless', ing:ing, o
 shapeless([{key:'LOG',qty:1}],'PLANKS',4);
 shapeless([{key:'SPRUCE_LOG',qty:1}],'SPRUCE_PLANKS',4);
 shapeless([{key:'REDWOOD_LOG',qty:1}],'REDWOOD_PLANKS',4);
+shaped([['PLANKS','PLANKS','PLANKS'],['PLANKS','WOOL','PLANKS'],['PLANKS','PLANKS','PLANKS']], 'PAINTING', 1);
 shaped([['SPRUCE_PLANKS',null,null],['SPRUCE_PLANKS','SPRUCE_PLANKS',null],['SPRUCE_PLANKS','SPRUCE_PLANKS','SPRUCE_PLANKS']], 'SPRUCE_STAIRS', 4);
 shaped([['SPRUCE_PLANKS','STICK','SPRUCE_PLANKS'],['SPRUCE_PLANKS','STICK','SPRUCE_PLANKS']], 'SPRUCE_FENCE', 3);
 shaped([['STICK','SPRUCE_PLANKS','STICK'],['STICK','SPRUCE_PLANKS','STICK']], 'SPRUCE_GATE', 1);
@@ -6793,13 +6925,20 @@ function makeCreeper(){
   var e2=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.08,0.02),eyeM); e2.position.set(0.1,0.72,0.66); g.add(e2);
   var e3=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.05,0.02),eyeM); e3.position.set(-0.16,0.62,0.65); g.add(e3);
   var e4=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.05,0.02),eyeM); e4.position.set(0.16,0.62,0.65); g.add(e4);
-  var legs=[];                                                            // 6 jointed pipe legs, splayed low & wide
-  for(var si=0;si<3;si++){ var zz=-0.24+si*0.24;
-    var lgL=part(0.09,0.5,0.09, v.iron, -0.5,0.34,zz); lgL.rotation.z=0.9;  legs.push(lgL);
-    var lgR=part(0.09,0.5,0.09, v.iron, 0.5,0.34,zz);  lgR.rotation.z=-0.9; legs.push(lgR);
-    part(0.08,0.34,0.08, v.iron, -0.66,0.16,zz); part(0.08,0.34,0.08, v.iron, 0.66,0.16,zz);   // lower leg segments
+  var legs=[];                                                            // 6 connected legs (thigh angles out, shin drops to a foot)
+  function leg(sx, zz, sign){
+    var hip=new THREE.Group(); hip.position.set(sx*0.28, 0.5, zz); g.add(hip);
+    var thigh=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.1,0.1), new THREE.MeshBasicMaterial({color:v.iron}));
+    thigh.position.set(sx*0.21,0,0); hip.add(thigh);                       // thigh out from the body
+    var knee=new THREE.Group(); knee.position.set(sx*0.42,0,0); hip.add(knee);
+    var shin=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.42,0.09), new THREE.MeshBasicMaterial({color:v.iron}));
+    shin.position.set(0,-0.2,0); knee.add(shin);                           // shin drops down from the knee
+    var foot=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.08,0.12), new THREE.MeshBasicMaterial({color:mixHex(v.iron,0,0.3)}));
+    foot.position.set(0,-0.4,0.02); knee.add(foot);                        // foot at the bottom of the shin
+    legs.push(hip); return hip;
   }
-  g.userData.legs=[legs[0],legs[3]];   // animate a representative pair
+  for(var si=0;si<3;si++){ var zz=-0.26+si*0.26; leg(-1, zz, -1); leg(1, zz, 1); }
+  g.userData.legs=[legs[0],legs[3]];
   g.userData.allLegs=legs;
   return g;
 }
@@ -7387,12 +7526,15 @@ function spawnEnemy(kind, x,y,z){
   if((kind==='zombie'||kind==='skeleton'||kind==='zombie_villager') && Math.random()<0.30){   // Minecraft-style: armored undead
     var TIERS=[['LEATHER',0x9a6a3a],['IRON',0xcdd0d6],['DIAMOND',0x5fe9e0]]; var _tw=Math.random(); var ti=_tw<0.6?0:(_tw<0.9?1:2);
     var T=TIERS[ti], defBase=[2,5,8][ti], ench=Math.random()<0.08, tint=ench?mixHex(T[0]===''?0:T[1],0x9a4fff,0.4):T[1];
-    var PIECES=[['head','HELMET',0.5,0.5,0.5,1.58],['chest','CHESTPLATE',0.57,0.74,0.33,0.95],['legs','LEGGINGS',0.44,0.5,0.24,0.35],['feet','BOOTS',0.46,0.17,0.28,0.06]];
+    var PIECES=[['head','HELMET'],['chest','CHESTPLATE'],['legguard','LEGGINGS'],['boot','BOOTS']];
     var pprob=[0.85,0.72,0.6,0.7]; e.armorPieces=[]; e.armorDef=0;
+    var _legs=mesh.userData&&mesh.userData; var _ll=(_legs&&(_legs.legL||( _legs.legs&&_legs.legs[0]))), _lr=(_legs&&(_legs.legR||(_legs.legs&&_legs.legs[1])));
     for(var pi=0;pi<PIECES.length;pi++){ if(Math.random()<pprob[pi]){ var P=PIECES[pi];
-      var am=new THREE.MeshBasicMaterial({color:tint, map:(typeof mobNoiseTex!=='undefined'?mobNoiseTex:null)}); am.__base=tint;
-      if(mesh.__mats) mesh.__mats.push(am);
-      var abox=new THREE.Mesh(new THREE.BoxGeometry(P[2],P[3],P[4]),am); abox.position.set(0,P[5],0); mesh.add(abox);
+      var piece=buildArmorPiece(P[0], tint);
+      // register the piece's materials for the hurt-flash
+      piece.traverse(function(o){ if(o.material){ o.material.__base=(o.material.color?o.material.color.getHex():tint); if(mesh.__mats) mesh.__mats.push(o.material); } });
+      if((P[0]==='legguard'||P[0]==='boot') && _ll && _lr){ mesh.add(piece); var piece2=buildArmorPiece(P[0],tint); piece2.traverse(function(o){ if(o.material){ o.material.__base=(o.material.color?o.material.color.getHex():tint); if(mesh.__mats) mesh.__mats.push(o.material); } }); mesh.add(piece2); }
+      else mesh.add(piece);
       e.armorPieces.push({key:T[0]+'_'+P[1]}); e.armorDef+=defBase*0.35; } }
     e.enchanted=ench; if(ench){ e.armorDef*=1.4; e.enchTool=randomEnchantedTool(); }
   }
@@ -8997,6 +9139,7 @@ function travelDim(target){
   if(Player.pos.y < _ah-6 || Player.pos.y > _ah+40){ Player.pos.y=_ah+1.2; }   // never arrive buried in terrain or falling from the sky
   Player.vel.set(0,0,0); Player.spawnGrace=20;
   try{ purgeOrphanChunkMeshes(); }catch(_){ }
+  try{ refreshAllPaintings(); }catch(_){ }
   ashStorm=0; ashStormOn=false; ashStormTimer=22+Math.random()*30;
   toast(target==='underforge'?'\uD83C\uDF2B\uFE0F You cross into the UnderForge\u2026':'\u2728 You return to the overworld');
   updateChunks(Player.pos.x, Player.pos.z);
@@ -9747,6 +9890,7 @@ function loop(t){
     if(frame%9===0 && World.dim!=='moon') maybeSpawnBirds();
     if(frame%220===0) maybeBirdEggs();
     if(frame%700===0){ try{ purgeOrphanChunkMeshes(); }catch(_){ } }
+    if(frame%300===50){ try{ refreshAllPaintings(); }catch(_){ } }
     if(frame%3===0) maybeSpawnAnimals();
     if(frame%7===0) maybeSpawnOcean();
     ambientTick(dt);
@@ -9884,8 +10028,15 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 167';
+var VERSION='Update 174';
 var CHANGELOG=[
+  { v:'Update 174', t:'Painting Polish', items:['<b>Blank painting is white now</b>, not pink (the empty fill was pointing at the wrong palette colour)','<b>Painting has its own icon</b> in the inventory and hand \u2014 a framed little canvas','<b>Nicer paint editor</b> \u2014 wooden frame around the canvas and a clearer header'] },
+  { v:'Update 173', t:'Paintings & Black Lips', items:['<b>Paintings you draw yourself!</b> Craft a Painting (planks around wool), place it on a wall, and a 16\u00d716 paint editor opens \u2014 pick from 16 colours and draw your own pixel art. It renders right on the block and saves with your world','<b>Lips are black</b> now on the character'] },
+  { v:'Update 172', t:'Hair & Better Faces', items:['<b>Skin now recolors the arms</b> too (a bug meant it only tinted the head)','<b>Hair colours</b> \u2014 10 options including blonde, ginger, white, blue, green, pink and purple','<b>Hair styles</b> \u2014 Short, Full, Bald, Mohawk and Long','<b>Faces redone</b> \u2014 Smile and Big Grin now draw a real upward curve; plus Neutral, Grumpy, Wide Eyes, Wink and Glowing'] },
+  { v:'Update 171', t:'Skin/Face Actually Apply', items:['<b>Skin colour and Face now update everywhere</b> \u2014 the main-menu character preview wasn\u2019t being told about them, so changes looked like they did nothing. Fixed'] },
+  { v:'Update 170', t:'Customize Skin & Face', items:['<b>Skin colour picker</b> in the Dressing Room \u2014 nine tones from pale to dark, plus Alien green and Frost blue','<b>Face styles</b> \u2014 Neutral, Smile, Grumpy, Wide Eyes, Wink and Glowing eyes','Both update your character live and are saved with your other cosmetics'] },
+  { v:'Update 169', t:'Cogspider Legs & Armor Fix', items:['<b>Cogspider legs connect properly</b> now \u2014 each leg is a jointed thigh + shin + foot hanging off the body instead of floating segments','<b>Enemy armor fixed</b> \u2014 it was a big flat noise-textured slab clipping through the mob; now armored enemies wear the same slim plate pieces the player does (helm, chestplate, leg guards, boots)'] },
+  { v:'Update 168', t:'Better Mining Cracks & Axe Chopping', items:['<b>Mining crack texture redone</b> \u2014 chunky pixel cracks that spread and shatter outward as you break a block, Minecraft destroy-stage style, instead of thin scratches','<b>Whole trees only fall with an axe</b> now \u2014 breaking a log by hand (or other tools) just takes that one log; use an axe to fell the tree'] },
   { v:'Update 167', t:'Naked Sheep, Hover Names & Eating', items:['<b>Sheared sheep look naked</b> now \u2014 the body slims down to bare pink skin instead of staying full and fluffy','<b>Item names show on hover</b> (mouse over any slot) as well as on tap','<b>Fixed the speck by the character\u2019s collar</b> on the menu \u2014 the belt buckle was poking through; it sits flush now','<b>Better eating animation</b> \u2014 food now rises toward your mouth with a chew motion instead of a mining jab'] },
   { v:'Update 166', t:'Real Texture Fix, Daggers & Wood Variants', items:['<b>Crafting Table &amp; Carpenter\u2019s Bench FINALLY fixed</b> \u2014 the decor values were mis-packed so they were rendering ore/wrong branches (the dots). Table now uses its proper 3\u00d73 grid texture; the bench has clean plank slats with a tool rail and saw','<b>Dagger crafting fixed</b> \u2014 Spruce/Birch/Cherry daggers had recipes but no item (blank name, no icon). All daggers exist now with proper icons','<b>Wood variety!</b> Stairs, fences, fence gates and slabs now come in <b>Spruce, Birch, Cherry and Redwood</b> too','Glass opacity and the door swing/seam fixes from last update are in this build (the previous one may have been cached)'] },
   { v:'Update 165', t:'Clearer Glass & Door Fixes', items:['<b>Glass is clearer</b> \u2014 lighter tint and more see-through','<b>Doors swing the right way</b> now (toward their hinge side, like Minecraft) instead of opening backwards','<b>Fixed the line through the door texture</b> \u2014 the panel now maps cleanly across the whole leaf with no seam'] },
