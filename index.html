@@ -5197,8 +5197,6 @@ toolRecipes('AETHERIUM','AETHERIUM');
 shaped([['PLANKS',null,'PLANKS'],['PLANKS','PLANKS','PLANKS']], 'BOAT', 1);
 shaped([['WOOL','WOOL','WOOL'],['IRON_INGOT','BRASS_BLOCK','IRON_INGOT'],['PLANKS','PLANKS','PLANKS']], 'AIRSHIP', 1);
 shaped([['LEATHER','STICK','LEATHER'],['STICK','STICK','STICK'],[null,'STICK',null]], 'GLIDER', 1);
-shaped([[null,'IRON_PLATE',null],['IRON_PLATE','REDSTONE','IRON_PLATE'],['IRON_INGOT','ENERGY_CELL','IRON_INGOT']], 'MOTORCAR', 1);
-shaped([['IRON_PLATE','IRON_PLATE','PLANKS'],['IRON_PLATE','REDSTONE','PLANKS'],['IRON_INGOT','ENERGY_CELL','IRON_INGOT']], 'TRUCK', 1);
 shaped([['IRON_PLATE','IRON_PLATE','IRON_PLATE'],['IRON_PLATE','BRASS_BLOCK','IRON_PLATE'],['COBBLE','COBBLE','COBBLE']], 'LAUNCH_PAD', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],[null,'IRON_INGOT',null],['IRON_INGOT',null,'IRON_INGOT']], 'PROPELLER', 1);
 shaped([['PLANKS','PROPELLER','PLANKS'],['PLANKS','PLANKS','PLANKS'],[null,'STICK',null]], 'WOODEN_PLANE', 1);
@@ -5527,7 +5525,7 @@ function machineLayout(p, widget){
 }
 function spacer(h){ var d=document.createElement('div'); d.style.height=h+'px'; return d; }
 
-function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER'||k==='ANY_PLANKS') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
+function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER'||k==='ANY_PLANKS'||k==='MOTORCAR'||k==='TRUCK') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
 var palNameEl=null, invNameEl=null, lastSlotName='';
 function cosCss(cat,base){ var c=cosItem(cat, playerCos[cat]); if(c&&c.col!=null){ return '#'+('000000'+c.col.toString(16)).slice(-6); } return base; }
 function makeAvatarPreview(){
@@ -7957,6 +7955,8 @@ function tickEntities(dt){
         e.pos.x=pp.x; e.pos.z=pp.z; e.pos.y=pp.y+0.35;   // gondola basket rises to the pilot's waist
         e.mesh.position.set(e.pos.x,e.pos.y,e.pos.z); e.mesh.rotation.set(0, Player.yaw, 0, 'YXZ');
         if(e.mesh.userData.prop) e.mesh.userData.prop.rotation.z += dt*22;
+        e.mesh.position.y += Math.sin(now*0.0016)*0.02;
+        e.mesh.rotation.z = Math.sin(now*0.0011)*0.03;   // subtle sway, like floating in air
         continue;
       }
       if(e.kind==='rocket'){
@@ -9605,9 +9605,10 @@ function physics(dt){
   if(rpgBiomeCd<=0){ rpgBiomeCd=1.0; var _bi=World.biomeAt(Math.floor(Player.pos.x),Math.floor(Player.pos.z));
     if(_bi!==rpgLastBiome){ if(rpgLastBiome!=null){ if(!rpgSeenBiome[_bi]){ rpgSeenBiome[_bi]=1; rpgAddXP('exploration',30); } else rpgAddXP('exploration',3); } rpgLastBiome=_bi; } }
   Player.sneakGuard = Player.sneaking && grounded && !Player.flying;
-  var accel = Player.onGround?40:8;
+  var accel = ridingBoat ? 2.6 : (Player.onGround?40:8);   // boats are heavy: slow to build speed, glide to a stop
   Player.vel.x += (wishX*speed - Player.vel.x)*Math.min(1,accel*dt);
   Player.vel.z += (wishZ*speed - Player.vel.z)*Math.min(1,accel*dt);
+  if(ridingBoat && (Math.abs(wishX)+Math.abs(wishZ))<0.05){ Player.vel.x*=(1-Math.min(1,dt*0.9)); Player.vel.z*=(1-Math.min(1,dt*0.9)); }   // water drag: coast a long way
   // gravity / flight
   var climbing = !Player.flying && !Player.inWater && onLadder();
   if(Player.flying && gameMode==='creative'){
@@ -9679,9 +9680,15 @@ function physics(dt){
     var adir=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(Player.pitch*0.7,Player.yaw,0,'YXZ'));
     var sdir=new THREE.Vector3(1,0,0).applyEuler(new THREE.Euler(0,Player.yaw,0,'YXZ'));
     var asp=6.5;
-    Player.vel.x = (adir.x*fIn2 + sdir.x*sIn2)*asp;
-    Player.vel.z = (adir.z*fIn2 + sdir.z*sIn2)*asp;
-    Player.vel.y = adir.y*fIn2*asp + ((input.jump||keys['Space'])?4.5:0);   // hover when idle; jump rises; look down+forward descends
+    var _av=Player.riding; if(_av.avx==null){ _av.avx=0; _av.avz=0; _av.avy=0; }
+    var _wishx=(adir.x*fIn2 + sdir.x*sIn2)*asp, _wishz=(adir.z*fIn2 + sdir.z*sIn2)*asp;
+    var _wishy=adir.y*fIn2*asp*0.5 + ((input.jump||keys['Space'])?4.2:0) + (Player.sneaking?0:0);
+    // heavy airship inertia: eases toward the target velocity and drifts when you let go
+    _av.avx += (_wishx-_av.avx)*Math.min(1,dt*0.8);
+    _av.avz += (_wishz-_av.avz)*Math.min(1,dt*0.8);
+    _av.avy += (_wishy-_av.avy)*Math.min(1,dt*1.2);
+    if(Math.abs(fIn2)<0.05 && Math.abs(sIn2)<0.05){ _av.avx*=(1-Math.min(1,dt*0.5)); _av.avz*=(1-Math.min(1,dt*0.5)); }   // slow gentle drift to a stop
+    Player.vel.x=_av.avx; Player.vel.z=_av.avz; Player.vel.y=_av.avy;   // constant altitude when idle (no gravity)
     Player.inWater=false; fellFrom=null;
   }
   if(!riding && !Player.onGround && !Player.inWater && Player.vel.y<-4){   // glider: hold it while falling to soar down
@@ -10061,8 +10068,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 177';
+var VERSION='Update 178';
 var CHANGELOG=[
+  { v:'Update 178', t:'Bye Cars, Weighty Boats & Airships', items:['<b>Removed the Motorcar &amp; Truck</b> for now \u2014 they looked rough. They\u2019ll come back when they\u2019re done right','<b>Boats have weight</b> now \u2014 they take a moment to build up speed and glide a long way when you let go, like a real boat on water','<b>Airship feels like flying</b> \u2014 momentum-based cruising that eases in and drifts to a stop, holds its altitude when idle, and sways gently in the air'] },
   { v:'Update 177', t:'Muscle Cars & Real Driving', items:['<b>Cars look like proper muscle cars now</b> \u2014 long low body, raised cabin with real windows, bumpers, headlights/taillights, a racing stripe and chrome wheel hubs','<b>Real driving mechanics</b> \u2014 forward/back is the throttle (accelerate up to top speed, coast to a stop) and left/right actually <b>steers</b> the car, which only turns while you\u2019re moving and reverses when backing up','<b>Motorcar &amp; Truck have proper icons</b> in the inventory and hand'] },
   { v:'Update 176', t:'Sit on Real Chairs', items:['<b>Sitting moved to actual furniture</b> \u2014 build a Chair, Stool or Sofa at the Carpenter\u2019s Bench, place it, and tap it to sit. Tap SNEAK (or JUMP) to stand up. (Stairs/slabs no longer act as seats)'] },
   { v:'Update 175', t:'Sitting & Clearer Glass', items:['<b>Sit down!</b> Tap any stairs or slab to sit on it, then tap SNEAK (or JUMP) to stand back up','<b>Glass is much clearer</b> now \u2014 more transparent and a softer, less milky-white tint','Mined blocks still tumble out as items you pick up off the ground'] },
