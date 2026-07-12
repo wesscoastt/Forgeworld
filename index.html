@@ -426,7 +426,7 @@ defBlock({key:'WATER', name:'Water', col:[46,104,170], top:[74,152,196], side:[3
 defBlock({key:'LOG', name:'Oak Log', col:[102,76,44], top:[160,128,82], side:[96,72,42], solid:true, tool:'axe', hard:1.2 , log:true });
 defBlock({key:'LEAVES', name:'Oak Leaves', col:[54,118,46], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'PLANKS', name:'Oak Planks', col:[176,140,86], top:[182,146,92], solid:true, tool:'axe', hard:1.0 });
-defBlock({key:'GLASS', name:'Glass', col:[218,236,244], top:[228,244,250], side:[206,228,240], solid:true, transparent:true, hard:0.4 });
+defBlock({key:'GLASS', name:'Glass', col:[232,244,250], top:[238,248,252], side:[224,240,248], solid:true, transparent:true, hard:0.4 });
 defBlock({key:'COAL_ORE', name:'Coal Ore', col:[60,60,64], spec:[26,26,28], solid:true, tool:'pickaxe', tier:1, hard:2.2, drop:'COAL' });
 defBlock({key:'IRON_ORE', name:'Iron Ore', col:[140,128,118], spec:[206,170,140], solid:true, tool:'pickaxe', tier:2, hard:2.6 });
 defBlock({key:'GOLD_ORE', name:'Gold Ore', col:[140,132,96], spec:[226,196,84], solid:true, tool:'pickaxe', tier:3, hard:2.8 });
@@ -667,6 +667,7 @@ mat('PROPELLER','Propeller',[205,208,216],{stack:16});
 mat('WOODEN_PLANE','Wooden Plane',[176,140,86],{stack:1});
 mat('GUNPOWDER','Gunpowder',[58,58,64]);
 mat('BLASTING_POWDER','Blasting Powder',[70,64,58]);
+defBlock({key:'COBWEB', name:'Cobweb', col:[228,232,240], solid:false, transparent:true, thin:true, cross:true, hard:1.4, drop:'STRING', web:true });
 mat('SHIELD','Shield',[120,90,54],{stack:1});
 mat('MAP','Map',[230,218,176],{stack:1});
 mat('AETHERIUM','Aetherium',[150,205,232]);
@@ -805,6 +806,7 @@ var TIER_COL={1:[150,150,154],2:[214,196,178],3:[120,224,224]};
   tool(p.toUpperCase()+'_SHOVEL', n+' Shovel','shovel',tier,c,base,spd,dur);
   tool(p.toUpperCase()+'_SWORD', n+' Sword','sword',tier,c,base+3,1.0,dur);
   tool(p.toUpperCase()+'_HOE', n+' Hoe','hoe',tier,c,base,1.0,dur);
+  tool(p.toUpperCase()+'_DAGGER', n+' Dagger','sword',tier,c,Math.max(1,base+1),1.5,Math.floor(dur*0.7));
 });
 // Battle axes - heavy, high-damage, slower weapons (advanced tiers)
 tool('IRON_BATTLEAXE','Iron Battle Axe','battleaxe',3,[214,196,178],11,5,220);
@@ -1336,8 +1338,10 @@ var World = {
       }
       // caves (3D) - carve STONE only, and keep a 4-block solid surface cap (so stone/rock surfaces never get holes you fall through)
       if(id===B.STONE){
-        var cv = this.noise.fbm(wx*0.05, wz*0.05 + y*0.08, 3) + this.noise.n2(wx*0.08+y*0.05, wz*0.08)*0.5;
-        if(y>3 && y<h-4 && cv > 0.62) id = B.AIR;
+        var cv = this.noise.fbm(wx*0.045, wz*0.045 + y*0.07, 3) + this.noise.n2(wx*0.075+y*0.045, wz*0.075)*0.5;
+        if(y>3 && y<h-4 && cv > 0.52) id = B.AIR;
+        var tun = this.noise.fbm(wx*0.02+11, y*0.06, wz*0.02-11 + 4);   // long winding tunnels
+        if(y>4 && y<h-5 && Math.abs(tun) < 0.06) id = B.AIR;
       }
       // ores in stone
       if(id===B.STONE){ id = this.oreAt(wx,y,wz,h); }
@@ -1649,6 +1653,7 @@ var World = {
     setLocal(ch.blocks, rx+2, floorY+1, rz+2, B.COPPER_LANTERN);
     setLocal(ch.blocks, rx+w-3, floorY+1, rz+d-3, B.COPPER_LANTERN);
     var kind = hash3(cx,405,cz,this.seed)*6|0, spawnMob='zombie', twoChests=false, dname='Boiler Room';
+    this._wantWebs=true;
     if(kind===0){        // Boiler Room
       for(var pp=1;pp<w-1;pp++){ setLocal(ch.blocks, rx+pp, floorY+hgt-2, rz+1, B.CABLE); setLocal(ch.blocks, rx+pp, floorY+hgt-2, rz+d-2, B.CABLE); }
       setLocal(ch.blocks, rx+2, floorY+1, rz+d-2, B.BRASS_BLOCK); setLocal(ch.blocks, rx+2, floorY+2, rz+d-2, B.BRASS_PIPE); setLocal(ch.blocks, rx+2, floorY+3, rz+d-2, B.BRASS_PIPE);
@@ -1693,6 +1698,8 @@ var World = {
     // central loot chest on a brass plinth
     setLocal(ch.blocks, mxp, floorY+1, mzp+1, B.BRASS_BLOCK);
     setLocal(ch.blocks, mxp, floorY+2, mzp+1, B.CHEST);
+    for(var _wi=0;_wi<8;_wi++){ var _wx=rx+1+((hash3(cx,460+_wi,cz,this.seed)*(w-2))|0), _wy=floorY+1+((hash3(cx,470+_wi,cz,this.seed)*(hgt-2))|0), _wz=rz+1+((hash3(cx,480+_wi,cz,this.seed)*(d-2))|0);
+      if(getLocal(ch.blocks,_wx,_wy,_wz)===B.AIR) setLocal(ch.blocks,_wx,_wy,_wz,B.COBWEB); }
     var dk=this.ck(cx*CHUNK+mxp, floorY+2, cz*CHUNK+mzp+1);
     if(!this.tiles[dk]){ var dit=newArray(27); this.fillDungeonLoot(dit, cx*CHUNK+mxp, cz*CHUNK+mzp); this.tiles[dk]={type:'chest', items:dit}; }
     if(twoChests){   // richer dungeons hide a second chest in a corner
@@ -2630,7 +2637,7 @@ function buildChunkGeometry(chunk){
         var co=fc.corners[v];
         P.push(lx+(co[0]?x1:x0), ly+(co[1]?y1:y0), lz+(co[2]?z1:z0));
         C.push(col[0]/255*shade, col[1]/255*shade, col[2]/255*shade);
-        L.push(sky/15, blv/15); var _uy=UVC[v][1]; if(fc.cat===2){ _uy=_v0+(_v1-_v0)*_uy; } U.push(UVC[v][0], _uy); D.push(decor);
+        L.push(sky/15, blv/15); var _uy=UVC[v][1]; if(uvv0!=null){ _uy=_v0+(_v1-_v0)*_uy; } U.push(UVC[v][0], _uy); D.push(decor);
       }
       I.push(start,start+1,start+2, start,start+2,start+3);
     }
@@ -2725,11 +2732,11 @@ function buildChunkGeometry(chunk){
         else if(dir2==='west') dbox(0,0,0,T,1,1);
         else dbox(0,0,0,1,1,T);
       } else {
-        if(dir2==='north'||dir2==='south'){
-          if(hinge==='l') dbox(0,0,0,T,1,1); else dbox(1-T,0,0,1,1,1);
-        } else {
-          if(hinge==='l') dbox(0,0,0,1,1,T); else dbox(0,0,1-T,1,1,1);
-        }
+        // open: the leaf rotates 90 degrees to sit along the wall on its hinge side
+        if(dir2==='north'){ if(hinge==='l') dbox(1-T,0,0,1,1,1); else dbox(0,0,0,T,1,1); }
+        else if(dir2==='south'){ if(hinge==='l') dbox(0,0,0,T,1,1); else dbox(1-T,0,0,1,1,1); }
+        else if(dir2==='east'){ if(hinge==='l') dbox(0,0,1-T,1,1,1); else dbox(0,0,0,1,1,T); }
+        else { if(hinge==='l') dbox(0,0,0,1,1,T); else dbox(0,0,1-T,1,1,1); }
       }
     }
   }
@@ -2889,12 +2896,13 @@ function buildGlasses(id){ var g=new THREE.Group(); function b(w,h,d,c,x,y,z){ v
 }
 // apply a full cosmetic set to an avatar's limbs (used by the player model AND the menu preview)
 function armorTint(key){ if(!key) return null; if(key.indexOf('DIAMOND')>=0) return 0x5fe9e0; if(key.indexOf('IRON')>=0) return 0xd2d2d2; if(key.indexOf('GOLD')>=0) return 0xe9d24a; if(key.indexOf('LEATHER')>=0) return 0x9a6a3a; if(key.indexOf('CHAIN')>=0) return 0x8a8f98; return 0xbfc4cc; }
-function buildArmorPiece(kind, tint){ var g=new THREE.Group(); var m=new THREE.MeshBasicMaterial({color:tint, map:(typeof mobNoiseTex!=='undefined'?mobNoiseTex:null)});
-  function b(w,h,d,x,y,z){ var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); g.add(me); }
-  if(kind==='head'){ b(0.56,0.22,0.56,0,1.85,0); b(0.6,0.1,0.6,0,1.73,0); b(0.08,0.28,0.5,-0.27,1.56,-0.02); b(0.08,0.28,0.5,0.27,1.56,-0.02); b(0.6,0.26,0.1,0,1.57,-0.26); }   // open-face helm: cap, brow ring, cheek guards, back guard
-  else if(kind==='chest'){ b(0.58,0.62,0.34,0,1.07,0); b(0.22,0.5,0.26,-0.34,1.4,0); b(0.22,0.5,0.26,0.34,1.4,0); }
-  else if(kind==='legguard'){ b(0.25,0.52,0.29,0,-0.37,0); }   // limb-local (attached to a leg group so it swings)
-  else if(kind==='boot'){ b(0.27,0.22,0.34,0,-0.72,0.03); }
+function buildArmorPiece(kind, tint){ var g=new THREE.Group();
+  var lite=mixHex(tint,0xffffff,0.28), dark=mixHex(tint,0x000000,0.35);
+  function b(w,h,d,x,y,z,c){ var m=new THREE.MeshBasicMaterial({color:(c==null?tint:c)}); var me=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); me.position.set(x,y,z); g.add(me); }
+  if(kind==='head'){ b(0.52,0.2,0.52,0,1.86,0,lite); b(0.56,0.12,0.56,0,1.74,0,tint); b(0.07,0.24,0.44,-0.26,1.58,0,dark); b(0.07,0.24,0.44,0.26,1.58,0,dark); }   // slim open helm hugging a 0.5 head
+  else if(kind==='chest'){ b(0.56,0.58,0.32,0,1.06,0,tint); b(0.56,0.1,0.32,0,1.3,0,lite); b(0.2,0.42,0.26,-0.35,1.36,0,tint); b(0.2,0.42,0.26,0.35,1.36,0,tint); }   // chestplate + shoulder pads, thin so it wraps
+  else if(kind==='legguard'){ b(0.24,0.5,0.28,0,-0.36,0,tint); b(0.24,0.08,0.28,0,-0.12,0,dark); }
+  else if(kind==='boot'){ b(0.26,0.2,0.32,0,-0.72,0.02,tint); }
   return g;
 }
 function applyCosmeticsTo(root, L, state){
@@ -3482,13 +3490,13 @@ function chunkFrag(alpha, grain){
     '  else if(id==25.0){ if(face<0.5){ if(uv.y<0.30){ col=mix(col, vec3(0.95,0.95,0.92), 0.85); col*=1.0-0.12*lineAt(uv.x,0.5,0.04); } else { col*=0.93+0.08*n2(uv*5.0); col*=1.0-0.34*lineAt(uv.y,0.30,0.02); } col*=1.0-0.14*lineAt(uv.x,0.5,0.02); } else if(face>1.5){ if(uv.y<0.40){ col=mix(col, vec3(0.46,0.31,0.17), 0.92); float leg=step(uv.x,0.14)+step(0.86,uv.x); col=mix(col, vec3(0.30,0.20,0.10), clamp(leg,0.0,1.0)); } else { col*=0.95+0.08*n2(uv*6.0); col*=1.0-0.18*lineAt(uv.y,0.40,0.02); if(uv.x<0.34 && uv.y>0.6) col=mix(col, vec3(0.95,0.95,0.92), 0.55); } } }',   // bed
     '  else if(id==26.0){ col*=0.86+0.2*n2(vec2(floor(uv.x*4.0),floor(uv.y*8.0))); col*=1.0-0.5*lineAt(uv.x,0.5,0.035); float pan=boxAt(uv,vec2(0.12,0.06),vec2(0.88,0.46))+boxAt(uv,vec2(0.12,0.54),vec2(0.88,0.94)); col*=1.0-0.16*pan; float frp=boxAt(uv,vec2(0.18,0.1),vec2(0.82,0.42))+boxAt(uv,vec2(0.18,0.58),vec2(0.82,0.9)); col*=0.9+0.16*frp; float hl=boxAt(uv,vec2(0.76,0.46),vec2(0.88,0.56)); col=mix(col, vec3(0.2,0.17,0.1), hl); col*=1.0-0.2*lineAt(uv.y,0.5,0.03); }',   // door panels
     '  else if(id==28.0){ float band=fract(uv.y*3.0); col*=(band<0.16)?0.58:(0.94+0.12*n2(uv*8.0)); col*=0.92+0.1*n2(uv*3.0); if(face>1.5){ vec2 hc=vec2(abs(uv.x-0.5), abs(uv.y-0.24)); if(max(hc.x,hc.y)<0.11) col*=vec3(0.22,0.18,0.14)*1.4; } }',
-    '  else if(id==29.0){ vec2 P=floor(uv*16.0); float pl=step(2.0,mod(P.y,4.0)); col*=0.86+0.14*pl; col*=0.94+0.12*n2(vec2(P.x,floor(P.y/4.0))*3.7); if(mod(P.y,4.0)<1.0) col*=0.55; if(face>1.5){ float rail=step(11.0,P.y)*step(P.y,12.0); col=mix(col, vec3(0.24,0.26,0.3), rail*0.8); float peg=step(0.5,mod(floor(P.x/3.0),2.0))*step(9.0,P.y)*step(P.y,10.0); col=mix(col, vec3(0.16,0.17,0.2), peg*0.7); } else { float tl=step(1.0,mod(P.x,4.0))*step(1.0,mod(P.y,4.0)); col=mix(col*0.8, col*1.1, tl); } }',
+    '  else if(id==29.0){ vec2 P=floor(uv*16.0); float band=step(2.0,mod(P.y,5.0)); col*=band>0.5?1.0:0.8; if(mod(P.y,5.0)<1.0) col*=0.5; if(face>1.5){ float rail=step(9.0,P.y)*step(P.y,10.0); col=mix(col, vec3(0.22,0.16,0.1), rail); float sawA=step(4.0,P.x)*step(P.x,7.0)*step(11.0,P.y)*step(P.y,13.0); float sawB=step(9.0,P.x)*step(P.x,12.0)*step(11.0,P.y)*step(P.y,12.0); col=mix(col, vec3(0.55,0.56,0.6), clamp(sawA+sawB,0.0,1.0)); } else { float edge=step(P.x,0.0)+step(15.0,P.x)+step(P.y,0.0)+step(15.0,P.y); col*=1.0-0.4*clamp(edge,0.0,1.0); } }',
     '  else if(id==32.0){ vec2 P=floor(uv*16.0); col*=0.9+0.1*n2(P*2.1); float grid=step(P.x,0.0)+step(15.0,P.x)+step(P.y,0.0)+step(15.0,P.y); col*=1.0-0.4*clamp(grid,0.0,1.0); }',
     '  else if(id==33.0){ col*=0.85+0.15*n2(uv*5.0); }',
     '  else if(id==34.0){ col*=0.88+0.14*n2(uv*vec2(6.0,2.0)); }',
-    '  else if(id==35.0){ vec2 P=floor(uv*16.0); col*=0.92+0.1*n2(P*2.3); float gx=step(3.0,mod(P.x,4.0)), gy=step(3.0,mod(P.y,4.0)); float grid=clamp(gx+gy,0.0,1.0); col*=1.0-0.5*grid; float ring=step(3.0,P.x)*step(P.x,12.0)*step(3.0,P.y)*step(P.y,12.0)*(step(mod(P.x,9.0),3.0)+step(9.0,mod(P.x,9.0))); col=mix(col, vec3(0.2,0.14,0.08), 0.0); float border=step(P.x,0.0)+step(15.0,P.x)+step(P.y,0.0)+step(15.0,P.y); col*=1.0-0.55*clamp(border,0.0,1.0); }',
+    '  else if(id==35.0){ vec2 P=floor(uv*16.0); float gx=step(4.0,mod(P.x+1.0,5.0)); float gy=step(4.0,mod(P.y+1.0,5.0)); float grid=clamp(gx+gy,0.0,1.0); col*=1.0-0.55*grid; float border=step(P.x,0.0)+step(15.0,P.x)+step(P.y,0.0)+step(15.0,P.y); col*=1.0-0.5*clamp(border,0.0,1.0); }',
     '  else if(id==36.0){ vec2 P=floor(uv*16.0); float pl=step(2.0,mod(P.y,4.0)); col*=0.86+0.14*pl; if(mod(P.y,4.0)<1.0) col*=0.55; }',
-    '  else if(id==37.0){ vec2 P=floor(uv*16.0); col*=0.9+0.1*n2(P*2.0); float top=step(P.y,3.0); vec3 tool=mix(col, vec3(0.55,0.35,0.18), step(0.5,mod(floor(P.x/2.0),2.0))*top*0.6); col=mix(col, tool, top); float pl2=step(2.0,mod(P.y,4.0))*step(4.0,P.y); col*=(P.y>3.0)?(0.85+0.15*pl2):1.0; if(mod(P.y,4.0)<1.0 && P.y>4.0) col*=0.6; }',
+    '  else if(id==37.0){ vec2 P=floor(uv*16.0); float top=step(13.0,P.y); vec3 tools=mix(col*0.7, vec3(0.5,0.32,0.16), step(0.5,mod(floor(P.x/2.0),2.0))); col=mix(col, tools, top); float band=step(2.0,mod(P.y,4.0)); if(P.y<13.0) col*=band>0.5?1.0:0.82; if(mod(P.y,4.0)<1.0 && P.y<13.0) col*=0.55; float border=step(P.x,0.0)+step(15.0,P.x); col*=1.0-0.4*clamp(border,0.0,1.0); }',
     '  else if(id==27.0){ if(face>1.5){ col*=0.80+0.22*abs(sin(uv.x*18.85)); col*=1.0-0.22*lineAt(fract(uv.x*4.0),0.0,0.05); col*=1.0-0.24*step(0.86,n2(vec2(floor(uv.x*5.0),floor(uv.y*9.0)))); if(uv.y>0.93) col*=1.08; } else { col*=0.9+0.12*n2(uv*5.0); col*=1.0-0.16*step(0.8,n2(uv*6.0)); } }',
     '  return col; }'
   ] : [];
@@ -3508,7 +3516,7 @@ var chunkMat=new THREE.ShaderMaterial({
 });
 var chunkMatT=chunkMat.clone();
 chunkMatT.transparent=true; chunkMatT.depthWrite=false;
-chunkMatT.fragmentShader=chunkFrag('0.72', false);
+chunkMatT.fragmentShader=chunkFrag('0.82', false);
 chunkMatT.uniforms={ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTime:{value:0}, uTorch:torchU, uTorchN:torchNU, uTorchFlk:torchFlkU };
 chunkMatT.needsUpdate=true;
 function setRenderDist(n){ RENDER_DIST=n; var fn=(n-1)*CHUNK, ff=(n+0.4)*CHUNK;
@@ -3642,6 +3650,8 @@ function buildPlantMesh(ch){
       if(st>=3 && (tl.crop==='wheat'||tl.crop==='corn')) cell=15;   // golden ripe heads — readable across a field
       pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, CROP_H[st], cell); }
   }
+  // cobwebs (cross-shaped, in caves/structures)
+  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } } }
   // lilypads floating on swamp water
   for(var llx=0;llx<CHUNK;llx++) for(var llz=0;llz<CHUNK;llz++){
     var lwx=ch.cx*CHUNK+llx, lwz=ch.cz*CHUNK+llz;
@@ -3782,7 +3792,8 @@ function blockBoxes(id,x,y,z){
   if(b.shape==='fence') return [[x+0.26,y,z+0.26,x+0.74,y+1.6,z+0.74]];
   if(b.shape==='wall') return [[x+0.2,y,z+0.2,x+0.8,y+1.6,z+0.8]];
   if(b.shape==='carpet') return [];
-  if(b.shape==='lily') return [[x,y,z,x+1,y+0.07,z+1]];   // stand on lily pads
+  if(b.key==='COBWEB') return [];
+  if(b.shape==='lily' && b.key!=='COBWEB') return [[x,y,z,x+1,y+0.07,z+1]];   // stand on lily pads
   if(b.shape==='lantern') return [[x+0.3,y,z+0.3,x+0.7,y+0.6,z+0.7]];
   if(b.shape==='cable') return [];
   if(b.shape==='ladder') return [];
@@ -4196,15 +4207,15 @@ function breakBlock(hit){
   }
   // TreeCapitator: chopping a log with an axe fells the whole connected tree
   if(gameMode!=='creative' && isLogId(id)){
-    var heldAxe=inv.hotbar[hotbarSel];
-    if(heldAxe && ITEMS[heldAxe.key] && ITEMS[heldAxe.key].tool==='axe'){
-      var felled=treeCapitate(hit.x,hit.y,hit.z);
-      for(var di=0; di<Math.min(felled,6); di++) damageTool();
-      if(id===B.LOG) unlock('getting_wood');
-      sfxBreak(); return;
-    }
+    var bottom = !isLogId(World.getBlock(hit.x,hit.y-1,hit.z));   // very bottom log -> fell the whole tree; otherwise only cut upward
+    var felled=treeCapitate(hit.x,hit.y,hit.z, bottom);
+    for(var di=0; di<Math.min(felled,6); di++) damageTool();
+    if(id===B.LOG) unlock('getting_wood');
+    sfxBreak(); return;
   }
   // drop
+  if(id===B.COBWEB){ var _heldw=inv.hotbar[hotbarSel]; var _sw=_heldw&&ITEMS[_heldw.key]&&ITEMS[_heldw.key].tool==='sword';
+    spawnDrop(hit.x,hit.y,hit.z,'STRING', _sw?(1+(Math.random()*2|0)):1); World.setBlock(hit.x,hit.y,hit.z,B.AIR,true); sfxBreak(id); return; }
   if(canHarvest(id) && gameMode!=='creative'){
     var dropKey = b.drop ? b.drop : (BLOCKS[id].key);
     if(blk(id).leaf){
@@ -4296,13 +4307,15 @@ function tickLeafDecay(dt){
   }
 }
 function isLeafId(id){ return id===B.LEAVES||id===B.SPRUCE_LEAVES||id===B.BIRCH_LEAVES||id===B.CHERRY_LEAVES||id===B.JUNGLE_LEAVES; }
-function treeCapitate(bx,by,bz){
+function treeCapitate(bx,by,bz, whole){
+  if(whole==null) whole=true;
   var logs=[], seen={}, stack=[[bx,by,bz]], cap=170;
+  var loDy = whole ? -1 : 0;   // whole tree can spread down; partial chop only cuts this block and everything above it
   while(stack.length && logs.length<cap){
     var p=stack.pop(), k=p[0]+','+p[1]+','+p[2]; if(seen[k]) continue; seen[k]=1;
     var id=World.getBlock(p[0],p[1],p[2]); if(!isLogId(id)) continue;
     logs.push([p[0],p[1],p[2],id]);
-    for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++)for(var dz=-1;dz<=1;dz++) if(dx||dy||dz) stack.push([p[0]+dx,p[1]+dy,p[2]+dz]);
+    for(var dy=loDy;dy<=1;dy++)for(var dx=-1;dx<=1;dx++)for(var dz=-1;dz<=1;dz++) if(dx||dy||dz) stack.push([p[0]+dx,p[1]+dy,p[2]+dz]);
   }
   for(var i=0;i<logs.length;i++){ var L=logs[i]; World.setBlock(L[0],L[1],L[2],B.AIR,true);
     if(gameMode!=='creative') spawnDrop(L[0]+0.5,L[1]+0.5,L[2]+0.5, BLOCKS[L[3]].key, 1); }
@@ -5028,6 +5041,7 @@ function toolRecipes(matKey, prefix){
   shaped([[matKey],['STICK'],['STICK']], prefix+'_SHOVEL',1);
   shaped([[matKey],[matKey],['STICK']], prefix+'_SWORD',1);
   shaped([[matKey,matKey],[null,'STICK'],[null,'STICK']], prefix+'_HOE',1);
+  shaped([[matKey],['STICK']], prefix+'_DAGGER',1);
 }
 toolRecipes('PLANKS','WOOD');
 toolRecipes('SPRUCE_PLANKS','SPRUCE');
@@ -7283,6 +7297,8 @@ var MOBDEF={
   duck:{hp:4,w:0.4,h:0.55,sp:1.6,dmg:0,passive:true},
   bird:{hp:4,w:0.4,h:0.3,sp:3.2,dmg:0,passive:true,bird:true},
   horse:{hp:15,w:0.8,h:1.6,sp:3.0,dmg:0,passive:true},
+  zombie_horse:{hp:18,w:0.8,h:1.6,sp:3.2,dmg:3},
+  skeleton_horse:{hp:16,w:0.8,h:1.6,sp:3.4,dmg:2},
   dog:{hp:8,w:0.5,h:0.7,sp:3.4,dmg:0,passive:true},
   cat:{hp:8,w:0.4,h:0.6,sp:3.4,dmg:0,passive:true},
   bear:{hp:30,w:1.0,h:1.4,sp:2.7,dmg:5,passive:true,neutral:true},
@@ -7310,7 +7326,10 @@ function meshFor(kind){ switch(kind){
   case 'sheep':return makeSheep(); case 'chicken':return makeChicken();
   case 'shark':return makeShark(); case 'crab':return makeCrab(); case 'emberwisp':return makeWisp();
   case 'deer':return makeDeer(); case 'duck':return makeDuck(); case 'bird':return makeBird();
-  case 'horse':return makeHorse(); case 'dog':return makeDog(); case 'cat':return makeCat();
+  case 'horse':return makeHorse();
+  case 'zombie_horse':{ var _zh=makeHorse(); zombifyMesh(_zh); return _zh; }
+  case 'skeleton_horse':{ var _sh=makeHorse(); if(_sh.__mats)for(var _m=0;_m<_sh.__mats.length;_m++){ _sh.__mats[_m].color.setHex(0xd9dde2); _sh.__mats[_m].__base=0xd9dde2; } return _sh; }
+  case 'dog':return makeDog(); case 'cat':return makeCat();
   case 'bear':return makeBear();
   case 'fox':return makeFox(); case 'boar':return makeBoar(); case 'rabbit':return makeRabbit(); case 'frog':return makeFrog(); case 'monkey':return makeMonkey(); case 'knight':return makeKnight(); case 'zombie_villager':return zombifyMesh(makeVillager()); case 'zombie_dwarf':return zombifyMesh(makeDwarf());
   case 'bee':return makeBee();
@@ -7893,6 +7912,8 @@ function tickEntities(dt){
       if(e.kind==='zombie'){ giveItem('RAW_PORK',1+(rr*2|0)); if(rr<0.12) giveItem('IRON_INGOT',1); }
       else if(e.kind==='skeleton'){ giveItem('BONE',1+(rr*2|0)); if(rr<0.4) giveItem('STICK',1); unlock('marksman'); }
       else if(e.kind==='spooler'){ giveItem('STRING',1+(rr*2|0)); if(rr<0.10) giveItem('STEAM_SILK',1); }
+      else if(e.kind==='zombie_horse'){ giveItem('RAW_PORK',2+(rr*2|0)); if(rr<0.3) giveItem('LEATHER',1); }
+      else if(e.kind==='skeleton_horse'){ giveItem('BONE',2+(rr*2|0)); }
       else if(e.kind==='creeper'){ giveItem('BLASTING_POWDER',1+(rr*2|0)); if(rr<0.4) giveItem('IRON_INGOT',1); }   // Cogspider scrap
       else if(rr<0.5){ giveItem('STICK',1); }
       continue;
@@ -7967,20 +7988,28 @@ function maybeSpawnEnemies(){
   if(gameMode==='creative') return;   // creative: no hostiles to bother you
   if(difficulty==='peaceful') return; // peaceful: no hostiles
   if(spawnGrace>0) return;            // brief grace after respawn
-  if(sunU.value>0.5) return; // only at night
+  var night=(sunU.value<=0.5);
   var hostiles=0; for(var hi=0;hi<entities.length;hi++){ var hk=entities[hi].kind; if(hk!=='fish'&&hk!=='emberwisp'&&!entities[hi].passive) hostiles++; }
-  var hostCap=(IS_MOBILE?6:10); if(difficulty==='easy') hostCap=Math.max(2,Math.floor(hostCap*0.5));
+  var hostCap=(IS_MOBILE?7:12); if(difficulty==='easy') hostCap=Math.max(3,Math.floor(hostCap*0.5)); if(difficulty==='hard') hostCap+=4;
   if(hostiles >= hostCap) return;
-  if(Math.random() > (difficulty==='easy'?0.03:0.055)) return;
-  var ang=Math.random()*Math.PI*2, dist=14+Math.random()*16;
+  if(Math.random() > (difficulty==='easy'?0.04:difficulty==='hard'?0.09:0.07)) return;
+  var ang=Math.random()*Math.PI*2, dist=16+Math.random()*20;
   var x=Math.floor(Player.pos.x+Math.cos(ang)*dist), z=Math.floor(Player.pos.z+Math.sin(ang)*dist);
-  // find surface
-  var cy=-1;
-  for(var y=WORLD_H-1;y>1;y--){ if(isSolid(World.getBlockLoaded(x,y,z))){ cy=y+1; break; } }
+  // pick a spawn Y: surface at night, or any dark air pocket underground (caves) day or night
+  var cy=-1, py=Math.floor(Player.pos.y);
+  if(night){ for(var y=WORLD_H-1;y>1;y--){ if(isSolid(World.getBlockLoaded(x,y,z))){ cy=y+1; break; } } }
+  if(cy<0 || !night){
+    for(var y2=Math.min(WORLD_H-2,py+8); y2>Math.max(2,py-14); y2--){
+      if(!isSolid(World.getBlockLoaded(x,y2,z)) && !isSolid(World.getBlockLoaded(x,y2+1,z)) && isSolid(World.getBlockLoaded(x,y2-1,z))){ cy=y2; break; }
+    }
+  }
   if(cy<0) return;
-  if(World.blockLightAt(x,cy,z) > 7) return; // it's already night here; only block near torches/light
+  var lit=World.blockLightAt(x,cy,z);
+  if(night && cy>SEA){ if(lit>7) return; }       // surface at night: needs darkness (torches keep it clear)
+  else { if(lit>7 || (sunU.value>0.5 && cy>SEA-2)) return; }   // underground/day: only in true dark (caves)
   var r=Math.random(); var kind = r<0.42?'zombie' : r<0.70?'skeleton' : r<0.86?'creeper' : 'spooler';
-  if(kind==='zombie'){ var zr=Math.random(); if(zr<0.16) kind='zombie_villager'; else if(zr<0.24) kind='zombie_dwarf'; }   // infected variants
+  if(kind==='zombie'){ var zr=Math.random(); if(zr<0.16) kind='zombie_villager'; else if(zr<0.24) kind='zombie_dwarf'; }
+  if(cy>SEA && Math.random()<0.02) kind=(Math.random()<0.5)?'zombie_horse':'skeleton_horse';   // rare spooky horses on the surface
   spawnEnemy(kind, x+0.5, cy, z+0.5);
 }
 function maybeSpawnKnights(){
@@ -9493,6 +9522,7 @@ function physics(dt){
     }
     else { Player.vel.y=0; }
   }
+  if(World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y+0.6),Math.floor(Player.pos.z))===B.COBWEB){ Player.vel.x*=0.28; Player.vel.z*=0.28; if(Player.vel.y<0) Player.vel.y*=0.35; }   // cobwebs slow you down
   moveAxis('x', Player.vel.x*dt);
   moveAxis('z', Player.vel.z*dt);
   moveAxis('y', Player.vel.y*dt);
@@ -9820,8 +9850,11 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 162';
+var VERSION='Update 165';
 var CHANGELOG=[
+  { v:'Update 165', t:'Clearer Glass & Door Fixes', items:['<b>Glass is clearer</b> \u2014 lighter tint and more see-through','<b>Doors swing the right way</b> now (toward their hinge side, like Minecraft) instead of opening backwards','<b>Fixed the line through the door texture</b> \u2014 the panel now maps cleanly across the whole leaf with no seam'] },
+  { v:'Update 164', t:'Bench/Table Textures & Smart Chopping', items:['<b>Crafting Table &amp; Carpenter\u2019s Bench textures actually redone</b> \u2014 removed the noise that was showing as random dots. The table now has a clean 3\u00d73 grid top with a tool strip on the sides; the bench has clean plank slats with a saw and tool rail','<b>Smarter tree chopping</b> \u2014 breaking a log now cuts that log and everything <b>above</b> it; only when you break the <b>very bottom</b> log does the whole tree come down. Works with any tool, not just an axe'] },
+  { v:'Update 163', t:'Armor Fix, Daggers, Spooky Horses & Caves', items:['<b>Enemy armor fixed</b> \u2014 it was rendering as a flat tiled slab; now every piece is slim flat-shaded plate that hugs the mob (helm, chestplate with shoulder pads, leg guards, boots)','<b>Daggers</b> \u2014 craft a fast, light blade in any material (quick swings, less damage than a sword)','<b>Spoolers stay</b> for String, and <b>Cobwebs</b> now appear in some structures \u2014 break them with a sword to get String','<b>Zombie &amp; Skeleton Horses</b> \u2014 a rare, eerie surface spawn at night','<b>Minecraft-style spawning</b> \u2014 hostiles now appear in any dark spot (including caves in daytime), scaled by difficulty','<b>More caves!</b> Bigger cave systems plus long winding tunnels, so they\u2019re far easier to find when you dig down'] },
   { v:'Update 162', t:'Cogspiders & Settings Fix', items:['<b>Creepers replaced by Cogspiders</b> \u2014 low, wide brass boiler-spiders with six jointed pipe legs and a smokestack venting steam. Instead of exploding they <b>scuttle up and pinch you</b> with their front claws','They drop <b>Blasting Powder</b> (works like gunpowder) plus scrap iron','<b>Fixed the Settings menu</b> \u2014 the Repair Chunks button was stretching across the whole screen; it\u2019s a normal button in the panel now'] },
   { v:'Update 161', t:'Better Character & Visible Shadows', items:['<b>Character reproportioned</b> \u2014 broader torso, shorter arms with full shirt sleeves (no more long bare arms), sturdier legs','<b>Shadows now draw on top of everything</b> (depth-test off) so they\u2019re always visible \u2014 bigger and darker under every creature'] },
   { v:'Update 160', t:'Shadows Actually Show', items:['<b>Shadows fixed</b> \u2014 they were sinking into the ground / being eaten by fog. Now they draw with a polygon-offset on top of the floor, fog off, so the soft dark disc under you and every creature is clearly visible'] },
