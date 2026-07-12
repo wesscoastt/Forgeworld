@@ -426,7 +426,7 @@ defBlock({key:'WATER', name:'Water', col:[46,104,170], top:[74,152,196], side:[3
 defBlock({key:'LOG', name:'Oak Log', col:[102,76,44], top:[160,128,82], side:[96,72,42], solid:true, tool:'axe', hard:1.2 , log:true });
 defBlock({key:'LEAVES', name:'Oak Leaves', col:[54,118,46], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'PLANKS', name:'Oak Planks', col:[176,140,86], top:[182,146,92], solid:true, tool:'axe', hard:1.0 });
-defBlock({key:'GLASS', name:'Glass', col:[232,244,250], top:[238,248,252], side:[224,240,248], solid:true, transparent:true, hard:0.4 });
+defBlock({key:'GLASS', name:'Glass', col:[198,222,236], top:[206,228,240], side:[190,216,232], solid:true, transparent:true, hard:0.4, glass:true });
 defBlock({key:'COAL_ORE', name:'Coal Ore', col:[60,60,64], spec:[26,26,28], solid:true, tool:'pickaxe', tier:1, hard:2.2, drop:'COAL' });
 defBlock({key:'IRON_ORE', name:'Iron Ore', col:[140,128,118], spec:[206,170,140], solid:true, tool:'pickaxe', tier:2, hard:2.6 });
 defBlock({key:'GOLD_ORE', name:'Gold Ore', col:[140,132,96], spec:[226,196,84], solid:true, tool:'pickaxe', tier:3, hard:2.8 });
@@ -3598,7 +3598,7 @@ var chunkMat=new THREE.ShaderMaterial({
 });
 var chunkMatT=chunkMat.clone();
 chunkMatT.transparent=true; chunkMatT.depthWrite=false;
-chunkMatT.fragmentShader=chunkFrag('0.82', false);
+chunkMatT.fragmentShader=chunkFrag('0.9', false);
 chunkMatT.uniforms={ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTime:{value:0}, uTorch:torchU, uTorchN:torchNU, uTorchFlk:torchFlkU };
 chunkMatT.needsUpdate=true;
 function setRenderDist(n){ RENDER_DIST=n; var fn=(n-1)*CHUNK, ff=(n+0.4)*CHUNK;
@@ -3940,6 +3940,7 @@ function stepUpTo(nx,nz){
   }
   return null;
 }
+function standUp(){ if(Player.sitting){ Player.sitting=false; Player.sitPos=null; } }
 function moveAxis(axis, amt){
   if(amt===0) return;
   var mx=0.45;                                   // never move more than ~half a block per collision test
@@ -4585,7 +4586,12 @@ function doPlace(){
   if(isChest(hit.id)){ openChest(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.BED){ sleepInBed(hit); return; }
   if(hit.id===B.BEEHIVE){ harvestHive(hit.x,hit.y,hit.z); return; }
-  if(hit.id===B.FURN){ var _fk=World.ck(hit.x,hit.y,hit.z); var _ftile=World.tiles[_fk]; if(_ftile && _ftile.items){ openChest(_fk, true); return; } }
+  if(hit.id===B.FURN){ var _fk=World.ck(hit.x,hit.y,hit.z); var _ftile=World.tiles[_fk];
+    if(_ftile && (_ftile.kind==='chair'||_ftile.kind==='stool'||_ftile.kind==='sofa') && !Player.riding && !Player.sitting){
+      var _sy=hit.y+(_ftile.kind==='stool'?0.55:0.5);
+      Player.sitting=true; Player.sitPos={x:hit.x+0.5,y:_sy,z:hit.z+0.5}; Player.pos.set(hit.x+0.5,_sy,hit.z+0.5); Player.vel.set(0,0,0); Player.yaw += 0;
+      sfxClick(); toast('Sitting \u2014 tap SNEAK to stand up'); return; }
+    if(_ftile && _ftile.items){ openChest(_fk, true); return; } }
   if(hit.id===B.PAINTING){ openPaintEditor(hit.x,hit.y,hit.z); return; }
   if(hit.id===B.ROCKET_WORKBENCH){ openRocketWorkbench(); return; }
   if(hit.id===B.COOKING_POT){ openCookingPot(); return; }
@@ -9699,6 +9705,7 @@ function physics(dt){
     }
     else { Player.vel.y=0; }
   }
+  if(Player.sitting){ if(Player.sneaking || (typeof input!=='undefined' && input.jump) || keys['Space']){ standUp(); } else if(Player.sitPos){ Player.pos.set(Player.sitPos.x,Player.sitPos.y,Player.sitPos.z); Player.vel.set(0,0,0); return; } }
   if(World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y+0.6),Math.floor(Player.pos.z))===B.COBWEB){ Player.vel.x*=0.28; Player.vel.z*=0.28; if(Player.vel.y<0) Player.vel.y*=0.35; }   // cobwebs slow you down
   moveAxis('x', Player.vel.x*dt);
   moveAxis('z', Player.vel.z*dt);
@@ -10028,8 +10035,10 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 174';
+var VERSION='Update 176';
 var CHANGELOG=[
+  { v:'Update 176', t:'Sit on Real Chairs', items:['<b>Sitting moved to actual furniture</b> \u2014 build a Chair, Stool or Sofa at the Carpenter\u2019s Bench, place it, and tap it to sit. Tap SNEAK (or JUMP) to stand up. (Stairs/slabs no longer act as seats)'] },
+  { v:'Update 175', t:'Sitting & Clearer Glass', items:['<b>Sit down!</b> Tap any stairs or slab to sit on it, then tap SNEAK (or JUMP) to stand back up','<b>Glass is much clearer</b> now \u2014 more transparent and a softer, less milky-white tint','Mined blocks still tumble out as items you pick up off the ground'] },
   { v:'Update 174', t:'Painting Polish', items:['<b>Blank painting is white now</b>, not pink (the empty fill was pointing at the wrong palette colour)','<b>Painting has its own icon</b> in the inventory and hand \u2014 a framed little canvas','<b>Nicer paint editor</b> \u2014 wooden frame around the canvas and a clearer header'] },
   { v:'Update 173', t:'Paintings & Black Lips', items:['<b>Paintings you draw yourself!</b> Craft a Painting (planks around wool), place it on a wall, and a 16\u00d716 paint editor opens \u2014 pick from 16 colours and draw your own pixel art. It renders right on the block and saves with your world','<b>Lips are black</b> now on the character'] },
   { v:'Update 172', t:'Hair & Better Faces', items:['<b>Skin now recolors the arms</b> too (a bug meant it only tinted the head)','<b>Hair colours</b> \u2014 10 options including blonde, ginger, white, blue, green, pink and purple','<b>Hair styles</b> \u2014 Short, Full, Bald, Mohawk and Long','<b>Faces redone</b> \u2014 Smile and Big Grin now draw a real upward curve; plus Neutral, Grumpy, Wide Eyes, Wink and Glowing'] },
