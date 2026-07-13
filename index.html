@@ -4421,6 +4421,8 @@ function tryHarvest(matureOnly){
   sfxBreak(); triggerHandSwing(); return true;
 }
 function breakBlock(hit){
+  { var _shid=hit&&World.getBlock(hit.x,hit.y,hit.z); var _shs=inv.hotbar[hotbarSel]; var _hasShears=_shs&&ITEMS[_shs.key]&&ITEMS[_shs.key].shears;
+    if(_hasShears && isLeafId(_shid)){ spawnDrop(hit.x,hit.y,hit.z, BLOCKS[_shid].key, 1); World.setBlock(hit.x,hit.y,hit.z,B.AIR,true); try{ damageTool(); sfxBreak(_shid); }catch(_){ } return; } }
   { var _fid=hit&&World.getBlock(hit.x,hit.y,hit.z), _fd=null;
     if(_fid===B.APPLE_FRUIT)_fd='APPLE'; else if(_fid===B.ORANGE_FRUIT)_fd='ORANGE'; else if(_fid===B.LEMON_FRUIT)_fd='LEMON'; else if(_fid===B.FIG_FRUIT)_fd='FIG';
     else if(_fid===B.BLUEBERRY_BUSH)_fd='BLUEBERRY'; else if(_fid===B.STRAWBERRY_BUSH)_fd='STRAWBERRY'; else if(_fid===B.GRAPE_VINE)_fd='GRAPES';
@@ -4468,7 +4470,7 @@ function breakBlock(hit){
       if(id===B.JUNGLE_LEAVES && hash3(hit.x,hit.y,hit.z,World.seed^53)<0.06) spawnDrop(hit.x,hit.y,hit.z,'COCONUT',1);
     }
     if(id===B.GRASS){ dropKey='DIRT'; var sr=hash3(hit.x,hit.y,hit.z,World.seed^41);
-      if(sr<0.5){ spawnDrop(hit.x,hit.y,hit.z, sr<0.22?'SEEDS':sr<0.30?'CARROT':sr<0.38?'POTATO':sr<0.44?'TOMATO_SEEDS':'CORN_SEEDS',1); } }
+      if(sr<0.32){ spawnDrop(hit.x,hit.y,hit.z, sr<0.20?'SEEDS':sr<0.235?'CARROT':sr<0.27?'POTATO':sr<0.30?'TOMATO_SEEDS':'CORN_SEEDS',1); } }   // rarer veg from grass, mostly seeds
     if(id===B.COAL_ORE) dropKey='COAL';
     if(id===B.GRAVEL && hash3(hit.x,hit.y,hit.z,World.seed^57)<0.22) dropKey='FLINT';
     var prospect=heldEnchLvl('prospector');
@@ -5949,7 +5951,8 @@ function openRecipeBook(){
       row.style.cursor='pointer'; row.style.borderColor='#5cc24a'; row.style.background='#16321a'; row.setAttribute('role','button');
       var _rl=row.querySelectorAll('.rname,.ring'); for(var _ri=0;_ri<_rl.length;_ri++){ _rl[_ri].style.color = _rl[_ri].className==='ring' ? '#a9c9a9' : '#f2fbf2'; }   // readable on the green craftable row
       var tag=document.createElement('div'); tag.textContent='\u2713 Craft'; tag.style.cssText='margin-left:auto;font-size:12px;font-weight:700;color:#8de29a;'; row.appendChild(tag);
-      row.addEventListener('click', function(){ if(craftFromBook(r)){ toast('Crafted '+(ITEMS[r.out]?ITEMS[r.out].name:r.out)); openRecipeBook(); } });
+      row.addEventListener('click', function(){ if(craftFromBook(r)){ toast('Crafted '+(ITEMS[r.out]?ITEMS[r.out].name:r.out));
+        var _pnl=screenEl.querySelector('.panel'); var _stp=_pnl?_pnl.scrollTop:0; var _fk=gpFocusPos; openRecipeBook(); var _p2=screenEl.querySelector('.panel'); if(_p2)_p2.scrollTop=_stp; } });
     } else if(!ok){ row.style.opacity='0.4'; }
     list.appendChild(row);
   })(RECIPES[ri]); }
@@ -6439,7 +6442,7 @@ function openFurnitureBench(){
     var tx=document.createElement('div'); tx.style.cssText='flex:1;'; tx.innerHTML='<div style="font-size:14px">'+ITEMS[rc.item].name+'</div><div class="small" style="opacity:.7">'+costStr+'</div>';
     var bt=document.createElement('button'); bt.className='tog'+(can?' on':''); bt.textContent='Build'; bt.style.cssText='padding:6px 14px;'; bt.disabled=!can;
     bt.onclick=function(){ if(!Object.keys(rc.cost).every(function(k){ return invCount(k)>=rc.cost[k]; })) return;
-      Object.keys(rc.cost).forEach(function(k){ invTake(k, rc.cost[k]); }); giveItem(rc.item,1); sfxClick(); openFurnitureBench(); };
+      Object.keys(rc.cost).forEach(function(k){ invTake(k, rc.cost[k]); }); giveItem(rc.item,1); sfxClick(); var _fp=screenEl.querySelector('.panel'); var _fs=_fp?_fp.scrollTop:0; openFurnitureBench(); var _f2=screenEl.querySelector('.panel'); if(_f2)_f2.scrollTop=_fs; };
     if(can){ row.setAttribute('role','button'); row.style.borderColor='#5cc24a'; row.style.borderWidth='2px'; row.style.borderStyle='solid'; row.onclick=function(ev){ if(ev && ev.target===bt) return; bt.onclick(); }; }
     row.appendChild(ic); row.appendChild(tx); row.appendChild(bt); p.appendChild(row);
   });
@@ -10112,7 +10115,7 @@ function pollGamepad(dt){
   input.strafe = dz(ax[0]);
   // held actions
   input.jump   = gpBtn(bt[0]);   // A
-  input.crouch = gpBtn(bt[1]);   // B (sneak / dismount)
+  input.crouch = gpBtn(bt[1]) || gpBtn(bt[11]);   // B, or R3 (press the right stick) to crouch
   input.sprint = gpBtn(bt[10]) || (-dz(ax[1]))>0.92;   // L3, or push the stick fully forward
   input.mine   = (bt[7]&&bt[7].value!=null)? (bt[7].value>0.3) : gpBtn(bt[7]);   // RT (analog) - mine / attack
   // edge actions
@@ -10308,8 +10311,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 196';
+var VERSION='Update 197';
 var CHANGELOG=[
+  { v:'Update 197', t:'Shears, Carrots & Controller', items:['<b>Shears harvest leaves</b> \u2014 cut leaf blocks off trees and collect them','<b>Fewer carrots</b> (and other veg) from tall grass \u2014 it drops mostly seeds now','<b>Controller crafting keeps your place</b> \u2014 crafting from the recipe book or carpenter bench no longer jumps back to the top of the list','<b>Press the right stick (R3) to crouch</b>'] },
   { v:'Update 196', t:'Dirt Path & Slab Fixes', items:['<b>Dirt paths are full height now</b> \u2014 they sit flush with the ground and stairs instead of sinking down as a half block','<b>Slabs place flat by default</b> \u2014 top or bottom depending on where you tap, no more accidental sideways slabs. Hold <b>SNEAK</b> while placing on a wall to make a <b>vertical slab</b>'] },
   { v:'Update 195', t:'Slower Stride & Steady Hand', items:['<b>Walk and run animations slowed</b> to a more natural cadence','<b>Right hand holds items steady</b> \u2014 when you\u2019re carrying something the right arm presents it instead of swinging (the left is your off-hand)'] },
   { v:'Update 194', t:'Fix Held Item Position', items:['<b>Your character holds items in front now</b> \u2014 tools and blocks were sitting behind the hand instead of in the fist'] },
