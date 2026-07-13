@@ -597,7 +597,7 @@ defBlock({key:'FIG_FRUIT', name:'Fig (on tree)', col:[120, 70, 110], solid:false
 defBlock({key:'BLUEBERRY_BUSH', name:'Blueberry Bush', col:[70, 110, 70], solid:false, transparent:true, thin:true, cross:true, hard:0.15 });
 defBlock({key:'STRAWBERRY_BUSH', name:'Strawberry Bush', col:[90, 140, 70], solid:false, transparent:true, thin:true, cross:true, hard:0.15 });
 defBlock({key:'GRAPE_VINE', name:'Grapevine', col:[110, 90, 140], solid:false, transparent:true, thin:true, cross:true, hard:0.15 });
-defBlock({key:'DIRT_PATH', name:'Dirt Path', col:[150,124,74], top:[164,138,86], side:[130,104,64], solid:true, tool:'shovel', hard:0.5, shape:'slab' });
+defBlock({key:'DIRT_PATH', name:'Dirt Path', col:[150,124,74], top:[164,138,86], side:[130,104,64], solid:true, tool:'shovel', hard:0.5 });
 defBlock({key:'PAINTING', name:'Painting', col:[120,96,60], solid:true, tool:'axe', hard:0.6 });
 defBlock({key:'LAUNCH_PAD', name:'Launch Pad', col:[92,96,106], top:[70,74,84], side:[100,104,114], spec:[255,180,60], solid:true, tool:'pickaxe', tier:1, hard:3.5 });
 defBlock({key:'MOON_DUST', name:'Moon Dust', col:[203,203,209], top:[212,212,218], side:[194,194,200], solid:true, tool:'shovel', hard:0.7 });
@@ -3222,13 +3222,14 @@ function updateAvatar(){
   playerAvatar.rotation.x=0;
   var sp=Math.hypot(Player.vel.x,Player.vel.z);
   var moving = sp>0.15;
-  Player.stridePh = (Player.stridePh||0) + (moving ? (0.11+sp*0.05) : 0.03);
+  Player.stridePh = (Player.stridePh||0) + (moving ? (0.07+sp*0.028) : 0.025);   // slower, more natural cadence
   var sw = moving ? Math.sin(Player.stridePh)*Math.min(1.2, 0.5+sp*0.16) : Math.sin(now*0.0018)*0.06;
   var act = handAnim>0 ? Math.sin((1-(handAnim/0.26))*Math.PI)*1.35 : 0;   // arm chops on mine/attack/place
   var _sneak = Player.sneaking ? 0.35 : 0;
+  var _holding = (function(){ var _hs=inv.hotbar[hotbarSel]; return _hs && ITEMS[_hs.key]; })();
   if(avatarLimbs.armL){
     avatarLimbs.armL.rotation.x=sw*0.9 + _breathePlayer();
-    avatarLimbs.armR.rotation.x=-sw*0.9 - act + _breathePlayer();
+    avatarLimbs.armR.rotation.x=(_holding ? (-0.25 - act*0.5) : (-sw*0.9 - act)) + _breathePlayer();   // right hand presents the item, swings less while carrying
     avatarLimbs.armL.rotation.z=0.06; avatarLimbs.armR.rotation.z=-0.06;   // slight arms-out rest
     avatarLimbs.legL.rotation.x=-sw; avatarLimbs.legR.rotation.x=sw;
     if(avatarLimbs.torso){ avatarLimbs.torso.rotation.x=_sneak; }          // lean when sneaking
@@ -5046,10 +5047,14 @@ function markDoorChunk(nx,nz,dir,side){
 function placeShape(pid, pb, hit, nx,ny,nz){
   if(pb.shape==='slab'){
     var half='bottom';
-    if(hit.ny<0) half='top';
-    else if(hit.ny>0) half='bottom';
-    else if(hit.nx>0) half='east'; else if(hit.nx<0) half='west';
-    else if(hit.nz>0) half='south'; else half='north';
+    if(hit.ny<0) half='top';                                            // placing under a ceiling -> top slab
+    else if(hit.ny>0) half='bottom';                                    // placing on a floor -> bottom slab
+    else {
+      // clicked a side face: bottom/top by where on the face you tapped; SNEAK makes a vertical slab
+      var frac=(hit.hy!=null)?(hit.hy-Math.floor(hit.hy)):0.0;
+      if(Player.sneaking){ if(hit.nx>0) half='east'; else if(hit.nx<0) half='west'; else if(hit.nz>0) half='south'; else half='north'; }
+      else half=(frac>0.5)?'top':'bottom';
+    }
     World.tiles[World.ck(nx,ny,nz)]={type:'shape', shape:'slab', half:half};
     World.setBlock(nx,ny,nz,pid,true);
   } else if(pb.shape==='stairs'){
@@ -10303,8 +10308,10 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 194';
+var VERSION='Update 196';
 var CHANGELOG=[
+  { v:'Update 196', t:'Dirt Path & Slab Fixes', items:['<b>Dirt paths are full height now</b> \u2014 they sit flush with the ground and stairs instead of sinking down as a half block','<b>Slabs place flat by default</b> \u2014 top or bottom depending on where you tap, no more accidental sideways slabs. Hold <b>SNEAK</b> while placing on a wall to make a <b>vertical slab</b>'] },
+  { v:'Update 195', t:'Slower Stride & Steady Hand', items:['<b>Walk and run animations slowed</b> to a more natural cadence','<b>Right hand holds items steady</b> \u2014 when you\u2019re carrying something the right arm presents it instead of swinging (the left is your off-hand)'] },
   { v:'Update 194', t:'Fix Held Item Position', items:['<b>Your character holds items in front now</b> \u2014 tools and blocks were sitting behind the hand instead of in the fist'] },
   { v:'Update 193', t:'Fix Invisible 3rd-Person Character', items:['<b>Fixed your character vanishing in third person</b> \u2014 the new walk-bob was snapping the model down to the bottom of the world instead of bobbing at your feet'] },
   { v:'Update 192', t:'FIXED: Load Crash', items:['<b>Fixed the crash on start!</b> The Space Suit crafting recipes were being registered before the recipe system existed, which threw an error and stopped the whole game from loading. Moved them into the right place \u2014 the game starts normally now'] },
