@@ -380,7 +380,7 @@
 
 <div id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 "use strict";
 (function(){
@@ -390,7 +390,21 @@
    ========================================================================= */
 
 var THREE = window.THREE;
-if(!THREE){ document.getElementById('menuMsg').textContent='Could not load 3D engine (needs internet for first load).'; return; }
+if(!THREE){
+  // primary CDN failed (slow mobile / CORS) — try fallbacks, then reload once they land
+  var _mm=document.getElementById('menuMsg'); if(_mm) _mm.textContent='Loading 3D engine\u2026';
+  var _fallbacks=['https://unpkg.com/three@0.128.0/build/three.min.js','https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js'];
+  var _fi=0;
+  (function tryNext(){
+    if(window.THREE){ location.reload(); return; }
+    if(_fi>=_fallbacks.length){ if(_mm) _mm.textContent='Could not load 3D engine. Check your connection and reload.'; return; }
+    var sc=document.createElement('script'); sc.src=_fallbacks[_fi++];
+    sc.onload=function(){ if(window.THREE){ location.reload(); } else tryNext(); };
+    sc.onerror=tryNext;
+    document.head.appendChild(sc);
+  })();
+  return;
+}
 // surface real runtime errors (iOS otherwise shows opaque "Script error.")
 var _errN=0;
 window.addEventListener('error', function(ev){
@@ -420,7 +434,7 @@ defBlock({key:'AIR', name:'Air', solid:false, transparent:true });
 defBlock({key:'GRASS', name:'Grass Block', col:[72,138,56], top:[86,152,62], side:[118,88,54], solid:true, tool:'shovel', hard:0.7 });
 defBlock({key:'DIRT', name:'Dirt', col:[133,96,62], solid:true, tool:'shovel', hard:0.6 });
 defBlock({key:'STONE', name:'Stone', col:[124,120,115], solid:true, tool:'pickaxe', tier:1, hard:1.5, drop:'COBBLE' });
-defBlock({key:'COBBLE', name:'Cobblestone', col:[126,126,129], side:[119,119,122], top:[131,131,134], solid:true, tool:'pickaxe', tier:1, hard:2.0 });   // neutral Minecraft grey
+defBlock({key:'COBBLE', name:'Cobblestone', col:[126,126,129], side:[119,119,122], top:[131,131,134], solid:true, tool:'pickaxe', tier:1, hard:2.0 });   // neutral  grey
 defBlock({key:'DEEPSLATE', name:'Deepslate', col:[64,64,70], side:[56,56,62], solid:true, tool:'pickaxe', tier:1, hard:3.2, drop:'COBBLE_DEEP' });
 defBlock({key:'COBBLE_DEEP', name:'Cobbled Deepslate', col:[58,58,64], side:[50,50,56], solid:true, tool:'pickaxe', tier:1, hard:3.4 });
 defBlock({key:'SAND', name:'Sand', col:[219,206,148], solid:true, tool:'shovel', hard:0.6 });
@@ -472,7 +486,7 @@ defBlock({key:'BIRCH_CHEST', name:'Birch Chest', col:[200,180,132], top:[212,192
 defBlock({key:'CHERRY_CHEST', name:'Cherry Chest', col:[214,150,150], top:[224,164,164], solid:true, tool:'axe', hard:1.5 });
 function isChest(id){ return id===B.CHEST||id===B.SPRUCE_CHEST||id===B.BIRCH_CHEST||id===B.CHERRY_CHEST; }
 function isCrafting(id){ return id===B.CRAFTING||id===B.SPRUCE_CRAFTING||id===B.BIRCH_CRAFTING||id===B.CHERRY_CRAFTING; }
-defBlock({key:'BED', name:'Bed', col:[178,46,46], top:[206,58,58], side:[150,40,40], solid:false, hard:0.4 });
+defBlock({key:'BED', name:'Bed', col:[178,46,46], top:[206,58,58], side:[150,40,40], solid:true, hard:0.4 });
 defBlock({key:'ASH', name:'Ash', col:[120,116,112], top:[136,132,128], side:[110,106,102], solid:true, tool:'shovel', hard:0.6 });
 defBlock({key:'ASH_STONE', name:'Ashstone', col:[82,46,44], side:[74,40,38], top:[90,52,48], solid:true, tool:'pickaxe', tier:1, hard:1.9, drop:'ASH_STONE' });
 defBlock({key:'CINDER', name:'Cinder Rock', col:[72,36,34], top:[96,44,38], side:[66,32,30], spec:[214,118,46], solid:true, tool:'pickaxe', tier:1, hard:2.0, drop:'ASH_STONE' });
@@ -576,6 +590,14 @@ defBlock({key:'REDWOOD_SLAB', name:'Redwood Slab', col:[168, 92, 64], solid:true
 defBlock({key:'SEAGRASS', name:'Seagrass', col:[54,140,70], solid:false, transparent:true, thin:true, cross:true, hard:0.1, water:true });
 defBlock({key:'KELP', name:'Kelp', col:[70,120,54], solid:false, transparent:true, thin:true, cross:true, hard:0.1, water:true });
 defBlock({key:'SEA_LANTERN', name:'Sea Lantern', col:[180,220,224], top:[200,236,240], side:[172,214,220], spec:[210,245,250], solid:true, tool:'pickaxe', tier:1, hard:0.9, light:12 });
+defBlock({key:'APPLE_FRUIT', name:'Apple (on tree)', col:[210, 60, 52], solid:false, transparent:true, thin:true, cross:true, hard:0.1, leaf:true });
+defBlock({key:'ORANGE_FRUIT', name:'Orange (on tree)', col:[240, 150, 40], solid:false, transparent:true, thin:true, cross:true, hard:0.1, leaf:true });
+defBlock({key:'LEMON_FRUIT', name:'Lemon (on tree)', col:[236, 220, 70], solid:false, transparent:true, thin:true, cross:true, hard:0.1, leaf:true });
+defBlock({key:'FIG_FRUIT', name:'Fig (on tree)', col:[120, 70, 110], solid:false, transparent:true, thin:true, cross:true, hard:0.1, leaf:true });
+defBlock({key:'BLUEBERRY_BUSH', name:'Blueberry Bush', col:[70, 110, 70], solid:false, transparent:true, thin:true, cross:true, hard:0.15 });
+defBlock({key:'STRAWBERRY_BUSH', name:'Strawberry Bush', col:[90, 140, 70], solid:false, transparent:true, thin:true, cross:true, hard:0.15 });
+defBlock({key:'GRAPE_VINE', name:'Grapevine', col:[110, 90, 140], solid:false, transparent:true, thin:true, cross:true, hard:0.15 });
+defBlock({key:'DIRT_PATH', name:'Dirt Path', col:[150,124,74], top:[164,138,86], side:[130,104,64], solid:true, tool:'shovel', hard:0.5, shape:'slab' });
 defBlock({key:'PAINTING', name:'Painting', col:[120,96,60], solid:true, tool:'axe', hard:0.6 });
 defBlock({key:'LAUNCH_PAD', name:'Launch Pad', col:[92,96,106], top:[70,74,84], side:[100,104,114], spec:[255,180,60], solid:true, tool:'pickaxe', tier:1, hard:3.5 });
 defBlock({key:'MOON_DUST', name:'Moon Dust', col:[203,203,209], top:[212,212,218], side:[194,194,200], solid:true, tool:'shovel', hard:0.7 });
@@ -724,6 +746,10 @@ mat('EMERALD','Emerald',[52,200,116]);
     defItem({ key:pre+'_'+s[0], name:nm+' '+s[2], color:col, stack:1, durability:dur, armor:{slot:s[1], def:defs[si]} });
   });
 });
+// --- SPACE SUIT: breathe on the Moon ---
+[['SPACE_HELMET','head','Space Helmet',4],['SPACE_SUIT','chest','Space Suit',6],['SPACE_LEGGINGS','legs','Space Leggings',5],['SPACE_BOOTS','feet','Space Boots',3]].forEach(function(s){
+  defItem({ key:s[0], name:s[2], color:[214,224,240], stack:1, durability:340, armor:{slot:s[1], def:s[3]}, spacesuit:true });
+});
 mat('REDSTONE','Redstone Dust',[210,40,40]);
 mat('APPLE','Apple',[210,60,52],{food:4,heal:0});
 mat('HONEY','Honey',[235,178,46],{food:4,heal:1,stack:16});
@@ -734,6 +760,13 @@ mat('BOILED_EGG','Boiled Egg',[246,238,214],{food:5,stack:16});
 mat('REDWOOD_SAPLING','Redwood Sapling',[70,130,60],{stack:64});
 mat('MOONSTONE','Moonstone',[182,198,244],{stack:64});
 mat('EMBERGLOW','Emberglow Dust',[248,190,110],{stack:64});
+mat('APPLE_F','Apple',[210,60,52],{food:4,stack:64});
+mat('ORANGE','Orange',[240,150,40],{food:4,stack:64});
+mat('LEMON','Lemon',[236,220,70],{food:2,stack:64});
+mat('FIG','Fig',[120,70,110],{food:3,stack:64});
+mat('BLUEBERRY','Blueberries',[70,90,180],{food:2,stack:64});
+mat('STRAWBERRY','Strawberry',[220,60,70],{food:3,stack:64});
+mat('GRAPES','Grapes',[120,80,170],{food:3,stack:64});
 mat('ANY_PLANKS','Any Planks',[178,140,86]);
 mat('CHEESE','Moon Cheese',[240,218,116],{food:8,stack:16});
 mat('COCONUT','Coconut',[176,132,88],{food:4,stack:16});
@@ -1532,6 +1565,12 @@ var World = {
         setLocal(blocks,ptx,ptop+1,lz,B.JUNGLE_LEAVES); setLocal(blocks,ptx-1,ptop,lz,B.JUNGLE_LEAVES); setLocal(blocks,ptx+1,ptop,lz,B.JUNGLE_LEAVES);
         setLocal(blocks,ptx,ptop-1,lz,B.LOG);   // coconut cluster
       }
+      if(getLocal(blocks,lx,h,lz)===B.GRASS && h>SEA && getLocal(blocks,lx,h+1,lz)===B.AIR){
+        var _br=hash3(wx,120,wz,this.seed^0xB77);
+        if(_br<0.010) setLocal(blocks,lx,h+1,lz,B.BLUEBERRY_BUSH);
+        else if(_br<0.018) setLocal(blocks,lx,h+1,lz,B.STRAWBERRY_BUSH);
+        else if(_br<0.024) setLocal(blocks,lx,h+1,lz,B.GRAPE_VINE);
+      }
       if(hash3(wx,1,wz,this.seed^777) < dens){
         var th = (jungle?8:(spruce?6:4)) + Math.floor(hash3(wx,2,wz,this.seed)*(jungle?6:(spruce?4:5)));
         for(var t=1;t<=th && h+t<WORLD_H;t++) setLocal(blocks,lx,h+t,lz,logT);
@@ -1552,6 +1591,13 @@ var World = {
             var ly=top+dy;
             if(ly<0||ly>=WORLD_H) continue;
             if(getLocal(blocks,lx+dx,ly,lz+dz)===B.AIR) setLocal(blocks,lx+dx,ly,lz+dz,leafT);
+          }
+          // fruit trees: some oaks bear apples/oranges/lemons/figs
+          if(!spruce && !jungle && hash3(wx,95,wz,this.seed^0xF2)<0.14){
+            var ft=hash3(wx,96,wz,this.seed); var fruit=(ft<0.4)?B.APPLE_FRUIT:(ft<0.65)?B.ORANGE_FRUIT:(ft<0.85)?B.LEMON_FRUIT:B.FIG_FRUIT;
+            for(var fdx=-2;fdx<=2;fdx++) for(var fdz=-2;fdz<=2;fdz++){
+              if(hash3(wx+fdx*3,97,wz+fdz*3,this.seed)<0.14){ var fyy=top-1; if(fyy>SEA && getLocal(blocks,lx+fdx,fyy,lz+fdz)===B.AIR && getLocal(blocks,lx+fdx,fyy+1,lz+fdz)!==B.AIR) setLocal(blocks,lx+fdx,fyy,lz+fdz,fruit); }
+            }
           }
           // hang a beehive on the canopy edge of some leafy trees
           if(hash3(wx,71,wz,this.seed^0xBEE)<0.09){ var hyv=top-1;
@@ -1933,6 +1979,11 @@ var World = {
   },
   // ===================== Spread-out villages (deterministic, world-space) =====================
   genVillage: function(ch){
+    var _allCrops=['wheat','carrot','potato','tomato','corn'];
+    var _vseed=this.villageAnchorSeed?this.villageAnchorSeed(ch.cx,ch.cz):hash3(ch.cx>>3,4,ch.cz>>3,this.seed);
+    var vcrops=[]; { var _pool=_allCrops.slice(), _n=2+((_vseed*3)|0)%3;   // each village grows 2-4 kinds
+      for(var _ci=0;_ci<_n && _pool.length;_ci++){ var _pi=(hash3(ch.cx>>3,50+_ci,ch.cz>>3,this.seed)*_pool.length)|0; vcrops.push(_pool.splice(_pi,1)[0]); } }
+    if(!vcrops.length) vcrops=['wheat'];
     if(this.dim==='underforge'||this.dim==='moon') return;
     if(this._vseed!==this.seed){ this._vcache={}; this._vseed=this.seed; }
     var VREGION=96, REACH=42;
@@ -2062,7 +2113,8 @@ var World = {
     for(dx=-rw;dx<=rw;dx++) for(dz=-rd;dz<=rd;dz++){
       if(dz===0){ setW(ch,cx+dx,h,cz+dz,B.WATER); continue; }   // irrigation channel
       setW(ch,cx+dx,h,cz+dz,B.FARMLAND);
-      if(inCh(ch,cx+dx,cz+dz)) setTileW(ch,cx+dx,h+1,cz+dz,{type:'crop', crop:'wheat', mature:(hash3(cx+dx,4,cz+dz,this.seed)<0.7)});
+      if(inCh(ch,cx+dx,cz+dz)){ var _vc=vcrops[Math.abs((cx+dx)*3+(cz+dz)*7+ (hash3(cx+dx,44,cz+dz,this.seed)*vcrops.length|0)) % vcrops.length];
+        setTileW(ch,cx+dx,h+1,cz+dz,{type:'crop', crop:_vc, mature:(hash3(cx+dx,4,cz+dz,this.seed)<0.7)}); }
     }
     // doorway gate in the fence + a lantern post
     setW(ch,cx,h+1,cz+rd+1,B.FENCE_GATE);
@@ -2222,6 +2274,28 @@ var World = {
     setW(ch,cx,h+2,cz,B.BRASS_BLOCK);
     this.structLoot(ch,cx-3,h+2,cz+2);
   },
+  genFloatingWreck: function(ch){
+    if(this.dim!=='overworld') return;
+    var cx=ch.cx, cz=ch.cz;
+    if(hash3(cx,920,cz,this.seed^0x5A17) > 0.006) return;              // very rare
+    var surf = ch.hmap[8*CHUNK+8] || SEA;
+    var fy = surf + 22 + (hash3(cx,921,cz,this.seed)*16|0);            // floats high in the sky
+    if(fy+8 >= WORLD_H) return;
+    var x0=4, z0=5;
+    // broken wooden hull (gapped planks)
+    for(var dx=0;dx<7;dx++) for(var dz=0;dz<5;dz++){ var x=x0+dx, z=z0+dz; if(x>15||z>15) continue;
+      if(hash3(cx+dx,922,cz+dz,this.seed)<0.78) setLocal(ch.blocks,x,fy,z, (dx===0||dx===6||dz===0||dz===4)?B.LOG:B.SPRUCE_PLANKS);
+    }
+    // ribs + a leaning mast
+    for(var r=0;r<7;r+=2){ if(hash3(cx,923+r,cz,this.seed)<0.7) setLocal(ch.blocks,x0+r,fy+1,z0,B.LOG); }
+    setLocal(ch.blocks,x0+3,fy+1,z0+2,B.LOG); setLocal(ch.blocks,x0+3,fy+2,z0+2,B.LOG); if(hash3(cx,930,cz,this.seed)<0.6) setLocal(ch.blocks,x0+3,fy+3,z0+2,B.LOG);
+    // tattered balloon canopy above (brass frame + wool)
+    for(var bx=1;bx<6;bx++) for(var bz=1;bz<4;bz++){ if(hash3(cx+bx,931,cz+bz,this.seed)<0.6) setLocal(ch.blocks,x0+bx,fy+5,z0+bz,B.WOOL); }
+    setLocal(ch.blocks,x0,fy+5,z0+2,B.BRASS_BLOCK); setLocal(ch.blocks,x0+6,fy+5,z0+2,B.BRASS_BLOCK);
+    // loot chest + a sea lantern beacon
+    setLocal(ch.blocks,x0+3,fy+1,z0+1,B.CHEST);
+    setLocal(ch.blocks,x0+1,fy+1,z0+3,B.SEA_LANTERN);
+  },
   genSunkenWreck: function(ch){
     if(this.dim!=='overworld') return;
     var cx=ch.cx, cz=ch.cz;
@@ -2243,6 +2317,7 @@ var World = {
   },
   genStructures: function(ch){
     try{ this.genSunkenWreck(ch); }catch(_){ }
+    try{ this.genFloatingWreck(ch); }catch(_){ }
     var cx=ch.cx, cz=ch.cz;
     if(this.dim==='moon') return;
     if(this.dim==='underforge'){ this.genDwarfCity(ch); this.genAshFortress(ch); return; }
@@ -2401,7 +2476,7 @@ var World = {
     if(running && !this._wsim && this.wq && (prev!==id)) this.schedWaterAround(x,y,z);
   },
   markDirty: function(cx,cz){ var ch=this.chunks[this.key(cx,cz)]; if(ch) ch.dirty=true; },
-  // --- Minecraft-style flowing water: source/level cellular automaton ---
+  // --- flowing water: source/level cellular automaton ---
   wlvl:{}, wsrc:{}, wq:[], wseen:{}, wtimer:0,
   isWaterSource: function(x,y,z){
     if(this.getBlock(x,y,z)!==B.WATER) return false;
@@ -2928,7 +3003,7 @@ function buildAvatarModel(L){ var g=new THREE.Group();
   L.footR=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.13,0.3), new THREE.MeshBasicMaterial({color:0x2a2f52})); L.footR.position.set(0,-0.7,0.04); L.legR.add(L.footR);
   return g;
 }
-var playerAvatar=buildAvatarModel(avatarLimbs); playerAvatar.visible=false;
+var playerAvatar=buildAvatarModel(avatarLimbs); playerAvatar.visible=false; var _avBaseY=playerAvatar.position.y||0;
 scene.add(playerAvatar);
 var MOB_NAMES={ zombie:'Zombie', zombie_villager:'Zombie Villager', zombie_dwarf:'Zombie Dwarf', skeleton:'Skeleton', creeper:'Cogspider', spooler:'Spooler', villager:'Villager', dwarf:'Dwarf', knight:'Knight', cow:'Cow', pig:'Pig', sheep:'Sheep', chicken:'Chicken', horse:'Horse', zombie_horse:'Zombie Horse', skeleton_horse:'Skeleton Horse', seahorse:'Seahorse', fish:'Fish', bird:'Bird', bear:'Bear', boar:'Boar', fox:'Fox', rabbit:'Rabbit', deer:'Deer', dog:'Dog', cat:'Cat', monkey:'Monkey', frog:'Frog', crab:'Crab', bee:'Bee', cinderkin:'Cinderkin', forgewright:'Forgewright' };
 var _shadowTex=null;
@@ -3113,7 +3188,7 @@ var avTM=buildToolHeads(avToolHeadMat, avToolHandleMat, 0.9); avTool.add(avTM.gr
 avTool.rotation.set(1.35,0,-0.15); avTool.visible=false;   // point forward out of the fist
 var avIconMat=new THREE.MeshBasicMaterial({transparent:true, alphaTest:0.4, side:THREE.DoubleSide});
 var avIcon=new THREE.Mesh(new THREE.PlaneGeometry(0.32,0.32), avIconMat); avIcon.visible=false;
-var avHeld=new THREE.Group(); avHeld.position.set(0.02,-0.74,-0.16); avHeld.add(avHeldBlock); avHeld.add(avTool); avHeld.add(avIcon);
+var avHeld=new THREE.Group(); avHeld.position.set(0.02,-0.66,0.2); avHeld.add(avHeldBlock); avHeld.add(avTool); avHeld.add(avIcon);
 if(avatarLimbs.armR) avatarLimbs.armR.add(avHeld);
 function updateAvatarHeld(){
   var s=inv.hotbar[hotbarSel], it=s?ITEMS[s.key]:null;
@@ -3147,16 +3222,22 @@ function updateAvatar(){
   playerAvatar.rotation.x=0;
   var sp=Math.hypot(Player.vel.x,Player.vel.z);
   var moving = sp>0.15;
-  var sw = moving ? Math.sin(now*0.013)*Math.min(1.15, 0.45+sp*0.14) : Math.sin(now*0.002)*0.05;
-  var act = handAnim>0 ? Math.sin((1-(handAnim/0.26))*Math.PI)*1.2 : 0;   // arm chops down on mine/attack/place
+  Player.stridePh = (Player.stridePh||0) + (moving ? (0.11+sp*0.05) : 0.03);
+  var sw = moving ? Math.sin(Player.stridePh)*Math.min(1.2, 0.5+sp*0.16) : Math.sin(now*0.0018)*0.06;
+  var act = handAnim>0 ? Math.sin((1-(handAnim/0.26))*Math.PI)*1.35 : 0;   // arm chops on mine/attack/place
+  var _sneak = Player.sneaking ? 0.35 : 0;
   if(avatarLimbs.armL){
-    avatarLimbs.armL.rotation.x=sw;
-    avatarLimbs.armR.rotation.x=-sw - act;
+    avatarLimbs.armL.rotation.x=sw*0.9 + _breathePlayer();
+    avatarLimbs.armR.rotation.x=-sw*0.9 - act + _breathePlayer();
+    avatarLimbs.armL.rotation.z=0.06; avatarLimbs.armR.rotation.z=-0.06;   // slight arms-out rest
     avatarLimbs.legL.rotation.x=-sw; avatarLimbs.legR.rotation.x=sw;
+    if(avatarLimbs.torso){ avatarLimbs.torso.rotation.x=_sneak; }          // lean when sneaking
+    playerAvatar.position.y = Player.pos.y + (moving?Math.abs(Math.sin(Player.stridePh))*0.04:0) - _sneak*0.15;   // walk bob + crouch (relative to the player, not world 0)
   }
   updateAvatarHeld();
 }
 var handAnim=0;
+function _breathePlayer(){ return Math.sin(now*0.0022)*0.03; }
 function triggerHandSwing(){ handAnim=0.26; }
 function updateHand(){
   var sp=Math.hypot(Player.vel.x,Player.vel.z);
@@ -3585,7 +3666,7 @@ function chunkFrag(alpha, grain){
     '       dc *= 1.0 - 0.3*lineAt(uv.y,0.5,0.035);',
     '       dc *= 1.0 - 0.22*lineAt(uv.x,0.5,0.028);',
     '     }',
-    '   } else if(base>=4.0 && base<=10.5){',            // ORES: chunky Minecraft-style mineral blobs on stone
+    '   } else if(base>=4.0 && base<=10.5){',            // ORES: chunky mineral blobs on stone
     '     vec3 ore = base==4.0?vec3(0.11,0.11,0.13):base==5.0?vec3(0.84,0.70,0.55):base==6.0?vec3(0.98,0.83,0.32):base==7.0?vec3(0.44,0.92,0.92):base==8.0?vec3(0.92,0.20,0.18):base==9.0?vec3(0.86,0.50,0.28):vec3(0.86,0.90,0.96);',
     '     dc *= 0.9+0.12*n2(floor(uv*16.0));',                                        // stone grain
     '     vec2 gc=floor(uv*4.0); vec2 gf=fract(uv*4.0)-0.5;',
@@ -3610,7 +3691,7 @@ function chunkFrag(alpha, grain){
     ' vec3 wc = vColor * (1.0 + 0.06*w*anyWater);',
     ' wc = torchLit(wc, vWorld);',
     ' vec3 c = mix(uFogColor, wc, vFog);',
-    ' float _wa = mix('+alpha+', 0.66, isWater); _wa = mix(_wa, 0.82, isSwamp);'
+    ' float _wa = mix('+alpha+', 0.68, isWater); _wa = mix(_wa, 0.9, isSwamp);'
   ];
   var helpers = grain ? [
     'float lineAt(float v, float c, float w){ return 1.0 - smoothstep(0.0, w, abs(v-c)); }',
@@ -3667,7 +3748,7 @@ var selGeo=new THREE.BoxGeometry(1.002,1.002,1.002);
 var selMat=new THREE.LineBasicMaterial({ color:0x000000, transparent:true, opacity:0.5 });
 var selBox=new THREE.LineSegments(new THREE.EdgesGeometry(selGeo), selMat);
 selBox.visible=false; scene.add(selBox);
-// progressive crack textures (Minecraft destroy-stage style)
+// progressive crack textures ( destroy-stage style)
 function makeCrackTex(stage){
   var N=16, px=8, cv=document.createElement('canvas'); cv.width=cv.height=N*px; var x=cv.getContext('2d');
   x.clearRect(0,0,N*px,N*px);
@@ -3675,16 +3756,17 @@ function makeCrackTex(stage){
   // grow jagged cracks from the centre outward; more branches & length each stage
   var frac=(stage+1)/6;
   function pix(ix,iy,a,shade){ if(ix<0||iy<0||ix>=N||iy>=N) return; x.fillStyle='rgba('+shade+','+shade+','+shade+','+a+')'; x.fillRect(ix*px,iy*px,px,px); }
-  var branches=2+stage*2;
+  var branches=3+stage*3;
   for(var b2=0;b2<branches;b2++){
-    var ang=rnd()*6.28, cx=8, cy=8, len=Math.floor((3+rnd()*5)*frac)+2;
+    var ang=rnd()*6.28, cx=8, cy=8, len=Math.floor((4+rnd()*5)*frac)+3;
     for(var l=0;l<len;l++){
-      ang+=(rnd()-0.5)*1.1;
+      ang+=(rnd()-0.5)*0.9;
       cx+=Math.cos(ang); cy+=Math.sin(ang);
       var ix=Math.round(cx), iy=Math.round(cy);
-      pix(ix,iy,0.82,10);                                  // dark crack core
-      if(rnd()<0.5) pix(ix+(rnd()<0.5?1:-1),iy,0.35,40);   // lighter chip beside it
-      if(rnd()<0.3) pix(ix,iy+1,0.28,90);                  // subtle highlight (spalled edge)
+      pix(ix,iy,0.9,8);                                    // dark crack core (thick)
+      if(rnd()<0.7) pix(ix+(rnd()<0.5?1:-1),iy,0.85,8);    // widen the crack to 2px
+      if(rnd()<0.5) pix(ix,iy+(rnd()<0.5?1:-1),0.45,30);   // chipped stone beside it
+      if(rnd()<0.35) pix(ix+1,iy+1,0.3,110);               // spalled highlight
     }
   }
   var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; t.needsUpdate=true;
@@ -3795,7 +3877,7 @@ function buildPlantMesh(ch){
       pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, CROP_H[st], cell); }
   }
   // cobwebs (cross-shaped, in caves/structures)
-  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.4, wzz+0.5, 0.5, 0.8, 11); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.42, 1.0, 11); } } }
+  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.4, wzz+0.5, 0.5, 0.8, 11); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.42, 1.0, 11); } else if(wbid===B.APPLE_FRUIT||wbid===B.ORANGE_FRUIT||wbid===B.LEMON_FRUIT||wbid===B.FIG_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.36, 0.7, 12); } else if(wbid===B.BLUEBERRY_BUSH||wbid===B.STRAWBERRY_BUSH||wbid===B.GRAPE_VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.42, wzz+0.5, 0.5, 0.85, 11); } } }
   // lilypads floating on swamp water
   for(var llx=0;llx<CHUNK;llx++) for(var llz=0;llz<CHUNK;llz++){
     var lwx=ch.cx*CHUNK+llx, lwz=ch.cz*CHUNK+llz;
@@ -3936,6 +4018,8 @@ function blockBoxes(id,x,y,z){
   if(b.shape==='fence') return [[x+0.26,y,z+0.26,x+0.74,y+1.6,z+0.74]];
   if(b.shape==='wall') return [[x+0.2,y,z+0.2,x+0.8,y+1.6,z+0.8]];
   if(b.shape==='carpet') return [];
+  if(b.key==='BED'||(b.key&&b.key.indexOf('_BED')>0)) return [[x,y,z,x+1,y+0.55,z+1]];
+  if(b.key==='BED'||(b.key&&b.key.indexOf('_BED')>0)) return [[x,y,z,x+1,y+0.55,z+1]];
   if(b.key==='COBWEB') return [];
   if(b.shape==='lily' && b.key!=='COBWEB') return [[x,y,z,x+1,y+0.07,z+1]];   // stand on lily pads
   if(b.shape==='lantern') return [[x+0.3,y,z+0.3,x+0.7,y+0.6,z+0.7]];
@@ -3991,6 +4075,9 @@ function onLadder(){ var bx=Math.floor(Player.pos.x), bz=Math.floor(Player.pos.z
 }
 function stepUpTo(nx,nz){
   if(!Player.onGround && Player.vel.y>0.5) return null;   // only step while grounded/settling
+  // don't auto-step onto a lily pad (it's a thin surface on water) — walk into/over it instead
+  var fbx=Math.floor(nx), fbz=Math.floor(nz), fby=Math.floor(Player.pos.y);
+  for(var _c=0;_c<2;_c++){ var _bb=World.getBlock(fbx,fby+_c,fbz); if(_bb===B.LILY_PAD) return null; }
   for(var up=0.12; up<=0.6; up+=0.12){
     if(!collides(nx, Player.pos.y+up, nz)) return Player.pos.y+up;
   }
@@ -4010,10 +4097,10 @@ function moveAxisStep(axis, amt){
   var step=amt;
   if(axis==='x'){ if(Player.sneakGuard && !groundUnder(p.x+step,p.z)){ Player.vel.x=0; return; }
     if(!collides(p.x+step,p.y,p.z)) p.x+=step;
-    else { var sy=stepUpTo(p.x+step,p.z); if(sy!==null){ p.x+=step; p.y=sy; } else Player.vel.x=0; } }
+    else { var sy=stepUpTo(p.x+step,p.z); if(sy!==null){ p.x+=step; Player._stepEase=(Player._stepEase||0)+(sy-p.y); p.y=sy; } else Player.vel.x=0; } }
   if(axis==='z'){ if(Player.sneakGuard && !groundUnder(p.x,p.z+step)){ Player.vel.z=0; return; }
     if(!collides(p.x,p.y,p.z+step)) p.z+=step;
-    else { var sz=stepUpTo(p.x,p.z+step); if(sz!==null){ p.z+=step; p.y=sz; } else Player.vel.z=0; } }
+    else { var sz=stepUpTo(p.x,p.z+step); if(sz!==null){ p.z+=step; Player._stepEase=(Player._stepEase||0)+(sz-p.y); p.y=sz; } else Player.vel.z=0; } }
   if(axis==='y'){
     if(!collides(p.x,p.y+step,p.z)) p.y+=step;
     else { if(step<0){ Player.onGround=true; } Player.vel.y=0; }
@@ -4270,7 +4357,7 @@ function tickMining(dt){
   if(playerAtkCd>0) playerAtkCd-=dt;
   if(mineSndCd>0) mineSndCd-=dt;
   if(!input.mine || uiOpen){ mining.target=null; mining.progress=0; eatHold=0; return; }
-  // HOLD TO EAT: if you're holding food, holding the screen eats it (Minecraft-mobile style) instead of mining
+  // HOLD TO EAT: if you're holding food, holding the screen eats it (-mobile style) instead of mining
   var _fs=inv.hotbar[hotbarSel];
   if(_fs && ITEMS[_fs.key] && ITEMS[_fs.key].food && Player.hunger<Player.maxHunger){
     mining.target=null; mining.progress=0;
@@ -4300,7 +4387,7 @@ function tickMining(dt){
     mining.target=null; mining.progress=0;
   }
 }
-// quick tap: attack mob / open block / eat / place block (Minecraft-mobile style)
+// quick tap: attack mob / open block / eat / place block (-mobile style)
 function tapAction(){
   if(uiOpen) return;
   if(tryFeedAnimal(inv.hotbar[hotbarSel])) return;   // feed / tame / milk takes priority over punching
@@ -4333,6 +4420,10 @@ function tryHarvest(matureOnly){
   sfxBreak(); triggerHandSwing(); return true;
 }
 function breakBlock(hit){
+  { var _fid=hit&&World.getBlock(hit.x,hit.y,hit.z), _fd=null;
+    if(_fid===B.APPLE_FRUIT)_fd='APPLE'; else if(_fid===B.ORANGE_FRUIT)_fd='ORANGE'; else if(_fid===B.LEMON_FRUIT)_fd='LEMON'; else if(_fid===B.FIG_FRUIT)_fd='FIG';
+    else if(_fid===B.BLUEBERRY_BUSH)_fd='BLUEBERRY'; else if(_fid===B.STRAWBERRY_BUSH)_fd='STRAWBERRY'; else if(_fid===B.GRAPE_VINE)_fd='GRAPES';
+    if(_fd){ spawnDrop(hit.x,hit.y,hit.z,_fd, 1+(Math.random()*2|0)); World.setBlock(hit.x,hit.y,hit.z,B.AIR,true); try{sfxBreak(_fid);}catch(_){ } return; } }
   if(hit && World.getBlock(hit.x,hit.y,hit.z)===B.PAINTING){ var _pk=paintingKey(hit.x,hit.y,hit.z); if(_paintMeshes[_pk]){ scene.remove(_paintMeshes[_pk]); _paintMeshes[_pk]=null; } }
   var id=hit.id; var b=blk(id);
   if(id===B.BED){ var _bt=World.tiles[World.ck(hit.x,hit.y,hit.z)]; var _bd=(_bt&&_bt.drop)|| (function(){ var h=World.tiles[World.ck(hit.x,hit.y,hit.z)]; return 'BED'; })(); if(_bt&&_bt.type==='bedhead'){ var _ff=World.tiles[World.ck(_bt.fx,_bt.fy,_bt.fz)]; if(_ff&&_ff.drop) _bd=_ff.drop; } breakBed(hit.x,hit.y,hit.z); if(gameMode!=='creative') spawnDrop(hit.x,hit.y,hit.z,_bd||'BED',1); damageTool(); sfxBreak(); return; }
@@ -4650,6 +4741,8 @@ function doPlace(){
     if(_ftile && _ftile.items){ openChest(_fk, true); return; } }
   if(hit.id===B.PAINTING){ openPaintEditor(hit.x,hit.y,hit.z); return; }
   if(hit.id===B.ROCKET_WORKBENCH){ openRocketWorkbench(); return; }
+  { var _sv=inv.hotbar[hotbarSel]; if(_sv && ITEMS[_sv.key] && ITEMS[_sv.key].tool==='shovel' && (hit.id===B.GRASS||hit.id===B.DIRT) && hit.ny>0 && World.getBlock(hit.x,hit.y+1,hit.z)===B.AIR){
+      World.setBlock(hit.x,hit.y,hit.z,B.DIRT_PATH,true); try{ damageTool(); if(typeof sfxBreak==='function') sfxBreak(); }catch(_){ } return; } }
   if(hit.id===B.COOKING_POT){ openCookingPot(); return; }
   if(hit.id===B.COMPOSTER){ var _cck=World.ck(hit.x,hit.y,hit.z); var _cct=World.tiles[_cck]||(World.tiles[_cck]={type:'composter',lvl:0});
     var _ch2=inv.hotbar[hotbarSel];
@@ -4998,8 +5091,8 @@ function placeShape(pid, pb, hit, nx,ny,nz){
     var lc=World.tiles[World.ck(nx+perp[0][0],ny,nz+perp[0][1])];
     var rc=World.tiles[World.ck(nx+perp[1][0],ny,nz+perp[1][1])];
     var hinge='l';
-    if(lc && lc.type==='door' && lc.dir===ddir && lc.hinge==='l'){ hinge='r'; }        // partner door on the left -> we become the right leaf (double door)
-    else if(rc && rc.type==='door' && rc.dir===ddir && rc.hinge==='r'){ hinge='l'; }
+    if(lc && lc.type==='door' && lc.dir===ddir){ hinge=(lc.hinge==='l')?'r':'l'; }       // partner beside us -> take the OPPOSITE hinge so they mirror
+    else if(rc && rc.type==='door' && rc.dir===ddir){ hinge=(rc.hinge==='l')?'r':'l'; }
     else if(isSolid(World.getBlock(nx+perp[1][0],ny,nz+perp[1][1])) && !isSolid(World.getBlock(nx+perp[0][0],ny,nz+perp[0][1]))) hinge='r';
     else hinge=resolveDoorHinge(nx,ny,nz,ddir);
     World.tiles[World.ck(nx,ny,nz)]={type:'door', shape:'door', dir:ddir, open:false, hinge:hinge};
@@ -5110,6 +5203,11 @@ function shaped(rows, out, outQty){ RECIPES.push({type:'shaped', rows:rows, out:
 function shapeless(ing, out, outQty){ RECIPES.push({type:'shapeless', ing:ing, out:out, qty:outQty||1}); }
 
 shapeless([{key:'LOG',qty:1}],'PLANKS',4);
+shaped([['MOONSTONE','MOONSTONE','MOONSTONE'],['MOONSTONE','GLASS','MOONSTONE']], 'SPACE_HELMET', 1);
+shaped([['MOONSTONE',null,'MOONSTONE'],['MOONSTONE','IRON_PLATE','MOONSTONE'],['MOONSTONE','MOONSTONE','MOONSTONE']], 'SPACE_SUIT', 1);
+shaped([['MOONSTONE','MOONSTONE','MOONSTONE'],['MOONSTONE',null,'MOONSTONE'],['IRON_PLATE',null,'IRON_PLATE']], 'SPACE_LEGGINGS', 1);
+shaped([['MOONSTONE',null,'MOONSTONE'],['IRON_PLATE',null,'IRON_PLATE']], 'SPACE_BOOTS', 1);
+
 shapeless([{key:'SPRUCE_LOG',qty:1}],'SPRUCE_PLANKS',4);
 shapeless([{key:'REDWOOD_LOG',qty:1}],'REDWOOD_PLANKS',4);
 shaped([['EMBERGLOW','EMBERGLOW','EMBERGLOW'],['EMBERGLOW','EMBERGLOW','EMBERGLOW'],['EMBERGLOW','EMBERGLOW','EMBERGLOW']], 'EMBERGLOW_BLOCK', 1);
@@ -5532,7 +5630,7 @@ function takeCraftOutput(width){
   } else {
     for(var i=0;i<size;i++){ if(craftGrid[i]){ craftGrid[i].qty-=1; if(craftGrid[i].qty<=0) craftGrid[i]=null; } }
   }
-  // hand the result straight to the inventory (Minecraft-style: tap again to make more)
+  // hand the result straight to the inventory (classic: tap again to make more)
   giveItem(pendingCraft.out, pendingCraft.qty);
   sfxClick();
   refreshLiveSlots(); updateCraftOutput(width);   // in-place refresh - no DOM teardown (keeps the grid stable so you can keep crafting)
@@ -5648,7 +5746,7 @@ function openInventory(keep){
   } else {
     var L=document.createElement('div'); L.className='invlayout';
     L.style.cssText='display:flex; gap:16px; align-items:flex-start; justify-content:center; flex-wrap:wrap;';
-    // LEFT: armor column + character + off-hand (Minecraft-style)
+    // LEFT: armor column + character + off-hand (classic)
     var left=document.createElement('div'); left.style.cssText='display:flex; flex-direction:column; align-items:center; gap:6px;';
     left.appendChild(label('Equipment'));
     var prow=document.createElement('div'); prow.style.cssText='display:flex; gap:10px; align-items:center; justify-content:center;';
@@ -7616,7 +7714,7 @@ function spawnEnemy(kind, x,y,z){
   e.maxHp=e.hp;
   var HAT_HEADY={zombie:1.9,skeleton:1.9,villager:1.95,dwarf:1.4,forgewright:2.0,cinderkin:1.95,zombie_villager:1.95};
   if(HAT_HEADY[kind]!=null && Math.random()<0.05){ var _hids=Object.keys(HATS); e.hat=_hids[(Math.random()*_hids.length)|0]; var _hg=new THREE.Group(); HATS[e.hat].build(_hg); _hg.position.y=HAT_HEADY[kind]; mesh.add(_hg); }
-  if((kind==='zombie'||kind==='skeleton'||kind==='zombie_villager') && Math.random()<0.30){   // Minecraft-style: armored undead
+  if((kind==='zombie'||kind==='skeleton'||kind==='zombie_villager') && Math.random()<0.30){   // classic: armored undead
     var TIERS=[['LEATHER',0x9a6a3a],['IRON',0xcdd0d6],['DIAMOND',0x5fe9e0]]; var _tw=Math.random(); var ti=_tw<0.6?0:(_tw<0.9?1:2);
     var T=TIERS[ti], defBase=[2,5,8][ti], ench=Math.random()<0.08, tint=ench?mixHex(T[0]===''?0:T[1],0x9a4fff,0.4):T[1];
     var PIECES=[['head','HELMET'],['chest','CHESTPLATE'],['legguard','LEGGINGS'],['boot','BOOTS']];
@@ -7671,7 +7769,7 @@ function animalTick(e,dt){
   if(e.hurt>0) e.moving=true;
   if(e.tamed){ var tdx=Player.pos.x-e.pos.x, tdz=Player.pos.z-e.pos.z, td=Math.hypot(tdx,tdz);
     if(td>4 && td<34){ e.wdir=Math.atan2(tdz,tdx); e.moving=true; e.wcd=Math.max(e.wcd,0.4); } else if(td<=4){ e.moving=false; } }
-  if(!e.tamed && e.passive && !e.baby){   // lure: follow the player holding this animal's food (like Minecraft)
+  if(!e.tamed && e.passive && !e.baby){   // lure: follow the player holding this animal's food (like )
     var held=inv.hotbar[hotbarSel];
     if(held && followsFood(e.kind, held.key)){
       var ldx=Player.pos.x-e.pos.x, ldz=Player.pos.z-e.pos.z, ld=Math.hypot(ldx,ldz);
@@ -8168,10 +8266,21 @@ function tickEntities(dt){
     if(e.swimming) e.pos.y += Math.sin(now*0.006+(e.wdir||0))*0.01;
     e.mesh.position.copy(e.pos);
     if(e.kind==='creeper'){ e.steamCd=(e.steamCd||0)-dt; if(e.steamCd<=0){ e.steamCd=0.2+Math.random()*0.14; spawnSteam(e.pos.x, e.pos.y+1.15, e.pos.z, e.mesh.userData?e.mesh.userData.steamCol:0xe8eef7); } }   // smokestack puffs steam out the top
-    var moving = Math.hypot(e.vel.x,e.vel.z)>0.1;
-    var sw=Math.sin(now*0.012)*(moving?0.6:0);
-    if(e.mesh.userData.legs){ var _lg2=e.mesh.userData.legs; if(_lg2.length>=4){ _lg2[0].rotation.x=sw; _lg2[3].rotation.x=sw; _lg2[1].rotation.x=-sw; _lg2[2].rotation.x=-sw; } else { _lg2[0].rotation.x=sw; if(_lg2[1]) _lg2[1].rotation.x=-sw; } }
-    if(e.mesh.userData.arms){ e.mesh.userData.arms[0].rotation.x=-1.4+Math.sin(now*0.004)*0.12; e.mesh.userData.arms[1].rotation.x=-1.4-Math.sin(now*0.004)*0.12; }
+    var _msp=Math.hypot(e.vel.x,e.vel.z);
+    var moving = _msp>0.1;
+    var _gait = 0.010 + Math.min(0.02, _msp*0.02);                       // faster steps when moving faster
+    var _amp = moving ? Math.min(1.1, 0.45+_msp*0.5) : 0;
+    e.animPh = (e.animPh||0) + dt*(moving? (6+_msp*7) : 2.2);            // per-mob phase so they're not all in sync
+    var sw=Math.sin(e.animPh)*_amp;
+    var _breathe=Math.sin(now*0.003 + (e.animSeed||0))*0.02;            // gentle idle breathing
+    if(e.animSeed==null) e.animSeed=Math.random()*6.28;
+    if(e.mesh.userData.legs){ var _lg2=e.mesh.userData.legs;
+      if(_lg2.length>=4){ _lg2[0].rotation.x=sw; _lg2[3].rotation.x=sw; _lg2[1].rotation.x=-sw; _lg2[2].rotation.x=-sw; }
+      else { _lg2[0].rotation.x=sw; if(_lg2[1]) _lg2[1].rotation.x=-sw; } }
+    if(e.mesh.userData.arms){ e.mesh.userData.arms[0].rotation.x=(e.provoked? -0.3+sw : -1.4)+_breathe; e.mesh.userData.arms[1].rotation.x=(e.provoked? -0.3-sw : -1.4)-_breathe; }
+    if(e.mesh.userData.head){ e.mesh.userData.head.rotation.x=_breathe*2 + (moving?Math.sin(e.animPh*2)*0.05:0); }   // subtle head bob
+    if(!moving && e.mesh.userData.body==null){ e.mesh.position.y += _breathe*0.3; }   // whole-body idle breath if no body node
+    if(e.kind==='rabbit'||e.kind==='frog'){ if(moving){ e.mesh.position.y += Math.max(0, Math.sin(e.animPh))*0.18; } }   // hoppers bounce
     if(e.mesh.userData.spiderLegs){ var sl=e.mesh.userData.spiderLegs, a=Math.sin(now*0.02)*(moving?0.28:0.06);
       for(var li=0; li<sl.length; li++){ sl[li].rotation.x=a*((li%2)?1:-1); } }
     if(e.mesh.userData.reels){ var rl=e.mesh.userData.reels, rspin=(moving?0.18:0.05)+(e.provoked?0.22:0); for(var ri2=0;ri2<rl.length;ri2++){ rl[ri2].rotation.x += rspin; } }
@@ -8712,12 +8821,12 @@ function tickSurvival(dt){
   Player.invul-=dt; if(Player.invul<0)Player.invul=0;
   if(spawnGrace>0) spawnGrace-=dt;
   if(gameMode==='creative'){ if(Player.hp<Player.maxHp) Player.hp=Player.maxHp; Player.hunger=20; return; }
-  var _act=0.3;                                                        // standing still: barely any drain, like Minecraft
+  var _act=0.3;                                                        // standing still: barely any drain
   if(Player.sprinting) _act=2.6;                                        // sprinting is what makes you hungry
   else if(Math.abs(Player.vel.x)+Math.abs(Player.vel.z)>0.6) _act=1.0;  // walking: normal
   if(!Player.onGround && !Player.inWater && !Player.flying) _act+=0.5;  // jumping/air time costs extra
   survivalTimer+=dt*_act;
-  // hunger drain (peaceful never gets hungry, like Minecraft)
+  // hunger drain (peaceful never gets hungry)
   var drainEvery = (difficulty==='hard') ? 5 : (difficulty==='easy') ? 10 : 7;
   if(difficulty!=='peaceful' && survivalTimer>=drainEvery){ survivalTimer=0;
     if(Player.sat>0) Player.sat-=1; else if(Player.hunger>0) Player.hunger-=1;
@@ -8745,11 +8854,17 @@ function tickSurvival(dt){
     }
     if(touched){ damagePlayer(1); Player.cactusCd=0.5; }   // half a heart
   }
-  // air / drowning
+  // full space suit check
+  var _suitN=0; for(var _ai=0;_ai<4;_ai++){ var _ap=inv.armor[_ai]; if(_ap && ITEMS[_ap.key] && ITEMS[_ap.key].spacesuit) _suitN++; }
+  var wearingSuit=(_suitN>=4);
+  // air / drowning / vacuum
+  var onMoon=(World.dim==='moon');
   var headBlk=World.getBlock(Math.floor(Player.pos.x),Math.floor(Player.pos.y+Player.eye),Math.floor(Player.pos.z));
   var submerged=blk(headBlk).liquid && !blk(headBlk).lava;
   var wo=document.getElementById('waterOverlay'); if(wo) wo.style.display=submerged?'block':'none';
-  if(submerged && !(Player.riding && Player.riding.kind==='seahorse')){ Player.air-=dt*0.9; if(Player.air<=0){ Player.air=0; Player.drownCd=(Player.drownCd||0)-dt;
+  var airborneVac = onMoon && !wearingSuit;   // the Moon is airless — no suit means you suffocate
+  var losingAir = (submerged && !(Player.riding && Player.riding.kind==='seahorse')) || airborneVac;
+  if(losingAir){ Player.air-=dt*(airborneVac?0.6:0.9); if(Player.air<=0){ Player.air=0; Player.drownCd=(Player.drownCd||0)-dt;
       if(Player.drownCd<=0){ Player.drownCd=1.5; damagePlayer(2); } } }
   else { if(Player.air<Player.maxAir) Player.air=Math.min(Player.maxAir, Player.air+dt*4); Player.drownCd=0; }
   updateStats();
@@ -8851,9 +8966,9 @@ function updateStats(){
   if(xl) xl.textContent=Player.xpLevel;
   // air bubbles (only when submerged / not full)
   var bEl=document.getElementById('bubbles');
-  if(bEl){ var submerged=Player.air<Player.maxAir;
-    bEl.style.display=submerged?'flex':'none';
-    if(submerged){ var want=Math.ceil(Player.air); if(bEl.children.length!==10) buildIconRow(bEl,10);
+  if(bEl){ var showAir=Player.air<Player.maxAir;
+    bEl.style.display=showAir?'flex':'none';
+    if(showAir){ var want=Math.ceil(Player.air); if(bEl.children.length!==10) buildIconRow(bEl,10);
       for(var k=0;k<10;k++){ bEl.children[k].style.backgroundImage=(k<want?BUBBLE_F:'none'); } }
   }
   // armor bar
@@ -8871,7 +8986,7 @@ function flashDamage(){ dmgFlash=0.3; }
 
 /* ----------------------------- DAY / NIGHT ------------------------------ */
 var timeOfDay=0.30; // 0..1 (0.25=morning, 0.5=noon, 0.75=evening, 0=midnight)
-var DAY_LEN=1200; // seconds per full cycle (20 min, same as Minecraft)
+var DAY_LEN=1200; // seconds per full cycle (20 min, same as )
 var sawNight=false;
 function tickDayNight(dt){
   if(World.dim==='moon'){
@@ -9317,7 +9432,7 @@ function startWorld(seed, save, mode){
     Player.yaw=0; Player.pitch=0; Player.hp=20; Player.hunger=20; Player.sat=5;
     Player.xp=0; Player.xpLevel=0; Player.air=Player.maxAir; unlocked={}; sawNight=false; rpgLoad(null); rpgLastBiome=null;
     inv.hotbar=newArray(9); inv.main=newArray(27); inv.armor=newArray(4); inv.offhand=newArray(1);
-    // empty inventory - survive from nothing, like Minecraft
+    // empty inventory - survive from nothing
     if(gameMode==='creative'){
       var kit=['GRASS','DIRT','STONE','COBBLE','DEEPSLATE','COBBLE_DEEP','SAND','GRAVEL','GLASS','PLANKS','LOG','SPRUCE_LOG','BIRCH_LOG',
                'LEAVES','WOOL','SNOW','CACTUS','TORCH','LANTERN','COPPER_LANTERN','SOUL_LANTERN','GOLD_LANTERN','CRAFTING','FURNACE','MACERATOR','GENERATOR','CABLE','SOLAR_PANEL','ENERGY_CELL','HOPPER','CHEST'];
@@ -10089,7 +10204,7 @@ function loop(t){
   }
   tickSky();
   updateHand();
-  { var _le=document.getElementById('lookName');
+  if(frame%4===0){ var _le=document.getElementById('lookName');
     if(!_le){ _le=document.createElement('div'); _le.id='lookName'; _le.style.cssText='position:fixed;top:44px;left:12px;z-index:40;padding:3px 10px;background:#0007;color:#cfe;font:600 12px monospace;border-radius:7px;pointer-events:none;opacity:0;transition:opacity .12s;text-shadow:0 1px 2px #000;'; document.body.appendChild(_le); }
     if(!showLookInfo){ _le.style.opacity='0'; }
     else {
@@ -10136,7 +10251,7 @@ function loop(t){
   renderer.autoClear=true;
   updateMobBars(dt); tickDmgNumbers(dt);
   updateTurbineRotors(dt);
-  try{ updateShadows(); }catch(_){ }
+  if(frame%2===0){ try{ updateShadows(); }catch(_){ } }
   renderer.render(scene,camera);
   if(!running){ try{ renderCharPreview(); }catch(_){} }
   updateWaypointHud();
@@ -10188,13 +10303,23 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 184';
+var VERSION='Update 194';
 var CHANGELOG=[
-  { v:'Update 184', t:'Water Redone Properly', items:['<b>Water fixed</b> \u2014 blue water is see-through with gentle animated waves like Minecraft, and <b>swamp water is visible again</b> as a murkier green. The previous fix had made swamp invisible and water look like solid cubes'] },
+  { v:'Update 194', t:'Fix Held Item Position', items:['<b>Your character holds items in front now</b> \u2014 tools and blocks were sitting behind the hand instead of in the fist'] },
+  { v:'Update 193', t:'Fix Invisible 3rd-Person Character', items:['<b>Fixed your character vanishing in third person</b> \u2014 the new walk-bob was snapping the model down to the bottom of the world instead of bobbing at your feet'] },
+  { v:'Update 192', t:'FIXED: Load Crash', items:['<b>Fixed the crash on start!</b> The Space Suit crafting recipes were being registered before the recipe system existed, which threw an error and stopped the whole game from loading. Moved them into the right place \u2014 the game starts normally now'] },
+  { v:'Update 191', t:'Fix: 3D Engine Load', items:['<b>Fixed the \u201cScript error\u201d on start</b> \u2014 the 3D engine is loaded from an online library, and on some mobile connections that download failed (which showed as a generic script error and a dead title screen). It now retries from backup sources and starts automatically once it loads'] },
+  { v:'Update 190', t:'Stability Fix', items:['<b>Fixed a rare error</b> that could interrupt play (an undefined sound call when making dirt paths)','If the game ever fails to start, fully close the tab and reopen so it loads the newest version'] },
+  { v:'Update 189', t:'Performance, Paths, Doors & Beds', items:['<b>Performance</b> \u2014 shadows and the look-at pop-up update less often, smoothing out the lag','<b>Dirt paths</b> \u2014 use a shovel on grass or dirt to carve a packed path','<b>Double doors fixed</b> \u2014 two doors placed together now hinge opposite and swing apart, opening into a full doorway','<b>Beds are solid</b> now \u2014 you rest on top of them instead of sinking in','<b>Smoother stepping</b> \u2014 you no longer hop up onto lily pads, and stepping up blocks is gentler'] },
+  { v:'Update 188', t:'Fix Load Crash', items:['<b>Fixed a script error on load</b> \u2014 the new walk-bob code referenced the player object before it existed. The game starts normally again'] },
+  { v:'Update 187', t:'Livelier Animations & Village Crops', items:['<b>Animals feel more alive</b> \u2014 legs swing in time with how fast they move, each animal steps out of sync, and they gently breathe and bob their heads when idle (rabbits and frogs now hop as they hop)','<b>Player animation improved</b> \u2014 a proper speed-scaled walk stride, counter-swinging arms, a subtle idle breath and a crouch lean when sneaking','<b>Every village grows its own crops</b> \u2014 each village randomly farms 2\u20134 different crops, so no two villages are quite the same'] },
+  { v:'Update 186', t:'Fruit Trees, Berries & Sky Wrecks', items:['<b>Swamp water is murkier</b> again (was too clear)','<b>Break/destroy texture improved</b> \u2014 thicker, darker cracks that spread more\u2019s destroy stages','<b>Fruit trees</b> \u2014 apple, orange, lemon and fig trees now grow in the world; pick the fruit to eat it','<b>Berry bushes</b> \u2014 blueberry bushes, strawberry bushes and grapevines scattered on grassland','<b>Rare floating airship wrecks</b> \u2014 broken balloon-ships drift high in the sky with a loot chest aboard (plus the sunken ship wrecks already in deep oceans)'] },
+  { v:'Update 185', t:'MoonQuest Part 4: Space Suit & Oxygen', items:['<b>The Moon is airless now</b> \u2014 without a suit your oxygen drains (the bubble meter appears up there) and you start to suffocate','<b>Craft a Space Suit</b> from <b>Moonstone</b> (mined on the Moon) plus iron plates and glass \u2014 Space Helmet, Space Suit, Space Leggings and Space Boots','<b>Wear the full set to breathe freely</b> on the Moon. It also gives solid armour, so gear up before the trip'] },
+  { v:'Update 184', t:'Water Redone Properly', items:['<b>Water fixed</b> \u2014 blue water is see-through with gentle animated waves, and <b>swamp water is visible again</b> as a murkier green. The previous fix had made swamp invisible and water look like solid cubes'] },
   { v:'Update 183', t:'Clearer Water, Mob Names & Toggles', items:['<b>Water is see-through now</b> \u2014 it renders at half opacity so you can see the bottom, with a brighter cleaner blue and a soft ripple instead of blocky squares','<b>The look-at pop-up names mobs too</b>, not just blocks','<b>New Settings toggles</b> \u2014 turn Coordinates and the Block/Mob Info pop-up on or off'] },
-  { v:'Update 182', t:'Clear Water, Lamps & Emberglow', items:['<b>Water redone</b> \u2014 clearer, a solid nice Minecraft-style blue with only a gentle ripple (no more checkerboard or purple speckle)','<b>Block name pop-up moved</b> under the coordinates, top-left, small and out of the way','<b>Emberglow Ore</b> \u2014 a glowing ore that lights up the UnderForge; mine it for Emberglow Dust (and craft it into a bright Emberglow Block)','<b>Light furniture</b> at the Carpenter\u2019s Bench, built from Emberglow \u2014 Ceiling Light, Floor Lamp, Wall Lamp, Outdoor Lamp and Desk Lamp, all of which actually cast light'] },
+  { v:'Update 182', t:'Clear Water, Lamps & Emberglow', items:['<b>Water redone</b> \u2014 clearer, a solid nice blue with only a gentle ripple (no more checkerboard or purple speckle)','<b>Block name pop-up moved</b> under the coordinates, top-left, small and out of the way','<b>Emberglow Ore</b> \u2014 a glowing ore that lights up the UnderForge; mine it for Emberglow Dust (and craft it into a bright Emberglow Block)','<b>Light furniture</b> at the Carpenter\u2019s Bench, built from Emberglow \u2014 Ceiling Light, Floor Lamp, Wall Lamp, Outdoor Lamp and Desk Lamp, all of which actually cast light'] },
   { v:'Update 181', t:'Water Texture & Block Names', items:['<b>Water looks like water now</b> \u2014 animated ripple/wave shading instead of the flat checkerboard, with a deeper blue','<b>Block name pop-up</b> \u2014 whatever block you\u2019re looking at shows its name in a little tag at the top of the screen'] },
-  { v:'Update 180', t:'Deep Oceans & Seahorses', items:['<b>Oceans are deep now</b> with basins and trenches, and small ponds vary in depth too','<b>Underwater foliage</b> \u2014 seagrass and tall kelp sway on the sea floor, plus glowing Sea Lanterns','<b>All ore textures redone</b> Minecraft-style \u2014 chunky mineral blobs with dark outlines and a bright center, on grainy stone','<b>Sunken wrecks</b> \u2014 broken wooden ships and sunken steampunk hulls rest on deep sea floors, with loot chests','<b>Tameable Seahorses!</b> Find one in the ocean, tame it with a Saddle, and ride it \u2014 you <b>breathe underwater</b> while riding and swim fast in any direction. SNEAK to dismount','<b>Fish and seahorses die</b> if they\u2019re stuck out of water too long \u2014 get them back in!'] },
+  { v:'Update 180', t:'Deep Oceans & Seahorses', items:['<b>Oceans are deep now</b> with basins and trenches, and small ponds vary in depth too','<b>Underwater foliage</b> \u2014 seagrass and tall kelp sway on the sea floor, plus glowing Sea Lanterns','<b>All ore textures redone</b> \u2014 chunky mineral blobs with dark outlines and a bright center, on grainy stone','<b>Sunken wrecks</b> \u2014 broken wooden ships and sunken steampunk hulls rest on deep sea floors, with loot chests','<b>Tameable Seahorses!</b> Find one in the ocean, tame it with a Saddle, and ride it \u2014 you <b>breathe underwater</b> while riding and swim fast in any direction. SNEAK to dismount','<b>Fish and seahorses die</b> if they\u2019re stuck out of water too long \u2014 get them back in!'] },
   { v:'Update 179', t:'Fixes: Glass & Vehicle Exit', items:['<b>Fixed the crash</b> when sneaking out of the airship (a null vehicle reference)','<b>Glass is nearly clear</b> now \u2014 much higher transparency and a neutral, barely-there tint instead of blue'] },
   { v:'Update 178', t:'Bye Cars, Weighty Boats & Airships', items:['<b>Removed the Motorcar &amp; Truck</b> for now \u2014 they looked rough. They\u2019ll come back when they\u2019re done right','<b>Boats have weight</b> now \u2014 they take a moment to build up speed and glide a long way when you let go, like a real boat on water','<b>Airship feels like flying</b> \u2014 momentum-based cruising that eases in and drifts to a stop, holds its altitude when idle, and sways gently in the air'] },
   { v:'Update 177', t:'Muscle Cars & Real Driving', items:['<b>Cars look like proper muscle cars now</b> \u2014 long low body, raised cabin with real windows, bumpers, headlights/taillights, a racing stripe and chrome wheel hubs','<b>Real driving mechanics</b> \u2014 forward/back is the throttle (accelerate up to top speed, coast to a stop) and left/right actually <b>steers</b> the car, which only turns while you\u2019re moving and reverses when backing up','<b>Motorcar &amp; Truck have proper icons</b> in the inventory and hand'] },
@@ -10206,26 +10331,26 @@ var CHANGELOG=[
   { v:'Update 171', t:'Skin/Face Actually Apply', items:['<b>Skin colour and Face now update everywhere</b> \u2014 the main-menu character preview wasn\u2019t being told about them, so changes looked like they did nothing. Fixed'] },
   { v:'Update 170', t:'Customize Skin & Face', items:['<b>Skin colour picker</b> in the Dressing Room \u2014 nine tones from pale to dark, plus Alien green and Frost blue','<b>Face styles</b> \u2014 Neutral, Smile, Grumpy, Wide Eyes, Wink and Glowing eyes','Both update your character live and are saved with your other cosmetics'] },
   { v:'Update 169', t:'Cogspider Legs & Armor Fix', items:['<b>Cogspider legs connect properly</b> now \u2014 each leg is a jointed thigh + shin + foot hanging off the body instead of floating segments','<b>Enemy armor fixed</b> \u2014 it was a big flat noise-textured slab clipping through the mob; now armored enemies wear the same slim plate pieces the player does (helm, chestplate, leg guards, boots)'] },
-  { v:'Update 168', t:'Better Mining Cracks & Axe Chopping', items:['<b>Mining crack texture redone</b> \u2014 chunky pixel cracks that spread and shatter outward as you break a block, Minecraft destroy-stage style, instead of thin scratches','<b>Whole trees only fall with an axe</b> now \u2014 breaking a log by hand (or other tools) just takes that one log; use an axe to fell the tree'] },
+  { v:'Update 168', t:'Better Mining Cracks & Axe Chopping', items:['<b>Mining crack texture redone</b> \u2014 chunky pixel cracks that spread and shatter outward as you break a block,  destroy-stage style, instead of thin scratches','<b>Whole trees only fall with an axe</b> now \u2014 breaking a log by hand (or other tools) just takes that one log; use an axe to fell the tree'] },
   { v:'Update 167', t:'Naked Sheep, Hover Names & Eating', items:['<b>Sheared sheep look naked</b> now \u2014 the body slims down to bare pink skin instead of staying full and fluffy','<b>Item names show on hover</b> (mouse over any slot) as well as on tap','<b>Fixed the speck by the character\u2019s collar</b> on the menu \u2014 the belt buckle was poking through; it sits flush now','<b>Better eating animation</b> \u2014 food now rises toward your mouth with a chew motion instead of a mining jab'] },
   { v:'Update 166', t:'Real Texture Fix, Daggers & Wood Variants', items:['<b>Crafting Table &amp; Carpenter\u2019s Bench FINALLY fixed</b> \u2014 the decor values were mis-packed so they were rendering ore/wrong branches (the dots). Table now uses its proper 3\u00d73 grid texture; the bench has clean plank slats with a tool rail and saw','<b>Dagger crafting fixed</b> \u2014 Spruce/Birch/Cherry daggers had recipes but no item (blank name, no icon). All daggers exist now with proper icons','<b>Wood variety!</b> Stairs, fences, fence gates and slabs now come in <b>Spruce, Birch, Cherry and Redwood</b> too','Glass opacity and the door swing/seam fixes from last update are in this build (the previous one may have been cached)'] },
-  { v:'Update 165', t:'Clearer Glass & Door Fixes', items:['<b>Glass is clearer</b> \u2014 lighter tint and more see-through','<b>Doors swing the right way</b> now (toward their hinge side, like Minecraft) instead of opening backwards','<b>Fixed the line through the door texture</b> \u2014 the panel now maps cleanly across the whole leaf with no seam'] },
+  { v:'Update 165', t:'Clearer Glass & Door Fixes', items:['<b>Glass is clearer</b> \u2014 lighter tint and more see-through','<b>Doors swing the right way</b> now (toward their hinge side) instead of opening backwards','<b>Fixed the line through the door texture</b> \u2014 the panel now maps cleanly across the whole leaf with no seam'] },
   { v:'Update 164', t:'Bench/Table Textures & Smart Chopping', items:['<b>Crafting Table &amp; Carpenter\u2019s Bench textures actually redone</b> \u2014 removed the noise that was showing as random dots. The table now has a clean 3\u00d73 grid top with a tool strip on the sides; the bench has clean plank slats with a saw and tool rail','<b>Smarter tree chopping</b> \u2014 breaking a log now cuts that log and everything <b>above</b> it; only when you break the <b>very bottom</b> log does the whole tree come down. Works with any tool, not just an axe'] },
-  { v:'Update 163', t:'Armor Fix, Daggers, Spooky Horses & Caves', items:['<b>Enemy armor fixed</b> \u2014 it was rendering as a flat tiled slab; now every piece is slim flat-shaded plate that hugs the mob (helm, chestplate with shoulder pads, leg guards, boots)','<b>Daggers</b> \u2014 craft a fast, light blade in any material (quick swings, less damage than a sword)','<b>Spoolers stay</b> for String, and <b>Cobwebs</b> now appear in some structures \u2014 break them with a sword to get String','<b>Zombie &amp; Skeleton Horses</b> \u2014 a rare, eerie surface spawn at night','<b>Minecraft-style spawning</b> \u2014 hostiles now appear in any dark spot (including caves in daytime), scaled by difficulty','<b>More caves!</b> Bigger cave systems plus long winding tunnels, so they\u2019re far easier to find when you dig down'] },
+  { v:'Update 163', t:'Armor Fix, Daggers, Spooky Horses & Caves', items:['<b>Enemy armor fixed</b> \u2014 it was rendering as a flat tiled slab; now every piece is slim flat-shaded plate that hugs the mob (helm, chestplate with shoulder pads, leg guards, boots)','<b>Daggers</b> \u2014 craft a fast, light blade in any material (quick swings, less damage than a sword)','<b>Spoolers stay</b> for String, and <b>Cobwebs</b> now appear in some structures \u2014 break them with a sword to get String','<b>Zombie &amp; Skeleton Horses</b> \u2014 a rare, eerie surface spawn at night','<b>spawning</b> \u2014 hostiles now appear in any dark spot (including caves in daytime), scaled by difficulty','<b>More caves!</b> Bigger cave systems plus long winding tunnels, so they\u2019re far easier to find when you dig down'] },
   { v:'Update 162', t:'Cogspiders & Settings Fix', items:['<b>Creepers replaced by Cogspiders</b> \u2014 low, wide brass boiler-spiders with six jointed pipe legs and a smokestack venting steam. Instead of exploding they <b>scuttle up and pinch you</b> with their front claws','They drop <b>Blasting Powder</b> (works like gunpowder) plus scrap iron','<b>Fixed the Settings menu</b> \u2014 the Repair Chunks button was stretching across the whole screen; it\u2019s a normal button in the panel now'] },
   { v:'Update 161', t:'Better Character & Visible Shadows', items:['<b>Character reproportioned</b> \u2014 broader torso, shorter arms with full shirt sleeves (no more long bare arms), sturdier legs','<b>Shadows now draw on top of everything</b> (depth-test off) so they\u2019re always visible \u2014 bigger and darker under every creature'] },
   { v:'Update 160', t:'Shadows Actually Show', items:['<b>Shadows fixed</b> \u2014 they were sinking into the ground / being eaten by fog. Now they draw with a polygon-offset on top of the floor, fog off, so the soft dark disc under you and every creature is clearly visible'] },
   { v:'Update 159', t:'Fix Blue Speck & Shadows', items:['<b>Removed the floating blue speck</b> \u2014 a shirt-sleeve piece was sitting off the arm, both on the inventory doll and on your in-world model','<b>Shadows show now</b> \u2014 they were searching upward for the floor and missing it; now they land correctly under you and every creature, a bit darker and larger'] },
   { v:'Update 158', t:'Fix Black Character', items:['<b>Fixed the black character panel</b> in the inventory \u2014 the little 3D render failed on some devices. It\u2019s back to the reliable paper-doll, now painted with your real shirt, pants and shoe colours so it still updates when you change clothes'] },
-  { v:'Update 157', t:'Door Texture & Shadows', items:['<b>Door texture fixed</b> \u2014 the full door pattern was drawn on both the top and bottom halves, so it looked doubled. Now the top leaf shows the top of the panel and the bottom leaf the bottom, forming one continuous door like Minecraft','<b>Shadows!</b> The player and every creature now cast a soft round shadow on the ground that shrinks as you jump or fall'] },
-  { v:'Update 156', t:'Doll, Doors, Bench & Big Fixes', items:['<b>Inventory character is now a live 3D model of YOU</b> \u2014 spinning, wearing your real shirt, pants, hat and armor, updating in real time (no more teal placeholder)','<b>Fixed the floating orange squares</b> on dwarves/skeletons and the <b>white-covered mobs</b> \u2014 a hurt-flash bug was stranding add-on parts (eyes, armor) mid-flash','<b>Crafting Table &amp; Carpenter\u2019s Bench retextured from scratch</b> \u2014 real pixel-art: the table has a 3\u00d73 grid top and tool trim, the bench has plank slats with a tool rail. No more random dots, and they no longer share a texture','<b>Doors place like Minecraft</b> now (hinge on the near side, facing you) and <b>two side-by-side doors act as double doors</b> \u2014 opening one swings both','<b>Held item fixes:</b> a picked-up stack no longer flashes in the top-left corner, and its name label now clears properly when you put it down or reopen the inventory','Item names show when you hover or pick up, and clear when you move away'] },
-  { v:'Update 155', t:'Controller Everywhere, Auto-Equip & Style', items:['<b>Controller works everywhere now</b> \u2014 the Wardrobe, the Skills screen, the Carpenter\u2019s Bench and the Cooking Pot are all fully navigable (craftable rows highlight green and press with A)','<b>Auto-Equip</b> \u2014 one button in the inventory\u2019s equipment panel puts on the best armor from your bags','<b>Helmets are open-faced now</b> \u2014 a proper cap with brow ring and cheek guards instead of a box over your whole face, and all armor pieces are shaded/textured like the body','<b>Character glow-up</b> \u2014 fuller hair (back and sides), real shirt sleeves that re-tint with whatever shirt you wear, and a belt with a brass buckle','<b>Recipe Book search</b> \u2014 type to filter recipes live and find exactly what you need','<b>Dragging an item now shows its name</b> under the icon so you always know what you grabbed','<b>Beds craft from any planks</b> (oak, spruce, birch, cherry, ash or redwood), the wool sets the blanket color like Minecraft \u2014 and you can now <b>dye a bed</b> (bed + dye) to recolor it','<b>Crafting Table &amp; Carpenter\u2019s Bench textures</b> \u2014 the table has its tool grid on top, the bench has slatted sides with a hanging tool rack','Typing in a search box no longer triggers game controls'] },
+  { v:'Update 157', t:'Door Texture & Shadows', items:['<b>Door texture fixed</b> \u2014 the full door pattern was drawn on both the top and bottom halves, so it looked doubled. Now the top leaf shows the top of the panel and the bottom leaf the bottom, forming one continuous door','<b>Shadows!</b> The player and every creature now cast a soft round shadow on the ground that shrinks as you jump or fall'] },
+  { v:'Update 156', t:'Doll, Doors, Bench & Big Fixes', items:['<b>Inventory character is now a live 3D model of YOU</b> \u2014 spinning, wearing your real shirt, pants, hat and armor, updating in real time (no more teal placeholder)','<b>Fixed the floating orange squares</b> on dwarves/skeletons and the <b>white-covered mobs</b> \u2014 a hurt-flash bug was stranding add-on parts (eyes, armor) mid-flash','<b>Crafting Table &amp; Carpenter\u2019s Bench retextured from scratch</b> \u2014 real pixel-art: the table has a 3\u00d73 grid top and tool trim, the bench has plank slats with a tool rail. No more random dots, and they no longer share a texture','<b>Doors place</b> now (hinge on the near side, facing you) and <b>two side-by-side doors act as double doors</b> \u2014 opening one swings both','<b>Held item fixes:</b> a picked-up stack no longer flashes in the top-left corner, and its name label now clears properly when you put it down or reopen the inventory','Item names show when you hover or pick up, and clear when you move away'] },
+  { v:'Update 155', t:'Controller Everywhere, Auto-Equip & Style', items:['<b>Controller works everywhere now</b> \u2014 the Wardrobe, the Skills screen, the Carpenter\u2019s Bench and the Cooking Pot are all fully navigable (craftable rows highlight green and press with A)','<b>Auto-Equip</b> \u2014 one button in the inventory\u2019s equipment panel puts on the best armor from your bags','<b>Helmets are open-faced now</b> \u2014 a proper cap with brow ring and cheek guards instead of a box over your whole face, and all armor pieces are shaded/textured like the body','<b>Character glow-up</b> \u2014 fuller hair (back and sides), real shirt sleeves that re-tint with whatever shirt you wear, and a belt with a brass buckle','<b>Recipe Book search</b> \u2014 type to filter recipes live and find exactly what you need','<b>Dragging an item now shows its name</b> under the icon so you always know what you grabbed','<b>Beds craft from any planks</b> (oak, spruce, birch, cherry, ash or redwood), the wool sets the blanket color \u2014 and you can now <b>dye a bed</b> (bed + dye) to recolor it','<b>Crafting Table &amp; Carpenter\u2019s Bench textures</b> \u2014 the table has its tool grid on top, the bench has slatted sides with a hanging tool rack','Typing in a search box no longer triggers game controls'] },
   { v:'Update 154', t:'THE MOON (MoonQuest Part 3)', items:['<b>The Moon is real.</b> Board your fueled rocket, ride the launch past the edge of the sky, and land on a <b>grey cratered moonscape</b> under a black, star-filled sky','<b>Low gravity</b> \u2014 a third of home. Bound across craters in huge floating leaps','<b>Moon resources</b> \u2014 dig through Moon Dust into Moon Rock to find glowing <b>Moonstone Ore</b>\u2026 and yes, veins of actual <b>Moon Cheese</b> (a hearty snack, of course)','<b>Getting home:</b> your rocket lands beside you on the Moon \u2014 board it with 4 more Rocket Fuel to fly back. Pack fuel for the round trip!','No weather, no mobs, no birdsong \u2014 just you, the dust and the stars. (Part 4 \u2014 space suits &amp; oxygen \u2014 comes later)'] },
   { v:'Update 153', t:'Redwoods, Liftoff & Forge Fixes', items:['<b>Redwood Grove biome!</b> A new forest of <b>towering redwoods</b> \u2014 thick russet trunks up to 16 blocks tall with high canopies. A full new wood set: Redwood logs, planks and saplings you can grow yourself','<b>MoonQuest Part 2 \u2014 the Launch Pad!</b> Craft a Launch Pad (iron plates + brass), mount your assembled Rocket on it, board with <b>4 Rocket Fuel</b>, and hold on: ignition countdown, flame-and-steam liftoff, up past the clouds to the edge of space \u2014 then a gentle descent back to the pad. The Moon dimension itself lands next update','<b>Dwarf-forge monuments fixed</b> \u2014 they\u2019re much rarer now, never spawn within 3 chunks of each other, only surface <b>on land</b> (underwater halls stay sealed secrets), and stand on stone foundations instead of floating over slopes'] },
-  { v:'Update 152', t:'Minecraft-Style Cobblestone', items:['<b>Cobblestone rebuilt from scratch</b> \u2014 now a proper 16\u00d716 pixel-art texture: irregular flat grey stones in four shades with thin dark seams between them, just like Minecraft. No dots, no moss'] },
+  { v:'Update 152', t:'-Style Cobblestone', items:['<b>Cobblestone rebuilt from scratch</b> \u2014 now a proper 16\u00d716 pixel-art texture: irregular flat grey stones in four shades with thin dark seams between them, just. No dots, no moss'] },
   { v:'Update 151', t:'Cobblestone Fixed (for real)', items:['<b>Cobblestone redone</b> \u2014 the last pass rendered as dots on black with huge green blotches. Now the stones fill the face edge-to-edge with <b>thin dark cracks</b> between them and <b>small moss flecks only inside the cracks</b>, like the reference'] },
-  { v:'Update 150', t:'Slate Cobble, Hunger & Hive Polish', items:['<b>Cobblestone remade</b> \u2014 angular interlocked slate stones in a dark blue-grey, with thin cracks and <b>moss creeping through the seams</b>, matched to the reference','<b>Lily pads</b> now rest right on the water (no more dark ring under them) and have a proper pad icon in your inventory','<b>Hunger works like Minecraft now</b> \u2014 standing still barely drains it, walking drains normally, and <b>sprinting and jumping are what make you hungry</b>. Easy drains slower, Peaceful never drains','<b>Beehives look like beehives</b> \u2014 wooden slat bands with a dark entrance hole on the sides'] },
-  { v:'Update 149', t:'Phantom Fix, Vehicles & Big Polish', items:['<b>Phantom blocks:</b> a chunk-mesh sweeper now automatically detects and removes ghost geometry (blocks you could see but walk through), and there\u2019s a new <b>Repair Chunks</b> button in Settings that instantly rebuilds all terrain if anything ever looks wrong','<b>Motorcar &amp; Truck!</b> Redstone-powered land vehicles \u2014 the Motorcar is fast, and the Truck can <b>carry two animals in its bed</b> (sneak-tap to load a nearby animal, sneak-tap again to unload, or to pack the vehicle up). Drive with the move stick, SNEAK to hop out','<b>Lily pads</b> are real blocks now \u2014 walk across them, break to collect, and place them back on water','<b>Day &amp; night now run on Minecraft time</b> \u2014 a full 20-minute cycle','<b>Cobblestone</b> matched closer to Minecraft (tighter interlocked stones, per-block variation) after the last pass came out too bubbly','<b>Fixed the gap where swamp water meets regular water</b>','<b>Your shirt shows in-game now</b> \u2014 changing shirts updates your character immediately, including the first-person sleeve (it was stuck teal)','<b>Held blocks finally match placed blocks</b> \u2014 blocks in your hand render with the real world shader, textures and all','<b>Recipe Book:</b> item names are readable now and each result shows its name right under the icon, hotbar-style','<b>Every menu fits on one screen</b> \u2014 the inventory (and all other screens) auto-scale so nothing needs scrolling to reach','The dwarf-forge ladder now surfaces inside an <b>ancient stone monument</b> with an arched doorway and lanterns'] },
+  { v:'Update 150', t:'Slate Cobble, Hunger & Hive Polish', items:['<b>Cobblestone remade</b> \u2014 angular interlocked slate stones in a dark blue-grey, with thin cracks and <b>moss creeping through the seams</b>, matched to the reference','<b>Lily pads</b> now rest right on the water (no more dark ring under them) and have a proper pad icon in your inventory','<b>Hunger works now</b> \u2014 standing still barely drains it, walking drains normally, and <b>sprinting and jumping are what make you hungry</b>. Easy drains slower, Peaceful never drains','<b>Beehives look like beehives</b> \u2014 wooden slat bands with a dark entrance hole on the sides'] },
+  { v:'Update 149', t:'Phantom Fix, Vehicles & Big Polish', items:['<b>Phantom blocks:</b> a chunk-mesh sweeper now automatically detects and removes ghost geometry (blocks you could see but walk through), and there\u2019s a new <b>Repair Chunks</b> button in Settings that instantly rebuilds all terrain if anything ever looks wrong','<b>Motorcar &amp; Truck!</b> Redstone-powered land vehicles \u2014 the Motorcar is fast, and the Truck can <b>carry two animals in its bed</b> (sneak-tap to load a nearby animal, sneak-tap again to unload, or to pack the vehicle up). Drive with the move stick, SNEAK to hop out','<b>Lily pads</b> are real blocks now \u2014 walk across them, break to collect, and place them back on water','<b>Day &amp; night now run on  time</b> \u2014 a full 20-minute cycle','<b>Cobblestone</b> matched closer to  (tighter interlocked stones, per-block variation) after the last pass came out too bubbly','<b>Fixed the gap where swamp water meets regular water</b>','<b>Your shirt shows in-game now</b> \u2014 changing shirts updates your character immediately, including the first-person sleeve (it was stuck teal)','<b>Held blocks finally match placed blocks</b> \u2014 blocks in your hand render with the real world shader, textures and all','<b>Recipe Book:</b> item names are readable now and each result shows its name right under the icon, hotbar-style','<b>Every menu fits on one screen</b> \u2014 the inventory (and all other screens) auto-scale so nothing needs scrolling to reach','The dwarf-forge ladder now surfaces inside an <b>ancient stone monument</b> with an arched doorway and lanterns'] },
   { v:'Update 148', t:'Dwarf Cities, Geothermal & Alchemy', items:['<b>Dwarf Cities!</b> Rare grand districts hide in the UnderForge \u2014 gilded roads, inlaid stone halls, glowing Runic Brass street lamps, and a central vault stuffed with loot. Knights and dwarves call them home','<b>Two rare decoration blocks</b> \u2014 <b>Gilded Stone</b> and glowing <b>Runic Brass</b>, found (mostly) in dwarf city vaults','<b>Geothermal Generator</b> (Tekkit classic) \u2014 place it next to lava and it drinks the lava for massive power, no fuel items needed','<b>Philosopher\u2019s Stone</b> (Equivalent Exchange) \u2014 tap blocks with it to transmute them: dirt\u2194sand\u2194gravel, cobble\u2194stone, cycle wood types, and recolour wool','<b>Doors fixed</b> \u2014 the use-cooldown now ticks properly so doors close again, and any door generated without its data heals itself when tapped','<b>Structures keep their distance</b> \u2014 villages, steampunk builds and fortresses no longer spawn in adjacent chunks','Softer, cleaner UI click and item-pickup sounds'] },
   { v:'Update 148', t:'Dwarf Cities, EE & Geothermal', items:['<b>Dwarven Cities</b> \u2014 rare, sprawling districts hidden in the UnderForge: gilded roads, brass-corner stone halls, glowing Runic Brass street lamps, and a central vault stocked with dwarven treasure. Dwarves and knights settle there. Two rare decoration blocks \u2014 <b>Gilded Stone</b> and glowing <b>Runic Brass</b> \u2014 can only be plundered from them','<b>Philosopher\u2019s Stone</b> (Equivalent Exchange) \u2014 craft it from redstone, Aetherium and a diamond, then tap blocks to transmute them: dirt \u2194 sand \u2194 gravel, cobble \u2194 stone, cycle wood types and wool colours','<b>Geothermal Generator</b> (IC2) \u2014 place it beside lava and it drinks the lava for a long, strong power burn. Feeds your grid like any generator','<b>Doors finally close</b> \u2014 the use-cooldown only counted down while mining, so a door could open but never shut. Fixed','<b>Structures keep their distance</b> \u2014 ruins, towers and fortresses can no longer generate in adjacent chunks, so they don\u2019t pile on top of each other','<b>Sound polish</b> \u2014 softer UI clicks, a warmer pickup chime, and chunkier low-end thumps when breaking and placing wood and stone'] },
   { v:'Update 147', t:'Big Fix & Polish Round', items:['<b>Glider!</b> Craft one from sticks + leather, hold it while falling, and soar down from tall places. It wears out with use like a tool','<b>Held items look right now</b> \u2014 everything shows its proper icon or block texture in hand (eggs, maps and more were invisible before), and held items/tools are noticeably bigger','<b>Bigger biomes &amp; taller mountains</b> \u2014 biomes are nearly twice the size, and mountain ranges now vary from rolling foothills to towering peaks (new terrain only)','<b>Knights fixed</b> \u2014 the sword is gripped in the hand (no more floating) and knights swing it with a proper attack animation','<b>Armored mobs fixed</b> \u2014 armor is textured and shaded like the body (no more flat white rectangles), and mobs no longer get stuck one solid colour after being hit','<b>Animals swim properly</b> \u2014 they sit down in the water instead of trotting across the surface','<b>Airship</b> \u2014 you now stand in the gondola basket instead of floating above it','<b>Bird eggs are rare</b> now and never pile up','<b>Boiled Egg</b> \u2014 cook an egg in the Cooking Pot for a quick snack','<b>Portal safety</b> \u2014 rift travel can no longer drop you inside terrain, and the Map now fits fully on screen','<b>Recipe Book on controller</b> \u2014 craftable recipes are focusable, so you can select and craft with A'] },
@@ -10241,17 +10366,17 @@ var CHANGELOG=[
   { v:'Update 137', t:'Armored Undead & Furniture', items:['<b>Armored mobs!</b> Zombies, skeletons and zombie villagers now sometimes spawn wearing <b>leather, iron or diamond armor</b> (helmet/chest/legs/boots) that absorbs damage and drops when they die. Rare <b>enchanted</b> ones glint purple, resist more, and always drop their gear plus an emerald','<b>Wardrobes &amp; Barrels</b> \u2014 new furniture you can <b>store items in</b> like a chest (tap to open, break to spill contents)','<b>More home furniture</b> \u2014 build a Sofa, Grandfather Clock, Potted Plant and Rug at the Carpenter\u2019s Bench to decorate your home'] },
   { v:'Update 136', t:'Steampunk Zombies + Caves & Ravines', items:['<b>Zombies got a steampunk makeover</b> \u2014 glowing amber eyes, a brass pauldron, a copper chest gear, a riveted belt and a venting exhaust pipe on the back','<b>Zombie Villagers &amp; Zombie Dwarves</b> now spawn as infected variants \u2014 sickly-green townsfolk that hunt you like other undead','<b>Ravines</b> \u2014 winding open chasms now cut through the surface and plunge deep underground','<b>Underground biomes</b> \u2014 explore glowing <b>Crystal Caves</b> (purple glow crystals), <b>Fungal Caverns</b> (teal glowshrooms) and <b>Mossy caves</b> deep below, all lit by their own glow'] },
   { v:'Update 135', t:'Knights, Animated Armor & Cobble', items:['<b>Village Knights!</b> Armored knights with sword, shield, cape and plumed helm now patrol near villages and <b>hunt down hostile monsters</b> \u2014 zombies, skeletons, creepers and the like \u2014 to defend the townsfolk. They won\u2019t attack you','<b>Armor animates with you now</b> \u2014 leg guards and boots swing with your legs as you walk instead of floating in place','<b>Cobblestone reworked again</b> \u2014 rounded irregular stones with clearer dark mortar and per-stone shading for a proper cobbled look'] },
-  { v:'Update 134', t:'3D Armor, Slabs & Doors', items:['<b>Armor now shows on your character</b> in 3rd-person and the menu preview \u2014 helmet, chestplate with shoulders, leg guards and boots, tinted by material (leather / iron / gold / diamond). The <b>Hide Helmet</b> toggle now hides it on the character too, and your hat sits on top','<b>Slabs combine</b> \u2014 place a matching slab onto a slab and the two merge into a full block, just like Minecraft. Slabs still go on the top or bottom half, or vertically against a wall face','<b>Doors improved</b> \u2014 they now need proper 2-tall clear space to place (no more overwriting the block above), and a lone door\u2019s hinge favours an adjacent wall so it swings into the opening'] },
+  { v:'Update 134', t:'3D Armor, Slabs & Doors', items:['<b>Armor now shows on your character</b> in 3rd-person and the menu preview \u2014 helmet, chestplate with shoulders, leg guards and boots, tinted by material (leather / iron / gold / diamond). The <b>Hide Helmet</b> toggle now hides it on the character too, and your hat sits on top','<b>Slabs combine</b> \u2014 place a matching slab onto a slab and the two merge into a full block, just. Slabs still go on the top or bottom half, or vertically against a wall face','<b>Doors improved</b> \u2014 they now need proper 2-tall clear space to place (no more overwriting the block above), and a lone door\u2019s hinge favours an adjacent wall so it swings into the opening'] },
   { v:'Update 133', t:'Hats Auto-Unlock + Hide Helmet', items:['<b>Killing a hatted mob now permanently unlocks that hat</b> in your Wardrobe \u2014 no item to manage, it just becomes available under Customize (and stays unlocked across all worlds)','Your equipped hat sits on top of your head/helmet, and there\u2019s a new <b>Hide Helmet</b> toggle in the inventory\u2019s equipment panel so hats and hair can show'] },
   { v:'Update 132', t:'Villagers, Tooltips, Axe & Beds', items:['<b>Villagers &amp; dwarves can be attacked now</b> \u2014 so you can collect hats from hatted townsfolk. Trading still lives on the use/interact button, and the Forgewright stays interact-only','<b>Item tooltips</b> \u2014 hover an item in your inventory or hotbar to see its name','<b>Axe fixed</b> \u2014 it now sits the right way round in your hand instead of facing backwards','<b>Village beds no longer backwards</b> \u2014 the pillow now sits against the wall like it should'] },
-  { v:'Update 131', t:'Fixes: Menu, Chests, Torches, Fuel', items:['<b>Fixed the main-menu character</b> \u2014 it wasn\u2019t rendering because the menu skipped the draw call. Your customized character now shows and slowly turns above the Customize button','<b>Breaking a chest spills its contents</b> onto the ground, so you never lose items to a misclick','<b>Torches drop when their support is broken</b> \u2014 mine the block under a torch and it falls as an item','<b>Everything wooden burns as furnace fuel now</b> \u2014 all planks & logs (spruce, birch, ash), sticks, fences, ladders, saplings, bookshelves, signs and benches','<b>Throw items</b> \u2014 press <b>Q</b> (keyboard) or <b>D-pad Down</b> (controller) to toss the held item, Minecraft-style','<b>Controller:</b> the furnace/machine screens no longer spam-highlight the Close button while the machine updates'] },
+  { v:'Update 131', t:'Fixes: Menu, Chests, Torches, Fuel', items:['<b>Fixed the main-menu character</b> \u2014 it wasn\u2019t rendering because the menu skipped the draw call. Your customized character now shows and slowly turns above the Customize button','<b>Breaking a chest spills its contents</b> onto the ground, so you never lose items to a misclick','<b>Torches drop when their support is broken</b> \u2014 mine the block under a torch and it falls as an item','<b>Everything wooden burns as furnace fuel now</b> \u2014 all planks & logs (spruce, birch, ash), sticks, fences, ladders, saplings, bookshelves, signs and benches','<b>Throw items</b> \u2014 press <b>Q</b> (keyboard) or <b>D-pad Down</b> (controller) to toss the held item, classic','<b>Controller:</b> the furnace/machine screens no longer spam-highlight the Close button while the machine updates'] },
   { v:'Update 130', t:'Frogs, Pants & Cursor', items:['<b>Frogs!</b> Green frogs now hop around the Swamp biome \u2014 the swamp\u2019s first residents','<b>Pants slot added</b> to the Dressing Room \u2014 Blue Jeans, Black Trousers, Explorer Khaki and Crimson Pants (unlocked via achievements), applied to your character and the menu preview','<b>Mouse cursor hides</b> when you\u2019re using a controller, and reappears the moment you move the mouse'] },
   { v:'Update 129', t:'Dressing Room & Character Preview', items:['<b>Character preview on the main menu</b> \u2014 your customized character now stands in the bottom-right of the title screen, slowly turning, with a <b>Customize</b> button beneath','<b>Full Dressing Room</b> \u2014 the Wardrobe now has tabs for <b>Hats, Shirts, Glasses &amp; Shoes</b>. Change any of them and it updates on your character (and the menu preview) instantly','<b>Achievements now reward cosmetics</b> \u2014 shirts, glasses and shoes unlock as you earn achievements (and stay unlocked across all your worlds). Hats still drop from hatted mobs','<b>Controller fix</b> \u2014 the Close button no longer keeps re-selecting itself on the furnace and other machine screens; gamepad focus now stays put while a machine\u2019s progress updates'] },
   { v:'Update 128', t:'Textures & Chrome Performance', items:['<b>Fixed the texture flicker/shimmer</b> (especially on desktop Chrome). The renderer was drawing at up to 2\u00d7 pixel density \u2014 far more than your phone \u2014 which both slowed Chrome down and made thin block patterns sparkle as you moved. Capped it, and block detail now fades sooner with distance','<b>Cobblestone redone</b> \u2014 proper irregular stones with dark mortar gaps and aged, uneven shading instead of the old flat speckle','<b>Warmer, aged stone palette</b> \u2014 stone and cobble now lean industrial grey-brown, a first step toward a cohesive steampunk resource-pack look'] },
   { v:'Update 127', t:'Crop Harvesting Fixed', items:['<b>You can harvest ripe crops again</b> \u2014 holding (\u201Cpunching\u201D) over ready wheat, carrots, potatoes, tomatoes or corn now harvests them, instead of trying to break the farmland. A quick tap still works too','<b>Use / LT also picks ripe crops</b> (berry-bush style) when you are not holding a block to place \u2014 so either action works','Holding over a crop that is <b>not ready yet</b> no longer accidentally rips it up \u2014 only ripe crops are harvested by holding'] },
   { v:'Update 126', t:'Hats, Machine FX & Wiki', items:['<b>Hat system!</b> Mobs now sometimes spawn wearing a hat \u2014 kill them to collect it. Ten hats to find (Crown, Top Hat, Wizard, Pirate Tricorn, Party, Chef, Cowboy, Viking Helm, Halo, Propeller Beanie). Equip them in the new <b>Wardrobe</b> (pause menu) and your hat shows on your character in 3rd-person view','<b>Machines came alive</b> \u2014 running Generators, Blast Furnaces and Macerators now vent <b>steam</b>, on top of the new spinning wind-turbine rotors','<b>New wiki walkthrough</b> \u2014 \u201CYour First Factory (Step by Step)\u201D teaches a brand-new player the exact order to build the machine chain, from first iron to a fully automated base. The whole wiki is also now emoji-free'] },
   { v:'Update 125', t:'Waypoints, Turbines & Quarry', items:['<b>Waypoints upgraded</b> \u2014 in the Map you can now rename a waypoint (tap its name), pick from 10 icons &amp; colours (tap the icon), and toggle whether each one shows in the world (Shown/Hidden). Delete now asks first','<b>Wind turbines actually spin</b> \u2014 placed turbines now have a real 3-blade rotor mounted on top that turns (and spins faster in wind/storms), instead of being a plain white block','<b>Quarry status fixed</b> \u2014 it no longer just says \u201Cdepth 0\u201D. It now correctly reports when it is idle for lack of power, and shows the true depth once mining','<b>Machine makeover</b> \u2014 generators, macerators, compressors, solar panels, energy cells, the blast furnace and sprinkler now have distinct, more fitting colours so they read apart at a glance'] },
-  { v:'Update 124', t:'Big Batch: UnderForge Life & More', items:['<b>Cinderkin</b> now roam the UnderForge in small groups \u2014 ash-grey wanderers with ember eyes. They are peaceful until you hit one\u2026 then the whole grudge is yours','The <b>Forgewright</b> now shows a floating name so you know it can be interacted with \u2014 tap it with the use action and it opens the Aether Forge to upgrade your held tool','<b>Dead ash trees</b> with grey <b>Ash Log / Ash Planks</b> wood now grow in the UnderForge ash flats','<b>Craft a Clock</b> (gold + redstone) and carry it to see the in-game time under your coordinates','<b>No more Apple emojis</b> \u2014 system messages and the changelog are now emoji-free for a cleaner ForgeWorld identity','<b>Water block removed from creative</b> \u2014 scoop water with a bucket and place it, like Minecraft','<b>Female villagers</b> \u2014 villages now have long-haired villagers in dresses alongside the rest'] },
+  { v:'Update 124', t:'Big Batch: UnderForge Life & More', items:['<b>Cinderkin</b> now roam the UnderForge in small groups \u2014 ash-grey wanderers with ember eyes. They are peaceful until you hit one\u2026 then the whole grudge is yours','The <b>Forgewright</b> now shows a floating name so you know it can be interacted with \u2014 tap it with the use action and it opens the Aether Forge to upgrade your held tool','<b>Dead ash trees</b> with grey <b>Ash Log / Ash Planks</b> wood now grow in the UnderForge ash flats','<b>Craft a Clock</b> (gold + redstone) and carry it to see the in-game time under your coordinates','<b>No more Apple emojis</b> \u2014 system messages and the changelog are now emoji-free for a cleaner ForgeWorld identity','<b>Water block removed from creative</b> \u2014 scoop water with a bucket and place it','<b>Female villagers</b> \u2014 villages now have long-haired villagers in dresses alongside the rest'] },
   { v:'Update 123', t:'Fixes & Performance', items:['<b>Health bars fixed</b> \u2014 they no longer appear over harmless fish; bars now only show on real threats near you, anything you recently hit, or named mobs. Plus a new <b>Mob Health Bars</b> toggle in Settings','<b>Controller crafting fixed</b> \u2014 pressing X on a crafted item no longer flings it into the armor slot; X now only splits stacks on normal slots','<b>Performance</b> \u2014 lighter light-scanning on phones and in bright daylight for smoother frame rates','<b>What\u2019s New cleaned up</b> \u2014 the stray &amp;lt;b&amp;gt; tags are gone, and the Close button moved to the top so you don\u2019t have to scroll'] },
   { v:'Update 122', t:'Swamp Biome', items:['\uD83D\uDC38 &lt;b&gt;New Swamp biome&lt;/b&gt; \u2014 low, wet lowlands with murky dark-green grass, &lt;b&gt;muddy green water&lt;/b&gt;, scattered oaks and &lt;b&gt;lilypads&lt;/b&gt; floating on the surface. Best seen in a fresh world','This kicks off the biome-content pass \u2014 &lt;b&gt;frogs&lt;/b&gt; in the swamp, plus jungle life (vines, monkeys, banana trees) and beach coconut palms, are coming next'] },
   { v:'Update 121', t:'Name Tags, Anvils & Fixes', items:['\uD83C\uDFF7\uFE0F &lt;b&gt;Name Tags &amp; Anvils&lt;/b&gt; \u2014 craft a Name Tag (string + iron), inscribe it at an &lt;b&gt;Anvil&lt;/b&gt;, then tap a mob to name it. Named mobs show a floating name and &lt;b&gt;never despawn&lt;/b&gt;, so you can keep your favourites','\uD83C\uDFE1 &lt;b&gt;Fixed village houses&lt;/b&gt; getting their bottoms carved out by neighbouring wheat farms (farms now generate first, so houses always win)','\uD83E\uDE9F &lt;b&gt;clearer glass&lt;/b&gt;: brighter and more window-like'] },
@@ -10284,13 +10409,13 @@ var CHANGELOG=[
   { v:'Update 94', t:'Chrome Texture Fix & Swim Revert', items:['\uD83D\uDDA5\uFE0F Fixed the shimmering / garbled ground textures on Chrome PC \u2014 the surface grain (and ore, water, ashstone detail) hashed raw world coordinates, so far from spawn it fed huge numbers into sin() and some GPUs returned garbage that crawled as you moved. Coordinates are now wrapped, so textures stay crisp and stable everywhere','\uD83C\uDFCA Reverted the swimming animation \u2014 you stay upright in the water again (a proper swim animation will come back later)','\uD83E\uDDCD Hardened the anti-clip safety \u2014 it now checks your whole footprint instead of just the centre, so slipping a corner into a block pops you back out reliably'] },
   { v:'Update 93', t:'Vibrant Skies', items:['\uD83C\uDF05 Gradient sky \u2014 the flat backdrop is now a rich vertical gradient: deep saturated blue overhead fading to a brighter horizon, shifting through the whole day/night cycle','\uD83C\uDF07 Sunrise & sunset glow \u2014 warm orange and pink light now blooms across the horizon around the sun at dawn and dusk','\u2600\uFE0F Soft sun halo \u2014 the sun has a gentle glow that swells and warms as it sinks toward the horizon','\uD83C\uDF00 The UnderForge return gate is now a full framed rift portal (it used to be a single block) \u2014 just walk into the energy to head home'] },
   { v:'Update 92', t:'Real Rift Portal & Swimming', items:['\uD83C\uDF00 The Rift Gate is now an <b>actual portal</b> \u2014 place one and a full 2\u00D73 wall of swirling violet energy tears open inside a dark rift frame (about 4\u00D75 overall). <b>Walk into the energy</b> to cross to the UnderForge and back \u2014 no more tapping a flat pink block','\uD83C\uDFCA Swimming animation \u2014 your character now goes horizontal with a breaststroke pull and flutter kick while swimming, instead of standing upright in the water'] },
-  { v:'Update 91', t:'Controller, Swimming & Crop Fixes', items:['\uD83C\uDFAE Controller inventory fixed \u2014 <b>A</b> picks up / moves / places a stack and <b>X</b> splits a stack in half (or places one). You can finally manage chests and inventory fully with a controller','\uD83D\uDEAA Doors now open on the <b>first</b> LT press (the trigger was double-firing and snapping them shut); holding LT no longer flickers them','\uD83C\uDFCA Swimming reworked \u2014 smooth rise & sink instead of bouncing, so you can no longer skip across the top of water','\uD83D\uDC2E Animals now <b>follow you when you hold their food</b> (wheat/carrot for cows-sheep-pigs, seeds for chickens, meat for wolves, fish for cats), like Minecraft','\uD83C\uDF3E Village and immature crops can always be harvested or cleared now (and bone meal works on them)','\uD83D\uDD25 The UnderForge ground got a makeover \u2014 harsh red-black ash is now richer molten basalt with an ember glow','\uD83D\uDD26 Torches reach farther and no longer glow harsh yellow in daylight \u2014 they dim in bright light and glow full at night'] },
+  { v:'Update 91', t:'Controller, Swimming & Crop Fixes', items:['\uD83C\uDFAE Controller inventory fixed \u2014 <b>A</b> picks up / moves / places a stack and <b>X</b> splits a stack in half (or places one). You can finally manage chests and inventory fully with a controller','\uD83D\uDEAA Doors now open on the <b>first</b> LT press (the trigger was double-firing and snapping them shut); holding LT no longer flickers them','\uD83C\uDFCA Swimming reworked \u2014 smooth rise & sink instead of bouncing, so you can no longer skip across the top of water','\uD83D\uDC2E Animals now <b>follow you when you hold their food</b> (wheat/carrot for cows-sheep-pigs, seeds for chickens, meat for wolves, fish for cats)','\uD83C\uDF3E Village and immature crops can always be harvested or cleared now (and bone meal works on them)','\uD83D\uDD25 The UnderForge ground got a makeover \u2014 harsh red-black ash is now richer molten basalt with an ember glow','\uD83D\uDD26 Torches reach farther and no longer glow harsh yellow in daylight \u2014 they dim in bright light and glow full at night'] },
   { v:'Update 90', t:'The Forgewright & Prospector', items:['\uD83E\uDDD1\u200D\uD83C\uDFED <b>The Forgewright</b> \u2014 a goggled steampunk smith now wanders the <b>UnderForge</b>. Find him, hold the tool you want to enchant and tap him to bind charms \u2014 no Aether Forge required. (You\u2019ll get a heads-up toast when one appears nearby.)','\u26CF\uFE0F New <b>Prospector</b> charm \u2014 the fourth enchant: ores drop bonus resources (better odds each level). Available at both the Aether Forge and the Forgewright','\uD83D\uDCD6 Wiki updated with the Forgewright and Prospector'] },
   { v:'Update 89', t:'In-Game Wiki & Critter Fixes', items:['\uD83D\uDCD6 The Guidebook is now a searchable in-game <b>Wiki</b> (\u201cWiki & Help\u201d in the menu) covering everything \u2014 enchanting, the Watcher, flowers, taming & breeding, the controller, combat, vehicles and settings. Type in the search box to jump to any topic','\uD83D\uDC3E Smarter animals \u2014 an animal that falls into a hole or pen now <b>panics and leaps</b> to scramble out instead of bumping the wall forever','\uD83D\uDCE6 Fixed the <b>chest lid</b> clipping through the chest \u2014 it now rests on top of the box and swings cleanly open'] },
   { v:'Update 88', t:'The UnderForge & Aether Forge', items:['\uD83C\uDFED Renamed the Ashlands to the <b>UnderForge</b> \u2014 same gloomy steampunk underworld, a name that fits ForgeWorld','\u2699\uFE0F <b>Aether Forge</b> \u2014 a new craftable enchanting station (brass ingots + aetherium). Place it, hold a tool, and spend Aetherium to bind steampunk charms: <b>Overclock</b> (mine faster), <b>Honed</b> (more melee damage), and <b>Tempered</b> (tools last longer), up to Lv 3 each','\uD83D\uDD0A Settings overhaul \u2014 the mute button now lives in the menu, with new <b>Master / Music / SFX</b> volume sliders and an <b>FOV</b> slider. All of them remember your choice between sessions'] },
   { v:'Update 87', t:'Placeable Flowers & The Watcher', items:['\uD83C\uDF38 Flowers are now placeable \u2014 plant any wildflower (poppy, dandelion, cornflower, daisy, azure bluet) on grass or dirt to decorate your world, and pick them back up by hitting them','\uD83D\uDC41\uFE0F The Watcher: go too many nights without sleeping and no phantoms come \u2014 instead a silent dark figure starts appearing at the edge of the night, watching you. Look right at it or get close and it vanishes. The longer you stay awake, the closer and more often it returns. Sleep in a bed to make it stop','\uD83D\uDECF\uFE0F Sleeping now also clears your sleepless-night count, keeping the Watcher away'] },
   { v:'Update 86', t:'Controller, Sound & Recipe Book', items:['\uD83D\uDD0A Material sounds \u2014 breaking, placing and walking now sound right for each block: wood knocks, stone thuds, glass shatters, sand & grass are soft, metal clinks, leaves rustle','\uD83C\uDFAE Controller feel: vibration on hits, breaking blocks & taking damage; smoother expo-curve aiming for finer control; analog right-trigger mining; sprint by pushing the stick fully forward (or L3)','\uD83D\uDCD6 Recipe Book now lists every ingredient by name under each recipe, so you know exactly what each slot needs'] },
-  { v:'Update 85', t:'Controller & Performance', items:['\uD83C\uDFAE Quick-transfer: with a controller, press Y / \u25B3 on any chest or furnace slot to instantly move that stack into your inventory (and the same the other way). Picked-up items now show under the controller cursor','\uD83D\uDD0A Menu sounds \u2014 moving through menus and scrolling the hotbar now click like Minecraft','\u26A1 Performance: the torch-light scan was re-scanning ~10,000 blocks several times a second even while standing still; it now only rescans when you move to a new block (instant when you place/break a light). Should cut the random frame hitches on desktop'] },
+  { v:'Update 85', t:'Controller & Performance', items:['\uD83C\uDFAE Quick-transfer: with a controller, press Y / \u25B3 on any chest or furnace slot to instantly move that stack into your inventory (and the same the other way). Picked-up items now show under the controller cursor','\uD83D\uDD0A Menu sounds \u2014 moving through menus and scrolling the hotbar now click','\u26A1 Performance: the torch-light scan was re-scanning ~10,000 blocks several times a second even while standing still; it now only rescans when you move to a new block (instant when you place/break a light). Should cut the random frame hitches on desktop'] },
   { v:'Update 84', t:'Dyes, Breeding & Fixes', items:['\uD83C\uDF38 Pick the wildflowers in the grass (poppy, dandelion, cornflower, daisy, azure bluet) and craft them into dyes; smelt cactus for green dye; combine any dye with wool to make coloured wool','\u2764\ufe0f Fixed breeding & taming \u2014 feeding animals now works out in the open (it only registered before if you were also aiming at a block). Feed two animals seeds/wheat/carrot to breed them, with hearts popping up','\uD83D\uDEAA Fixed doors \u2014 a bug made every door non-solid, so closed doors didn\u2019t block you. They work again','\uD83C\uDF42 Leaves now decay when you break the wood out from under them','\uD83C\uDFF9 Arrows you fire can now sometimes be picked back up off the ground'] },
   { v:'Update 83', t:'Bow, Arrows & Fishing', items:['\uD83C\uDFF9 Craft a Bow (sticks + string) and Arrows (flint + stick + feather) \u2014 use the place/interact button to fire. Gravel now sometimes drops flint','\uD83C\uDFA3 Craft a Fishing Rod (sticks + string). Aim at water and use it to cast, wait for the bite, then use again to reel in fish (and the occasional string, leather or bone)','\u2694\ufe0f Arrows damage mobs and you can hunt with the bow'] },
   { v:'Update 82', t:'Vehicles, Lights & Creative Toggle', items:['\u2708\ufe0f Plane flies slower and calmer, banks the correct way into turns, the chase-cam stays behind it when you dive, and your character now sits in it instead of looking like they\u2019re sprinting','\uD83D\uDEF6 Boats: can now be placed on water and float properly on the surface, a nicer model with oars + a real inventory icon, slow and no-jumping on land','\uD83D\uDD26 Torchlight now reaches noticeably farther','\u2699\ufe0f New Mode toggle in the game menu \u2014 switch between Survival and Creative any time (Hardcore stays locked)'] },
