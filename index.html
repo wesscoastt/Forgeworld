@@ -486,7 +486,7 @@ defBlock({key:'BIRCH_CHEST', name:'Birch Chest', col:[200,180,132], top:[212,192
 defBlock({key:'CHERRY_CHEST', name:'Cherry Chest', col:[214,150,150], top:[224,164,164], solid:true, tool:'axe', hard:1.5 });
 function isChest(id){ return id===B.CHEST||id===B.SPRUCE_CHEST||id===B.BIRCH_CHEST||id===B.CHERRY_CHEST; }
 function isCrafting(id){ return id===B.CRAFTING||id===B.SPRUCE_CRAFTING||id===B.BIRCH_CRAFTING||id===B.CHERRY_CRAFTING; }
-defBlock({key:'BED', name:'Bed', col:[178,46,46], top:[206,58,58], side:[150,40,40], solid:true, hard:0.4 });
+defBlock({key:'BED', name:'Bed', col:[178,46,46], top:[206,58,58], side:[150,40,40], solid:true, noCull:true, hard:0.4 });
 defBlock({key:'ASH', name:'Ash', col:[120,116,112], top:[136,132,128], side:[110,106,102], solid:true, tool:'shovel', hard:0.6 });
 defBlock({key:'ASH_STONE', name:'Ashstone', col:[82,46,44], side:[74,40,38], top:[90,52,48], solid:true, tool:'pickaxe', tier:1, hard:1.9, drop:'ASH_STONE' });
 defBlock({key:'CINDER', name:'Cinder Rock', col:[72,36,34], top:[96,44,38], side:[66,32,30], spec:[214,118,46], solid:true, tool:'pickaxe', tier:1, hard:2.0, drop:'ASH_STONE' });
@@ -607,7 +607,7 @@ defBlock({key:'CHEESE_BLOCK', name:'Moon Cheese', col:[236,212,108], top:[244,22
 
 function blk(id){ return BLOCKS[id] || BLOCKS[0]; }
 function isSolid(id){ return blk(id).solid; }
-function isOpaque(id){ var b=blk(id); return b.solid && !b.transparent && !b.shape; }
+function isOpaque(id){ var b=blk(id); return b.solid && !b.transparent && !b.shape && !b.noCull; }
 function blockColor(id, face){ // face: 0 top,1 bottom,2 sides
   var b=blk(id);
   if(face===0 && b.top) return b.top;
@@ -879,7 +879,9 @@ tool('MINING_DRILL','Mining Drill','pickaxe',4,[96,176,224],10,21,900); ITEMS.MI
 mat('FLINT','Flint',[58,56,62]);
 mat('ARROW','Arrow',[120,100,72]);
 defItem({key:'BOW',name:'Bow',color:[150,110,60],durability:240,stack:1,bow:true});
-defItem({key:'FISHING_ROD',name:'Fishing Rod',color:[150,110,60],durability:96,stack:1,rod:true});
+defItem({key:'FISHING_ROD',name:'Fishing Rod',color:[150,110,60],durability:96,stack:1,rod:true,rodTier:1});
+defItem({key:'IRON_ROD',name:'Iron Fishing Rod',color:[196,200,210],durability:220,stack:1,rod:true,rodTier:2});
+defItem({key:'MASTER_ROD',name:'Master Fishing Rod',color:[120,224,224],durability:480,stack:1,rod:true,rodTier:3});
 // wildflowers (picked from grassland) and the dyes made from them
 mat('POPPY','Poppy',[204,42,38],{flower:6});
 mat('DANDELION','Dandelion',[242,197,42],{flower:7});
@@ -1107,7 +1109,7 @@ function iconFor(key){
     else if(K==='BOW'){ x.strokeStyle=css([150,110,60]); x.lineWidth=2.6; x.beginPath(); x.arc(21,16,12,2.25,4.03); x.stroke();   // wooden arc
       x.strokeStyle=css([228,228,222]); x.lineWidth=1; x.beginPath(); x.moveTo(13,7.5); x.lineTo(13,24.5); x.stroke();           // string
       R(7,15,16,1.6,[120,100,72]); x.fillStyle=css([96,98,104]); x.beginPath(); x.moveTo(7,15.8); x.lineTo(11,12.6); x.lineTo(11,19); x.closePath(); x.fill(); }   // nocked arrow
-    else if(K==='FISHING_ROD'){ x.strokeStyle=css([150,110,60]); x.lineWidth=2.4; x.beginPath(); x.moveTo(6,26); x.lineTo(26,6); x.stroke();
+    else if(K==='FISHING_ROD'||K==='IRON_ROD'||K==='MASTER_ROD'){ var rodc=K==='IRON_ROD'?[196,200,210]:K==='MASTER_ROD'?[120,224,224]:[150,110,60]; x.strokeStyle=css(rodc); x.lineWidth=2.4; x.beginPath(); x.moveTo(6,26); x.lineTo(26,6); x.stroke();
       x.strokeStyle=css([205,205,214]); x.lineWidth=0.8; x.beginPath(); x.moveTo(26,6); x.lineTo(24,16); x.lineTo(22,22); x.stroke();   // line
       C(22,23,2,[226,59,37]); R(4.5,23,4,2,[112,80,46]); }                                                                              // bobber + handle
     else if(K==='CRAB_MEAT'||K==='COOKED_CRAB'){ var crc=(K==='COOKED_CRAB')?[226,96,52]:[226,120,88]; C(16,18,7,crc); R(7,12,5,4,crc); R(20,12,5,4,crc); R(13,15,2,2,[255,220,200]); }
@@ -1567,9 +1569,9 @@ var World = {
       }
       if(getLocal(blocks,lx,h,lz)===B.GRASS && h>SEA && getLocal(blocks,lx,h+1,lz)===B.AIR){
         var _br=hash3(wx,120,wz,this.seed^0xB77);
-        if(_br<0.010) setLocal(blocks,lx,h+1,lz,B.BLUEBERRY_BUSH);
-        else if(_br<0.018) setLocal(blocks,lx,h+1,lz,B.STRAWBERRY_BUSH);
-        else if(_br<0.024) setLocal(blocks,lx,h+1,lz,B.GRAPE_VINE);
+        if(_br<0.0022) setLocal(blocks,lx,h+1,lz,B.BLUEBERRY_BUSH);
+        else if(_br<0.0040) setLocal(blocks,lx,h+1,lz,B.STRAWBERRY_BUSH);
+        else if(_br<0.0055) setLocal(blocks,lx,h+1,lz,B.GRAPE_VINE);
       }
       if(hash3(wx,1,wz,this.seed^777) < dens){
         var th = (jungle?8:(spruce?6:4)) + Math.floor(hash3(wx,2,wz,this.seed)*(jungle?6:(spruce?4:5)));
@@ -3558,7 +3560,7 @@ function tickWeather(dt){
   weatherTimer-=dt;
   if(weatherTimer<=0){
     if(weather==='clear'){ weather='rain'; stormy=Math.random()<0.4; weatherTimer=(stormy?25:40)+Math.random()*45; thunderCd=(stormy?4:12)+Math.random()*10; if(actx) startRainSound();
-      if(running) toast(stormy?'\u26C8\uFE0F A thunderstorm rolls in\u2026':(cold?'\uD83C\uDF28\uFE0F Snow begins to fall\u2026':'\uD83C\uDF27\uFE0F Rain begins to fall')); }
+      }
     else { weather='clear'; weatherTimer=120+Math.random()*180; }
   }
   snowing = (weather==='rain') && cold;
@@ -3790,7 +3792,7 @@ function showCrack(bx,by,bz, nx,ny,nz, stage){
 
 /* ------------------------- CHUNK MANAGEMENT ----------------------------- */
 var buildQueue=[];
-var plantAtlasMat=null, PLANT_N=17;
+var plantAtlasMat=null, PLANT_N=24;
 function makePlantAtlas(){
   var c=16, cv=document.createElement('canvas'); cv.width=c*PLANT_N; cv.height=c; var x=cv.getContext('2d'); x.clearRect(0,0,cv.width,c);
   function stem(o,col){ x.fillStyle=col||'#3f8a30'; x.fillRect(o+7,7,2,9); }
@@ -3829,6 +3831,23 @@ function makePlantAtlas(){
   o=240; for(var i=0;i<5;i++){ var bx=(o+2+i*2.6)|0; x.fillStyle='#b79a3e'; x.fillRect(bx,8,2,7); x.fillStyle='#f0d264'; x.fillRect(bx,1,2,8); x.fillStyle='#fce7a0'; x.fillRect(bx,1,2,2); }
   // 16 lilypad (top-down disc with a notch + tiny bloom)
   o=256; x.fillStyle='#3d7539'; x.fillRect(o+3,4,10,8); x.fillRect(o+4,3,8,10); x.fillStyle='#4f9146'; x.fillRect(o+5,5,6,6); x.clearRect(o+11,7,3,3); x.fillStyle='#f2e884'; x.fillRect(o+7,7,2,2);
+  // 17 blueberry bush: round green bush with blue specks
+  o=272; x.fillStyle='#2f6e2c'; x.fillRect(o+3,6,10,9); x.fillStyle='#3f8a38'; x.fillRect(o+4,5,8,8); x.fillStyle='#54a043'; x.fillRect(o+5,4,6,4);
+  x.fillStyle='#3a55c8'; x.fillRect(o+5,8,2,2); x.fillRect(o+9,7,2,2); x.fillRect(o+7,11,2,2); x.fillStyle='#6a86e8'; x.fillRect(o+5,8,1,1); x.fillRect(o+9,7,1,1);
+  // 18 strawberry bush: green bush with red berries + tiny white seeds
+  o=288; x.fillStyle='#356f28'; x.fillRect(o+3,6,10,9); x.fillStyle='#478c36'; x.fillRect(o+4,5,8,8); x.fillStyle='#5aa845'; x.fillRect(o+5,4,6,4);
+  x.fillStyle='#d2382e'; x.fillRect(o+5,9,3,3); x.fillRect(o+9,7,3,3); x.fillStyle='#f4e6d0'; x.fillRect(o+6,10,1,1); x.fillRect(o+10,8,1,1);
+  // 19 grapevine: leafy vine with purple grape clusters
+  o=304; x.fillStyle='#4a6a2a'; x.fillRect(o+7,2,2,13); x.fillStyle='#5a8a34'; x.fillRect(o+3,3,4,3); x.fillRect(o+9,5,4,3); x.fillRect(o+4,9,4,3);
+  x.fillStyle='#7a3fa8'; x.fillRect(o+9,9,3,4); x.fillRect(o+4,12,3,3); x.fillStyle='#9a5fc8'; x.fillRect(o+10,10,1,1); x.fillRect(o+5,13,1,1);
+  // 20 apple (hanging red fruit + leaf)
+  o=320; x.fillStyle='#3d7a30'; x.fillRect(o+7,1,2,3); x.fillStyle='#c8302a'; x.fillRect(o+5,4,6,6); x.fillStyle='#e85a50'; x.fillRect(o+6,5,2,2); x.fillStyle='#54a043'; x.fillRect(o+9,2,3,2);
+  // 21 orange
+  o=336; x.fillStyle='#3d7a30'; x.fillRect(o+7,1,2,3); x.fillStyle='#e8862a'; x.fillRect(o+5,4,6,6); x.fillStyle='#f6a850'; x.fillRect(o+6,5,2,2);
+  // 22 lemon
+  o=352; x.fillStyle='#3d7a30'; x.fillRect(o+7,1,2,3); x.fillStyle='#e6d23a'; x.fillRect(o+5,5,6,5); x.fillRect(o+6,4,4,7); x.fillStyle='#f6ec7a'; x.fillRect(o+6,6,2,2);
+  // 23 fig (dark purple teardrop)
+  o=368; x.fillStyle='#3d7a30'; x.fillRect(o+7,1,2,3); x.fillStyle='#5a3468'; x.fillRect(o+6,4,4,3); x.fillRect(o+5,7,6,4); x.fillStyle='#7a4f8a'; x.fillRect(o+6,8,2,2);
   var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; return t;
 }
 function ensurePlantMats(){ if(plantAtlasMat) return;
@@ -3878,7 +3897,7 @@ function buildPlantMesh(ch){
       pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, CROP_H[st], cell); }
   }
   // cobwebs (cross-shaped, in caves/structures)
-  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.4, wzz+0.5, 0.5, 0.8, 11); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.42, 1.0, 11); } else if(wbid===B.APPLE_FRUIT||wbid===B.ORANGE_FRUIT||wbid===B.LEMON_FRUIT||wbid===B.FIG_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.36, 0.7, 12); } else if(wbid===B.BLUEBERRY_BUSH||wbid===B.STRAWBERRY_BUSH||wbid===B.GRAPE_VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.42, wzz+0.5, 0.5, 0.85, 11); } } }
+  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.4, wzz+0.5, 0.5, 0.8, 0); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.42, 1.0, 5); } else if(wbid===B.APPLE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.36, 0.7, 20); } else if(wbid===B.ORANGE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.36, 0.7, 21); } else if(wbid===B.LEMON_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.36, 0.7, 22); } else if(wbid===B.FIG_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.36, 0.7, 23); } else if(wbid===B.BLUEBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.42, wzz+0.5, 0.5, 0.85, 17); } else if(wbid===B.STRAWBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.42, wzz+0.5, 0.5, 0.85, 18); } else if(wbid===B.GRAPE_VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.42, wzz+0.5, 0.5, 0.85, 19); } } }
   // lilypads floating on swamp water
   for(var llx=0;llx<CHUNK;llx++) for(var llz=0;llz<CHUNK;llz++){
     var lwx=ch.cx*CHUNK+llx, lwz=ch.cz*CHUNK+llz;
@@ -5248,6 +5267,8 @@ shaped([['CHERRY_PLANKS','CHERRY_PLANKS'],['CHERRY_PLANKS','CHERRY_PLANKS']], 'C
 shaped([['PLANKS',null],['PLANKS',null]], 'STICK', 4);
 shaped([[null,'STICK','STRING'],['STICK',null,'STRING'],[null,'STICK','STRING']], 'BOW', 1);
 shaped([[null,null,'STICK'],[null,'STICK','STRING'],['STICK',null,'STRING']], 'FISHING_ROD', 1);
+shaped([[null,null,'IRON_INGOT'],[null,'STICK','STRING'],['STICK',null,'STRING']], 'IRON_ROD', 1);
+shaped([[null,null,'DIAMOND'],[null,'IRON_INGOT','STRING'],['STICK',null,'STRING']], 'MASTER_ROD', 1);
 shaped([['FLINT',null,null],['STICK',null,null],['FEATHER',null,null]], 'ARROW', 4);shaped([['PLANKS','PLANKS'],['PLANKS','PLANKS']], 'CRAFTING', 1);
 shaped([['COBBLE','COBBLE','COBBLE'],['COBBLE',null,'COBBLE'],['COBBLE','COBBLE','COBBLE']], 'FURNACE', 1);
 shaped([['COBBLE','COBBLE','COBBLE'],['COBBLE','IRON_INGOT','COBBLE'],['COBBLE','COBBLE','COBBLE']], 'MACERATOR', 1);
@@ -8069,14 +8090,72 @@ function tickProjectiles(dt){
     }
   }
 }
+var FISH_SPECIES=[
+ {id:'minnow',   name:'Pond Minnow',      w:14, t:1, min:5,  max:14},
+ {id:'perch',    name:'Sun Perch',        w:12, t:1, min:12, max:28},
+ {id:'trout',    name:'Riverback Trout',  w:11, t:1, min:20, max:48},
+ {id:'carp',     name:'Mud Carp',         w:10, t:1, min:25, max:60},
+ {id:'bass',     name:'Green Bass',       w:9,  t:1, min:22, max:55},
+ {id:'catfish',  name:'Whisker Catfish',  w:8,  t:1, min:30, max:85},
+ {id:'herring',  name:'Silver Herring',   w:8,  t:2, min:15, max:32},
+ {id:'pike',     name:'Iron Pike',        w:6,  t:2, min:40, max:100},
+ {id:'salmon',   name:'Copper Salmon',    w:6,  t:2, min:35, max:90},
+ {id:'eel',      name:'Gear Eel',         w:5,  t:2, min:45, max:120},
+ {id:'lantern',  name:'Lanternfin',       w:4,  t:2, min:18, max:40},
+ {id:'sturgeon', name:'Royal Sturgeon',   w:3,  t:3, min:80, max:200},
+ {id:'voidfish', name:'Voidscale',        w:2,  t:3, min:30, max:75},
+ {id:'brassfish',name:'Brass Leviathan',  w:1.5,t:3, min:100,max:260},
+ {id:'kingfish', name:'The Forge King',   w:0.8,t:3, min:120,max:300}];
+var fishDex={}; try{ fishDex=JSON.parse(localStorage.getItem('fw_fishdex')||'{}'); }catch(e){ fishDex={}; }
+function saveFishDex(){ try{ localStorage.setItem('fw_fishdex', JSON.stringify(fishDex)); }catch(e){} }
+function rollFish(tier, perfect){
+  var pool=[], tw=0;
+  for(var i=0;i<FISH_SPECIES.length;i++){ var sp=FISH_SPECIES[i];
+    var w=sp.w;
+    if(sp.t>tier) w*= (sp.t-tier>=2)?0.02:0.12;                 // rare fish barely bite on lesser rods
+    if(perfect && sp.t>=2) w*=1.8;                              // perfect reel favors better fish
+    pool.push([sp,w]); tw+=w; }
+  var r=Math.random()*tw;
+  for(var j=0;j<pool.length;j++){ r-=pool[j][1]; if(r<=0) return pool[j][0]; }
+  return FISH_SPECIES[0];
+}
+function recordFish(sp, size){
+  var d=fishDex[sp.id]||(fishDex[sp.id]={n:0,max:0});
+  d.n++; if(size>d.max) d.max=size; saveFishDex();
+}
+function openFishDex(){
+  openScreen(); currentScreen='fishdex'; screenEl.innerHTML='';
+  var p=document.createElement('div'); p.className='panel';
+  var h=document.createElement('h2'); h.textContent='\uD83C\uDFA3 Fish Compendium'; p.appendChild(h);
+  var caught=0; for(var ci=0;ci<FISH_SPECIES.length;ci++) if(fishDex[FISH_SPECIES[ci].id]) caught++;
+  var sub=document.createElement('div'); sub.className='small'; sub.style.cssText='opacity:.8;margin-bottom:8px;'; sub.textContent=caught+' / '+FISH_SPECIES.length+' species discovered'; p.appendChild(sub);
+  for(var i=0;i<FISH_SPECIES.length;i++){ var sp=FISH_SPECIES[i], d=fishDex[sp.id];
+    var row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;gap:8px;padding:7px 10px;margin:4px 0;background:#ffffff10;border-radius:8px;font-size:14px;';
+    var stars=(sp.t===3?'\u2605\u2605\u2605':sp.t===2?'\u2605\u2605':'\u2605');
+    row.innerHTML = d ? ('<span><b>'+sp.name+'</b> <span style="opacity:.7">'+stars+'</span></span><span>x'+d.n+' \u2022 best '+d.max+' cm</span>')
+                      : ('<span style="opacity:.5">??? <span style="opacity:.7">'+stars+'</span></span><span style="opacity:.4">not caught</span>');
+    p.appendChild(row); }
+  var cb=document.createElement('button'); cb.className='mbtn'; cb.textContent='Close'; cb.onclick=function(){ closeScreen(); }; p.appendChild(cb);
+  screenEl.appendChild(p); bindScreenBg();
+}
 function castFishingRod(){
   if(Player.fishing){   // reel in
     var fs=Player.fishing;
     if(fs.state==='bite'){
+      var held0=inv.hotbar[hotbarSel]; var tier=(held0&&ITEMS[held0.key]&&ITEMS[held0.key].rodTier)||1;
+      var perfect=fs.biteWin>1.1;                                  // reeled almost instantly = perfect catch
+      var junkCh=tier===3?0.06:tier===2?0.12:0.22;
       var roll=Math.random();
-      if(roll<0.74){ giveItem('RAW_FISH',1); toast('\uD83D\uDC1F Caught a fish!'); }
-      else if(roll<0.88){ giveItem('STRING',1); toast('Reeled in some string'); }
-      else if(roll<0.95){ giveItem('LEATHER',1); toast('Reeled in an old boot \u2014 leather'); }
+      if(roll>=junkCh){
+        var sp=rollFish(tier, perfect);
+        var szf=Math.random(); if(perfect) szf=Math.min(1, szf+0.3);
+        var size=Math.round(sp.min + (sp.max-sp.min)*szf);
+        recordFish(sp,size);
+        giveItem('RAW_FISH',1);
+        toast((perfect?'\u2728 PERFECT! ':'\uD83D\uDC1F ')+sp.name+' \u2014 '+size+' cm'+(fishDex[sp.id].n===1?' (NEW!)':''));
+      }
+      else if(roll<junkCh*0.55){ giveItem('STRING',1); toast('Reeled in some string'); }
+      else if(roll<junkCh*0.85){ giveItem('LEATHER',1); toast('Reeled in an old boot \u2014 leather'); }
       else { giveItem('BONE',1); toast('Reeled in a bone'); }
       rpgAddXP('fishing',8);   // RPG fishing XP
       if(Math.random()<rpgFishLuck()){ giveItem(Math.random()<0.25?'EMERALD':'RAW_FISH',1); toast('\u2728 Lucky catch!'); }   // RPG fishing luck perk
@@ -8094,7 +8173,8 @@ function castFishingRod(){
   if(!spot){ toast('\uD83C\uDFA3 Aim at open water to cast'); return; }
   var bob=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,0.16), new THREE.MeshBasicMaterial({color:0xe23b25}));
   bob.position.set(spot[0],spot[1]+0.04,spot[2]); scene.add(bob);
-  Player.fishing={bob:bob, pos:spot, state:'wait', biteT:2.5+Math.random()*4.5, biteWin:0};
+  var _hr=inv.hotbar[hotbarSel]; var _rt=(_hr&&ITEMS[_hr.key]&&ITEMS[_hr.key].rodTier)||1;
+  Player.fishing={bob:bob, pos:spot, state:'wait', biteT:(2.5+Math.random()*4.5)/(1+(_rt-1)*0.35), biteWin:0};
   sfxSplash(); toast('\uD83C\uDFA3 Cast \u2014 wait for a bite\u2026');
 }
 function tickFishing(dt){
@@ -8274,6 +8354,8 @@ function tickEntities(dt){
     if(e.swimming) e.pos.y += Math.sin(now*0.006+(e.wdir||0))*0.01;
     e.mesh.position.copy(e.pos);
     if(e.kind==='creeper'){ e.steamCd=(e.steamCd||0)-dt; if(e.steamCd<=0){ e.steamCd=0.2+Math.random()*0.14; spawnSteam(e.pos.x, e.pos.y+1.15, e.pos.z, e.mesh.userData?e.mesh.userData.steamCol:0xe8eef7); } }   // smokestack puffs steam out the top
+    var _ddx=e.pos.x-Player.pos.x, _ddz=e.pos.z-Player.pos.z;
+    if(_ddx*_ddx+_ddz*_ddz>1296){ } else {   // skip cosmetic animation beyond 36 blocks
     var _msp=Math.hypot(e.vel.x,e.vel.z);
     var moving = _msp>0.1;
     var _gait = 0.010 + Math.min(0.02, _msp*0.02);                       // faster steps when moving faster
@@ -8285,10 +8367,13 @@ function tickEntities(dt){
     if(e.mesh.userData.legs){ var _lg2=e.mesh.userData.legs;
       if(_lg2.length>=4){ _lg2[0].rotation.x=sw; _lg2[3].rotation.x=sw; _lg2[1].rotation.x=-sw; _lg2[2].rotation.x=-sw; }
       else { _lg2[0].rotation.x=sw; if(_lg2[1]) _lg2[1].rotation.x=-sw; } }
-    if(e.mesh.userData.arms){ e.mesh.userData.arms[0].rotation.x=(e.provoked? -0.3+sw : -1.4)+_breathe; e.mesh.userData.arms[1].rotation.x=(e.provoked? -0.3-sw : -1.4)-_breathe; }
+    if(e.mesh.userData.arms){ var _zraise=(e.kind&&e.kind.indexOf('zombie')===0);
+      if(_zraise){ e.mesh.userData.arms[0].rotation.x=-1.35+sw*0.15+_breathe; e.mesh.userData.arms[1].rotation.x=-1.35-sw*0.15-_breathe; }   // zombies shamble with arms out
+      else { e.mesh.userData.arms[0].rotation.x=(e.provoked? -0.3+sw : -1.4)+_breathe; e.mesh.userData.arms[1].rotation.x=(e.provoked? -0.3-sw : -1.4)-_breathe; } }
     if(e.mesh.userData.head){ e.mesh.userData.head.rotation.x=_breathe*2 + (moving?Math.sin(e.animPh*2)*0.05:0); }   // subtle head bob
     if(!moving && e.mesh.userData.body==null){ e.mesh.position.y += _breathe*0.3; }   // whole-body idle breath if no body node
     if(e.kind==='rabbit'||e.kind==='frog'){ if(moving){ e.mesh.position.y += Math.max(0, Math.sin(e.animPh))*0.18; } }   // hoppers bounce
+    }
     if(e.mesh.userData.spiderLegs){ var sl=e.mesh.userData.spiderLegs, a=Math.sin(now*0.02)*(moving?0.28:0.06);
       for(var li=0; li<sl.length; li++){ sl[li].rotation.x=a*((li%2)?1:-1); } }
     if(e.mesh.userData.reels){ var rl=e.mesh.userData.reels, rspin=(moving?0.18:0.05)+(e.provoked?0.22:0); for(var ri2=0;ri2<rl.length;ri2++){ rl[ri2].rotation.x += rspin; } }
@@ -9713,6 +9798,7 @@ function openRpgSkills(){ rpgBuildScreen(); var sc=rpgEl('rpgScreen'); rpgRefres
     var attach=function(){ var pe=document.getElementById('pExit'); if(pe && pe.parentNode && !document.getElementById('pSkills')){
         var b=document.createElement('button'); b.className='mbtn'; b.id='pSkills'; b.innerHTML='Skills';
         var wb=document.createElement('button'); wb.className='mbtn'; wb.id='pWardrobe'; wb.innerHTML='Wardrobe'; wb.onclick=function(){ try{ if(typeof closePause==='function') closePause(); }catch(e){} openWardrobe(); }; pe.parentNode.insertBefore(wb, pe);
+        var fb=document.createElement('button'); fb.className='mbtn'; fb.id='pFishDex'; fb.innerHTML='Fish Compendium'; fb.onclick=function(){ try{ if(typeof closePause==='function') closePause(); }catch(e){} openFishDex(); }; pe.parentNode.insertBefore(fb, pe);
         b.onclick=function(){ try{ if(typeof closePause==='function') closePause(); }catch(e){} openRpgSkills(); };
         pe.parentNode.insertBefore(b, pe);
     } };
@@ -10259,7 +10345,7 @@ function loop(t){
   renderer.autoClear=true;
   updateMobBars(dt); tickDmgNumbers(dt);
   updateTurbineRotors(dt);
-  if(frame%2===0){ try{ updateShadows(); }catch(_){ } }
+  if(frame%3===0){ try{ updateShadows(); }catch(_){ } }
   renderer.render(scene,camera);
   if(!running){ try{ renderCharPreview(); }catch(_){} }
   updateWaypointHud();
@@ -10305,14 +10391,17 @@ document.getElementById('btnCreateGo').addEventListener('click', function(){ ac(
   loadWorld(w.id);
 });
 document.getElementById('btnRespawn').addEventListener('click', function(){ if(gameMode==='hardcore') hardcoreGameOver(); else respawn(); });
-var SPLASHES=['Now with chunk lighting!','100% organic voxels!','Punch a tree to begin!','Mine. Craft. Survive.','Forged from nothing!','It is night somewhere...','Wind-up spoolers about!','Single file, big dreams!','Don\'t dig straight down!','Survive the first night!','Creative mode: just fly!','Build anything!'];
+var SPLASHES=['Tip: shovel on grass makes dirt paths!','Tip: tame a Seahorse to breathe underwater!','Tip: shears collect leaf blocks!','Tip: SNEAK + place slab on a wall = vertical slab!','Tip: mine Emberglow for lamps!','Tip: full Space Suit to breathe on the Moon!','Tip: two doors together = double doors!','Tip: better rods catch rarer fish!','Tip: tap a chair to sit!','Tip: draw your own paintings!','Tip: R3 crouches on controller!','Punch a tree to begin!','Mine. Craft. Survive.','Forged from nothing!','Don\'t dig straight down!'];
+var _OLD_SPLASHES=['Now with chunk lighting!','100% organic voxels!','Punch a tree to begin!','Mine. Craft. Survive.','Forged from nothing!','It is night somewhere...','Wind-up spoolers about!','Single file, big dreams!','Don\'t dig straight down!','Survive the first night!','Creative mode: just fly!','Build anything!'];
 document.getElementById('splash').textContent = SPLASHES[(Math.random()*SPLASHES.length)|0];
 document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 197';
+var VERSION='Update 199';
 var CHANGELOG=[
+  { v:'Update 199', t:'Fishing Overhaul', items:['<b>15 fish species</b> \u2014 from Pond Minnows to the legendary Forge King, each with its own size range and rarity','<b>Fish Compendium</b> (in the pause menu) tracks every species you\u2019ve caught, how many, and your biggest catch','<b>Perfect catches</b> \u2014 reel the instant it bites for bigger fish and better odds at rare species','<b>New rods</b> \u2014 the Iron Rod and Master Rod bite faster, hook rarer fish and snag less junk','<b>Game tips now bounce on the title screen</b> splash text'] },
+  { v:'Update 198', t:'Bush & Bed Fixes, Zombie Arms', items:['<b>Berry bushes look like bushes now</b> \u2014 each has its own texture: green bush with blue specks for blueberries, red berries with seeds for strawberries, and purple grape clusters on a leafy vine. They also spawn far less often','<b>Tree fruit got real textures too</b> \u2014 apples, oranges, lemons and figs each hang as their own fruit instead of a sapling sprite','<b>Fixed the bed making blocks behind it invisible</b>','<b>Zombies shamble with their arms raised</b> now (zombie villagers too)','<b>No more weather pop-ups</b> (\u201ca thunderstorm rolls in\u2026\u201d)','<b>Rotating game tips</b> on the main menu','<b>Performance</b> \u2014 distant animals skip their cosmetic animations and shadows update a touch less often'] },
   { v:'Update 197', t:'Shears, Carrots & Controller', items:['<b>Shears harvest leaves</b> \u2014 cut leaf blocks off trees and collect them','<b>Fewer carrots</b> (and other veg) from tall grass \u2014 it drops mostly seeds now','<b>Controller crafting keeps your place</b> \u2014 crafting from the recipe book or carpenter bench no longer jumps back to the top of the list','<b>Press the right stick (R3) to crouch</b>'] },
   { v:'Update 196', t:'Dirt Path & Slab Fixes', items:['<b>Dirt paths are full height now</b> \u2014 they sit flush with the ground and stairs instead of sinking down as a half block','<b>Slabs place flat by default</b> \u2014 top or bottom depending on where you tap, no more accidental sideways slabs. Hold <b>SNEAK</b> while placing on a wall to make a <b>vertical slab</b>'] },
   { v:'Update 195', t:'Slower Stride & Steady Hand', items:['<b>Walk and run animations slowed</b> to a more natural cadence','<b>Right hand holds items steady</b> \u2014 when you\u2019re carrying something the right arm presents it instead of swinging (the left is your off-hand)'] },
@@ -10688,6 +10777,7 @@ function dismissTapStart(){
 document.addEventListener('pointerdown', startMenuMusic);
 document.addEventListener('touchstart', startMenuMusic);
 renderHotbar();
+
 requestAnimationFrame(loop);
 last=performance.now();
 
