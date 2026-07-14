@@ -1428,6 +1428,8 @@ var World = {
         if(y>3 && y<h-4 && cv > 0.52) id = B.AIR;
         var tun = this.noise.fbm(wx*0.02+11, y*0.06, wz*0.02-11 + 4);   // long winding tunnels
         if(y>4 && y<h-5 && Math.abs(tun) < 0.06) id = B.AIR;
+        var cav = this.noise.fbm(wx*0.012+400, wz*0.012-400 + y*0.028, 3);   // giant caverns
+        if(y>4 && y<h-8 && cav > 0.64) id = B.AIR;
       }
       // ores in stone
       if(id===B.STONE){ id = this.oreAt(wx,y,wz,h); }
@@ -1497,13 +1499,13 @@ var World = {
       return -1;
     }
     var o;
-    o=vein(0x1a1a, 2, 0.0017, 0.62, B.DIAMOND_ORE,  5, 18); if(o>0)return o;  // deepest, rare
-    o=vein(0x2b2b, 2, 0.0052, 0.62, B.REDSTONE_ORE, 5, 24); if(o>0)return o;
-    o=vein(0x3c3c, 2, 0.0030, 0.62, B.GOLD_ORE,     5, 34); if(o>0)return o;
-    o=vein(0x4d4d, 2, 0.0110, 0.60, B.IRON_ORE,     8, 58); if(o>0)return o;
-    o=vein(0x5e5e, 2, 0.0110, 0.60, B.COPPER_ORE,  10, 70); if(o>0)return o;
+    o=vein(0x1a1a, 2, 0.0024, 0.70, B.DIAMOND_ORE,  5, 16); if(o>0)return o;  // deepest, rare
+    o=vein(0x2b2b, 2, 0.0080, 0.70, B.REDSTONE_ORE, 5, 16); if(o>0)return o;
+    o=vein(0x3c3c, 2, 0.0046, 0.68, B.GOLD_ORE,     5, 32); if(o>0)return o;
+    o=vein(0x4d4d, 2, 0.0150, 0.68, B.IRON_ORE,     5, 64); if(o>0)return o;
+    o=vein(0x5e5e, 2, 0.0150, 0.66, B.COPPER_ORE,  16, 72); if(o>0)return o;
     o=vein(0x6f6f, 2, 0.0100, 0.60, B.TIN_ORE,     10, 54); if(o>0)return o;
-    o=vein(0x7070, 3, 0.0130, 0.60, B.COAL_ORE,    14,108); if(o>0)return o;  // common, all heights
+    o=vein(0x7070, 3, 0.0200, 0.66, B.COAL_ORE,     5,120); if(o>0)return o;  // common, all heights
     return B.STONE;
   },
   genTrees: function(chunk){
@@ -3137,7 +3139,7 @@ function initCharPreview(){
   previewAvatar=buildAvatarModel(previewLimbs); previewScene.add(previewAvatar);
   updateCharPreview();
 }
-function updateCharPreview(){ if(!previewAvatar) return; applyCosmeticsTo(previewAvatar, previewLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, skin:playerCos.skin, face:playerCos.face, haircol:playerCos.haircol, hairtype:playerCos.hairtype, armor:(typeof inv!=='undefined'&&inv.armor)}); }
+function updateCharPreview(){ if(!previewAvatar) return; applyCosmeticsTo(previewAvatar, previewLimbs, {hat:playerHat, shirt:playerCos.shirt, glasses:playerCos.glasses, shoes:playerCos.shoes, pants:playerCos.pants, skin:playerCos.skin, face:playerCos.face, haircol:playerCos.haircol, hairtype:playerCos.hairtype, armor:(running && typeof inv!=='undefined' && inv.armor)}); }
 function renderCharPreview(){ if(!previewRenderer){ initCharPreview(); if(!previewRenderer) return; } previewAvatar.rotation.y += 0.012; previewRenderer.render(previewScene, previewCam); }
 function applyPlayerCosmetics(){ applyPlayerHat(); if(typeof updateCharPreview==='function') updateCharPreview(); }
 applyPlayerHat();
@@ -3512,6 +3514,9 @@ function tickRain(dt){
   rainMat.opacity = (snowing?0.75:0.5)*rainAmt; rainMesh.visible = rainAmt>0.02;
   if(rainGainNode) rainGainNode.gain.value = sfxOn? rainAmt*0.09*(1+0.28*Math.sin(now*0.0017)) : 0;   // gentle variation
   if(rainFilter) rainFilter.frequency.value = 1850 + 750*Math.sin(now*0.0009);
+  if(rainMesh.visible){ var _cov=false, _cx=Math.floor(camera.position.x), _cz=Math.floor(camera.position.z);
+    for(var _cy=Math.floor(camera.position.y)+1; _cy<Math.floor(camera.position.y)+34 && _cy<WORLD_H; _cy++){ if(isSolid(World.getBlock(_cx,_cy,_cz))){ _cov=true; break; } }
+    if(_cov) rainMesh.visible=false; }
   if(!rainMesh.visible) return;
   if(actx && !rainSrc) startRainSound();
   var cx=camera.position.x, cy=camera.position.y, cz=camera.position.z, fall=(snowing?8:24)*dt, slen=(snowing?0.18:0.9), p=rainPos;
@@ -3675,9 +3680,9 @@ function chunkFrag(alpha, grain){
     '     vec2 gc=floor(uv*4.0); vec2 gf=fract(uv*4.0)-0.5;',
     '     float rnd=fract(sin(dot(gc+mod(floor(vWorld.xz),256.0), vec2(12.9898,78.233))+mod(floor(vWorld.y),256.0)*7.31)*43758.5453);',
     '     float has=step(0.45,rnd);',
-    '     float d2=max(abs(gf.x),abs(gf.y))*1.2+length(gf)*0.4;',                     // squarish blob
-    '     float blob=1.0-smoothstep(0.26,0.36,d2);',
-    '     float edge=smoothstep(0.30,0.40,d2)-smoothstep(0.40,0.5,d2);',
+    '     float d2=max(abs(gf.x),abs(gf.y))*1.05+length(gf)*0.2;',                    // big square nugget
+    '     float blob=1.0-smoothstep(0.34,0.42,d2);',
+    '     float edge=smoothstep(0.36,0.44,d2)-smoothstep(0.44,0.55,d2);',
     '     dc=mix(dc, ore, blob*has*vDetail);',
     '     dc=mix(dc, ore*0.4, edge*has*0.7*vDetail);',                               // dark outline around each blob
     '     dc+=ore*0.25*(1.0-smoothstep(0.0,0.12,d2))*has*vDetail;',                  // bright center speck
@@ -4072,6 +4077,7 @@ function blockBoxes(id,x,y,z){
 }
 function collides(px,py,pz){
   var b=playerAABB(px,py,pz);
+  b.x0+=0.04; b.x1-=0.04; b.z0+=0.04; b.z1-=0.04; b.y1-=0.04;   // forgiving margin so you can place blocks right beside you
   var x0=Math.floor(b.x0),x1=Math.floor(b.x1),y0=Math.floor(b.y0),y1=Math.floor(b.y1),z0=Math.floor(b.z0),z1=Math.floor(b.z1);
   for(var x=x0;x<=x1;x++)for(var y=y0;y<=y1;y++)for(var z=z0;z<=z1;z++){
     var id=World.getBlock(x,y,z);
@@ -4427,6 +4433,9 @@ function tryHarvest(matureOnly){
     var sd = tl.crop==='carrot'?'CARROT': tl.crop==='potato'?'POTATO': tl.crop==='tomato'?'TOMATO_SEEDS': tl.crop==='corn'?'CORN_SEEDS':'SEEDS';
     giveItem(sd,1); delete World.tiles[tk]; var ch0=World.getChunk(hit.x>>4,hit.z>>4,false); if(ch0) buildPlantMesh(ch0); sfxBreak(); triggerHandSwing(); return true;
   }
+  { var _bm=inv.hotbar[hotbarSel];
+    if(_bm && _bm.key==='BONE'){ if(!tl.mature){ tl.mature=true; if(tl.st!=null) tl.st=3; consumeSlot(_bm,1); renderHotbar(); try{ spawnSteam(hit.x+0.5,hit.y+0.8,hit.z+0.5,0xffffff); }catch(_){ } toast('\u2728 The crop ripens!'); sfxClick(); return; } }
+    if(!tl.mature){ toast('Not ready to harvest yet'); return; } }
   if(tl.crop==='wheat'){ giveItem('WHEAT',1); giveItem('SEEDS',1+(hash3(hit.x,1,hit.z,World.seed)*2|0)); }
   else if(tl.crop==='carrot'){ giveItem('CARROT',1+(hash3(hit.x,2,hit.z,World.seed)*3|0)); }
   else if(tl.crop==='tomato'){ giveItem('TOMATO',1+(hash3(hit.x,4,hit.z,World.seed)*3|0)); giveItem('TOMATO_SEEDS',1+(hash3(hit.x,5,hit.z,World.seed)*2|0)); }
@@ -4765,6 +4774,9 @@ function doPlace(){
   if(hit.id===B.ROCKET_WORKBENCH){ openRocketWorkbench(); return; }
   { var _sv=inv.hotbar[hotbarSel]; if(_sv && ITEMS[_sv.key] && ITEMS[_sv.key].tool==='shovel' && (hit.id===B.GRASS||hit.id===B.DIRT) && hit.ny>0 && World.getBlock(hit.x,hit.y+1,hit.z)===B.AIR){
       World.setBlock(hit.x,hit.y,hit.z,B.DIRT_PATH,true); try{ damageTool(); if(typeof sfxBreak==='function') sfxBreak(); }catch(_){ } return; } }
+  { var _bp=inv.hotbar[hotbarSel]; var _bmap={BLUEBERRY:B.BLUEBERRY_BUSH, STRAWBERRY:B.STRAWBERRY_BUSH, GRAPES:B.GRAPE_VINE};
+    if(_bp && _bmap[_bp.key]!=null && hit.ny>0 && (hit.id===B.GRASS||hit.id===B.DIRT) && World.getBlock(hit.x,hit.y+1,hit.z)===B.AIR){
+      World.setBlock(hit.x,hit.y+1,hit.z,_bmap[_bp.key],true); consumeSlot(_bp,1); renderHotbar(); sfxPlace(); toast('Planted!'); return; } }
   if(hit.id===B.COOKING_POT){ openCookingPot(); return; }
   if(hit.id===B.COMPOSTER){ var _cck=World.ck(hit.x,hit.y,hit.z); var _cct=World.tiles[_cck]||(World.tiles[_cck]={type:'composter',lvl:0});
     var _ch2=inv.hotbar[hotbarSel];
@@ -4937,11 +4949,14 @@ function doPlace(){
   if(slot && ITEMS[slot.key] && ITEMS[slot.key].food){ if(tryEat(slot)) return; }
   // two matching slabs combine into one full block
   if(slot && blk(hit.id).shape==='slab' && BLOCKS[hit.id] && slot.key===BLOCKS[hit.id].key){
+    var _sht=World.tiles[World.ck(hit.x,hit.y,hit.z)], _shf=(_sht&&_sht.half)||'bottom';
+    var _mergeFace=(_shf==='bottom'&&hit.ny>0)||(_shf==='top'&&hit.ny<0);
+    if(_mergeFace){
     var _full=B[BLOCKS[hit.id].tex]; if(_full!=null){
       var _tk=World.ck(hit.x,hit.y,hit.z); if(World.tiles[_tk]) delete World.tiles[_tk];
       World.setBlock(hit.x,hit.y,hit.z,_full,true); World.reflowLight(hit.x,hit.y,hit.z);
       if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(); return;
-    }
+    } }
   }
   if(!slot || ITEMS[slot.key].block==null) return;
   var nx=hit.x+hit.nx, ny=hit.y+hit.ny, nz=hit.z+hit.nz;
@@ -5117,8 +5132,8 @@ function placeShape(pid, pb, hit, nx,ny,nz){
     var lc=World.tiles[World.ck(nx+perp[0][0],ny,nz+perp[0][1])];
     var rc=World.tiles[World.ck(nx+perp[1][0],ny,nz+perp[1][1])];
     var hinge='l';
-    if(lc && lc.type==='door' && lc.dir===ddir){ hinge=(lc.hinge==='l')?'r':'l'; }       // partner beside us -> take the OPPOSITE hinge so they mirror
-    else if(rc && rc.type==='door' && rc.dir===ddir){ hinge=(rc.hinge==='l')?'r':'l'; }
+    if(lc && lc.type==='door' && lc.dir===ddir){ hinge='r'; if(lc.hinge!=='l'){ lc.hinge='l'; try{ World.markDirty((nx+perp[0][0])>>4,(nz+perp[0][1])>>4); }catch(_){ } } }   // partner on the left: it hinges left, we hinge right -> knobs meet in the middle
+    else if(rc && rc.type==='door' && rc.dir===ddir){ hinge='l'; if(rc.hinge!=='r'){ rc.hinge='r'; try{ World.markDirty((nx+perp[1][0])>>4,(nz+perp[1][1])>>4); }catch(_){ } } }
     else if(isSolid(World.getBlock(nx+perp[1][0],ny,nz+perp[1][1])) && !isSolid(World.getBlock(nx+perp[0][0],ny,nz+perp[0][1]))) hinge='r';
     else hinge=resolveDoorHinge(nx,ny,nz,ddir);
     World.tiles[World.ck(nx,ny,nz)]={type:'door', shape:'door', dir:ddir, open:false, hinge:hinge};
@@ -5973,7 +5988,7 @@ function openRecipeBook(){
       var _rl=row.querySelectorAll('.rname,.ring'); for(var _ri=0;_ri<_rl.length;_ri++){ _rl[_ri].style.color = _rl[_ri].className==='ring' ? '#a9c9a9' : '#f2fbf2'; }   // readable on the green craftable row
       var tag=document.createElement('div'); tag.textContent='\u2713 Craft'; tag.style.cssText='margin-left:auto;font-size:12px;font-weight:700;color:#8de29a;'; row.appendChild(tag);
       row.addEventListener('click', function(){ if(craftFromBook(r)){ toast('Crafted '+(ITEMS[r.out]?ITEMS[r.out].name:r.out));
-        var _pnl=screenEl.querySelector('.panel'); var _stp=_pnl?_pnl.scrollTop:0; var _fk=gpFocusPos; openRecipeBook(); var _p2=screenEl.querySelector('.panel'); if(_p2)_p2.scrollTop=_stp; } });
+        var _pnl=screenEl.querySelector('.panel'); var _stp=_pnl?_pnl.scrollTop:0; openRecipeBook(); var _p2=screenEl.querySelector('.panel'); if(_p2){ _p2.scrollTop=_stp; requestAnimationFrame(function(){ _p2.scrollTop=_stp; }); } } });
     } else if(!ok){ row.style.opacity='0.4'; }
     list.appendChild(row);
   })(RECIPES[ri]); }
@@ -7892,7 +7907,7 @@ function animalTick(e,dt){
   var nx=e.pos.x+e.vel.x*dt; if(!entCollides(e,nx,e.pos.y,e.pos.z)) e.pos.x=nx; else e.wdir+=2.0;
   var nz=e.pos.z+e.vel.z*dt; if(!entCollides(e,e.pos.x,e.pos.y,nz)) e.pos.z=nz; else e.wdir+=2.0;
   var ny=e.pos.y+e.vel.y*dt; if(!entCollides(e,e.pos.x,ny,e.pos.z)) e.pos.y=ny; else { if(e.vel.y<0) e.onGround=true; e.vel.y=0; }
-  if(e.swimming) e.pos.y += Math.sin(now*0.006+(e.wdir||0))*0.01;
+  if(e.swimming){ e._swb=Math.sin(now*0.0025+(e.wdir||0))*0.1; } else e._swb=0;
   e.mesh.position.copy(e.pos);
   if(e.swimming) e.mesh.position.y -= 0.34;   // body sits down in the water while swimming
   var mv=Math.hypot(e.vel.x,e.vel.z)>0.1, swg=Math.sin(now*0.012)*(mv?0.5:0);
@@ -8351,8 +8366,9 @@ function tickEntities(dt){
     var nz=e.pos.z+e.vel.z*dt; if(!entCollides(e,e.pos.x,e.pos.y,nz)) e.pos.z=nz; else e.vel.z=0;
     var ny=e.pos.y+e.vel.y*dt;
     if(!entCollides(e,e.pos.x,ny,e.pos.z)) e.pos.y=ny; else { if(e.vel.y<0) e.onGround=true; e.vel.y=0; }
-    if(e.swimming) e.pos.y += Math.sin(now*0.006+(e.wdir||0))*0.01;
+    if(e.swimming){ e._swb=Math.sin(now*0.0025+(e.wdir||0))*0.1; } else e._swb=0;
     e.mesh.position.copy(e.pos);
+    if(e._swb) e.mesh.position.y+=e._swb;
     if(e.kind==='creeper'){ e.steamCd=(e.steamCd||0)-dt; if(e.steamCd<=0){ e.steamCd=0.2+Math.random()*0.14; spawnSteam(e.pos.x, e.pos.y+1.15, e.pos.z, e.mesh.userData?e.mesh.userData.steamCol:0xe8eef7); } }   // smokestack puffs steam out the top
     var _ddx=e.pos.x-Player.pos.x, _ddz=e.pos.z-Player.pos.z;
     if(_ddx*_ddx+_ddz*_ddz>1296){ } else {   // skip cosmetic animation beyond 36 blocks
@@ -10243,6 +10259,10 @@ function loop(t){
     if(frame%220===0) maybeBirdEggs();
     if(frame%700===0){ try{ purgeOrphanChunkMeshes(); }catch(_){ } }
     if(frame%300===50){ try{ refreshAllPaintings(); }catch(_){ } }
+    if(frame%40===12){ try{ var _px=Player.pos.x,_pz=Player.pos.z;
+      for(var _tk2 in World.tiles){ var _t2=World.tiles[_tk2]; if(!_t2||_t2.type!=='crop'||!_t2.mature) continue;
+        var _pa2=_tk2.split(','); var _dx2=(+_pa2[0])-_px, _dz2=(+_pa2[2])-_pz;
+        if(_dx2*_dx2+_dz2*_dz2<256 && Math.random()<0.25){ spawnSteam((+_pa2[0])+0.3+Math.random()*0.4, (+_pa2[1])+0.5, (+_pa2[2])+0.3+Math.random()*0.4, 0xffffff); } } }catch(_){ } }
     if(frame%3===0) maybeSpawnAnimals();
     if(frame%7===0) maybeSpawnOcean();
     ambientTick(dt);
@@ -10398,8 +10418,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 199';
+var VERSION='Update 200';
 var CHANGELOG=[
+  { v:'Update 200', t:'The Big Fix Update', items:['<b>Seahorses & crabs no longer jitter</b> in water \u2014 their bob is visual now, not fighting the physics','<b>Giant caverns</b> \u2014 cave systems can open into huge chambers deep underground','<b>Ore rates rebalanced</b> classic-style \u2014 coal everywhere, iron plentiful, gold deep, redstone & diamond in the lowest layers, and veins run larger','<b>Ore texture pass</b> \u2014 bigger, squarer nuggets with cleaner outlines','<b>Rain no longer shows underground</b> or under a roof','<b>Slabs place beside slabs</b> now \u2014 they only merge into a full block when you click the flat face','<b>Double doors hinge outward and meet in the middle</b> like proper double doors','<b>Bone works as bonemeal</b> \u2014 use it on a crop to ripen it instantly, and immature crops can no longer be tapped away','<b>Ready crops sparkle white</b> so you can spot harvest time at a glance','<b>Berries are plantable</b> \u2014 use blueberries, strawberries or grapes on grass to plant a new bush and farm them','<b>Controller crafting truly keeps your scroll spot</b> (a hidden error was resetting it)','<b>Main-menu character no longer shows glitched armor</b>','<b>Placing blocks right beside you works</b> while crouching'] },
   { v:'Update 199', t:'Fishing Overhaul', items:['<b>15 fish species</b> \u2014 from Pond Minnows to the legendary Forge King, each with its own size range and rarity','<b>Fish Compendium</b> (in the pause menu) tracks every species you\u2019ve caught, how many, and your biggest catch','<b>Perfect catches</b> \u2014 reel the instant it bites for bigger fish and better odds at rare species','<b>New rods</b> \u2014 the Iron Rod and Master Rod bite faster, hook rarer fish and snag less junk','<b>Game tips now bounce on the title screen</b> splash text'] },
   { v:'Update 198', t:'Bush & Bed Fixes, Zombie Arms', items:['<b>Berry bushes look like bushes now</b> \u2014 each has its own texture: green bush with blue specks for blueberries, red berries with seeds for strawberries, and purple grape clusters on a leafy vine. They also spawn far less often','<b>Tree fruit got real textures too</b> \u2014 apples, oranges, lemons and figs each hang as their own fruit instead of a sapling sprite','<b>Fixed the bed making blocks behind it invisible</b>','<b>Zombies shamble with their arms raised</b> now (zombie villagers too)','<b>No more weather pop-ups</b> (\u201ca thunderstorm rolls in\u2026\u201d)','<b>Rotating game tips</b> on the main menu','<b>Performance</b> \u2014 distant animals skip their cosmetic animations and shadows update a touch less often'] },
   { v:'Update 197', t:'Shears, Carrots & Controller', items:['<b>Shears harvest leaves</b> \u2014 cut leaf blocks off trees and collect them','<b>Fewer carrots</b> (and other veg) from tall grass \u2014 it drops mostly seeds now','<b>Controller crafting keeps your place</b> \u2014 crafting from the recipe book or carpenter bench no longer jumps back to the top of the list','<b>Press the right stick (R3) to crouch</b>'] },
