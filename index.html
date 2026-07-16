@@ -443,13 +443,13 @@ defBlock({key:'LOG', name:'Oak Log', col:[102,76,44], top:[160,128,82], side:[96
 defBlock({key:'LEAVES', name:'Oak Leaves', col:[54,118,46], solid:true, leaf:true, hard:0.3 });
 defBlock({key:'PLANKS', name:'Oak Planks', col:[176,140,86], top:[182,146,92], solid:true, tool:'axe', hard:1.0 });
 defBlock({key:'GLASS', name:'Glass', col:[236,242,245], top:[240,245,248], side:[232,239,243], solid:true, transparent:true, hard:0.4, glass:true });
-defBlock({key:'COAL_ORE', name:'Coal Ore', col:[60,60,64], spec:[26,26,28], solid:true, tool:'pickaxe', tier:1, hard:2.2, drop:'COAL' });
-defBlock({key:'IRON_ORE', name:'Iron Ore', col:[140,128,118], spec:[206,170,140], solid:true, tool:'pickaxe', tier:2, hard:2.6 });
-defBlock({key:'GOLD_ORE', name:'Gold Ore', col:[140,132,96], spec:[226,196,84], solid:true, tool:'pickaxe', tier:3, hard:2.8 });
-defBlock({key:'DIAMOND_ORE', name:'Diamond Ore', col:[120,140,150], spec:[120,224,224], solid:true, tool:'pickaxe', tier:3, hard:3.2, drop:'DIAMOND' });
-defBlock({key:'REDSTONE_ORE', name:'Redstone Ore', col:[128,96,96], spec:[210,40,40], solid:true, tool:'pickaxe', tier:2, hard:2.6, drop:'REDSTONE' });
-defBlock({key:'COPPER_ORE', name:'Copper Ore', col:[140,116,100], spec:[200,120,70], solid:true, tool:'pickaxe', tier:1, hard:2.4 });
-defBlock({key:'TIN_ORE', name:'Tin Ore', col:[150,150,156], spec:[200,210,220], solid:true, tool:'pickaxe', tier:1, hard:2.4 });
+defBlock({key:'COAL_ORE', name:'Coal Ore', col:[124,120,115], spec:[26,26,28], solid:true, tool:'pickaxe', tier:1, hard:2.2, drop:'COAL' });
+defBlock({key:'IRON_ORE', name:'Iron Ore', col:[124,120,115], spec:[206,170,140], solid:true, tool:'pickaxe', tier:2, hard:2.6 });
+defBlock({key:'GOLD_ORE', name:'Gold Ore', col:[124,120,115], spec:[226,196,84], solid:true, tool:'pickaxe', tier:3, hard:2.8 });
+defBlock({key:'DIAMOND_ORE', name:'Diamond Ore', col:[124,120,115], spec:[120,224,224], solid:true, tool:'pickaxe', tier:3, hard:3.2, drop:'DIAMOND' });
+defBlock({key:'REDSTONE_ORE', name:'Redstone Ore', col:[124,120,115], spec:[210,40,40], solid:true, tool:'pickaxe', tier:2, hard:2.6, drop:'REDSTONE' });
+defBlock({key:'COPPER_ORE', name:'Copper Ore', col:[124,120,115], spec:[200,120,70], solid:true, tool:'pickaxe', tier:1, hard:2.4 });
+defBlock({key:'TIN_ORE', name:'Tin Ore', col:[124,120,115], spec:[200,210,220], solid:true, tool:'pickaxe', tier:1, hard:2.4 });
 defBlock({key:'BEDROCK', name:'Bedrock', col:[28,28,32], solid:true, tier:99, hard:999 });
 defBlock({key:'TORCH', name:'Torch', col:[230,170,60], solid:false, transparent:true, thin:true, light:14, hard:0.05 });
 defBlock({key:'LANTERN', name:'Lantern', col:[246,206,120], solid:true, tool:'pickaxe', hard:0.4, shape:'lantern', light:14 });
@@ -476,9 +476,10 @@ defBlock({key:'SKYSOIL', name:'Sky Soil', col:[188,186,206], top:[196,194,214], 
 defBlock({key:'SKYGRASS', name:'Sky Grass', col:[126,214,190], top:[138,228,198], side:[150,196,196], solid:true, tool:'shovel', hard:0.6 });
 defBlock({key:'SKYLOG', name:'Sky Log', col:[196,204,224], top:[176,184,204], solid:true, tool:'axe', hard:1.2, log:true });
 defBlock({key:'SKYLEAVES', name:'Sky Leaves', col:[120,200,220], solid:true, transparent:true, leaf:true, hard:0.2 });
-defBlock({key:'SKY_CRYSTAL_ORE', name:'Sky Crystal Ore', col:[190,200,220], spec:[140,230,255], solid:true, tool:'pickaxe', tier:2, hard:2.0, drop:'SKY_CRYSTAL' });
+defBlock({key:'SKY_CRYSTAL_ORE', name:'Sky Crystal Ore', col:[206,212,224], spec:[140,230,255], solid:true, tool:'pickaxe', tier:2, hard:2.0, drop:'SKY_CRYSTAL' });
 defBlock({key:'SKYGATE', name:'Skygate', col:[150,220,255], top:[170,232,255], side:[140,212,250], spec:[220,250,255], solid:true, tool:'pickaxe', hard:2.0, light:13 });
 defBlock({key:'GLOWBLOOM', name:'Glowbloom', col:[130,200,255], solid:false, transparent:true, thin:true, cross:true, hard:0.05, light:7 });
+defBlock({key:'DEAD_BUSH', name:'Dead Bush', col:[154,122,68], solid:false, transparent:true, thin:true, cross:true, hard:0.05 });
 defBlock({key:'BANANA_BUNCH', name:'Banana Bunch', col:[230,200,66], top:[240,214,80], side:[214,182,54], solid:false, transparent:true, hard:0.2, tool:'axe', drop:'BANANA' });
 defBlock({key:'CACTUS', name:'Cactus', col:[54,116,58], top:[92,156,86], side:[48,104,52], solid:true, hard:0.5, hurt:1 });
 defBlock({key:'BEEHIVE', name:'Beehive', col:[198,142,52], top:[150,104,38], side:[206,150,54], solid:true, hard:0.5 });
@@ -517,7 +518,7 @@ defBlock({key:'CORAL_PINK', name:'Pink Coral', col:[232,112,168], solid:true, ha
 defBlock({key:'CORAL_BLUE', name:'Blue Coral', col:[86,134,232], solid:true, hard:0.5 });
 defBlock({key:'CORAL_YELLOW', name:'Yellow Coral', col:[240,200,72], solid:true, hard:0.5 });
 defBlock({key:'SEA_LANTERN', name:'Sea Lantern', col:[178,224,214], top:[200,238,228], solid:true, hard:0.6, light:14 });
-defBlock({key:'EMBERGLOW_ORE', name:'Emberglow Ore', col:[120,60,40], spec:[255,180,90], solid:true, tool:'pickaxe', tier:1, hard:1.4, light:13, drop:'EMBERGLOW' });
+defBlock({key:'EMBERGLOW_ORE', name:'Emberglow Ore', col:[96,84,80], spec:[255,180,90], solid:true, tool:'pickaxe', tier:1, hard:1.4, light:13, drop:'EMBERGLOW' });
 defBlock({key:'EMBERGLOW_BLOCK', name:'Emberglow Block', col:[236,180,90], top:[248,196,110], side:[228,170,80], spec:[255,210,130], solid:true, tool:'pickaxe', hard:0.6, light:15 });
 defBlock({key:'GLOW_CRYSTAL', name:'Glow Crystal', col:[168,120,232], top:[196,150,250], side:[150,104,214], solid:true, tool:'pickaxe', tier:1, hard:1.2, light:12 });
 defBlock({key:'GLOWSHROOM', name:'Glowshroom', col:[86,196,168], top:[120,220,190], side:[70,170,150], solid:true, tool:'axe', hard:0.4, light:10 });
@@ -617,8 +618,8 @@ defBlock({key:'GRAPE_VINE', name:'Grapevine', col:[110, 90, 140], solid:false, t
 defBlock({key:'DIRT_PATH', name:'Dirt Path', col:[150,124,74], top:[164,138,86], side:[130,104,64], solid:true, tool:'shovel', hard:0.5 });
 defBlock({key:'PAINTING', name:'Painting', col:[120,96,60], solid:true, tool:'axe', hard:0.6 });
 defBlock({key:'LAUNCH_PAD', name:'Launch Pad', col:[92,96,106], top:[70,74,84], side:[100,104,114], spec:[255,180,60], solid:true, tool:'pickaxe', tier:1, hard:3.5 });
-defBlock({key:'AMETHYST_ORE', name:'Amethyst Ore', col:[130,120,150], spec:[190,120,240], solid:true, tool:'pickaxe', tier:2, hard:2.2, drop:'AMETHYST' });
-defBlock({key:'SILVER_ORE', name:'Silver Ore', col:[150,150,158], spec:[230,232,240], solid:true, tool:'pickaxe', tier:1, hard:1.8, drop:'SILVER_INGOT' });
+defBlock({key:'AMETHYST_ORE', name:'Amethyst Ore', col:[136,136,140], spec:[190,120,240], solid:true, tool:'pickaxe', tier:2, hard:2.2, drop:'AMETHYST' });
+defBlock({key:'SILVER_ORE', name:'Silver Ore', col:[136,136,140], spec:[230,232,240], solid:true, tool:'pickaxe', tier:1, hard:1.8, drop:'SILVER_INGOT' });
 defBlock({key:'PUMPKIN', name:'Pumpkin', col:[214,120,32], top:[190,104,28], side:[224,130,38], solid:true, tool:'axe', hard:0.7 });
 defBlock({key:'MELON_BLOCK', name:'Melon', col:[92,160,60], top:[104,172,66], side:[84,150,56], solid:true, tool:'axe', hard:0.7 });
 defBlock({key:'VINE', name:'Vines', col:[62,110,56], solid:false, transparent:true, thin:true, cross:true, hard:0.1 });
@@ -975,6 +976,13 @@ function iconFor(key){
       x.fillStyle=css([210,70,70]); x.fillRect(10,16,4,4);       // little dabs of art
       x.fillStyle=css([70,120,210]); x.fillRect(17,10,4,4);
       x.fillStyle=css([90,190,90]); x.fillRect(15,18,5,3);
+      _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key];
+    }
+    if(it.key==='MINECART'){
+      x.fillStyle=css([120,124,132]); x.fillRect(5,12,22,10);
+      x.fillStyle=css([90,94,102]); x.fillRect(5,12,22,3);
+      x.fillStyle=css([40,40,46]); x.fillRect(8,23,5,5); x.fillRect(19,23,5,5);
+      x.fillStyle=css([160,164,172]); x.fillRect(7,14,18,6);
       _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key];
     }
     if(it.key==='MOTORCAR'||it.key==='TRUCK'){
@@ -1418,6 +1426,12 @@ var World = {
     return base+Math.floor((m-0.52)*10);
   },
   heightAt: function(wx,wz){
+    if(this.dim!=='overworld') return this.heightAtRaw(wx,wz);
+    var h0=this.heightAtRaw(wx,wz);
+    var h1=this.heightAtRaw(wx+5,wz), h2=this.heightAtRaw(wx-5,wz), h3=this.heightAtRaw(wx,wz+5), h4=this.heightAtRaw(wx,wz-5);
+    return Math.round(h0*0.4 + (h1+h2+h3+h4)*0.15);   // soften hard biome-border cliffs
+  },
+  heightAtRaw: function(wx,wz){
     if(this.dim==='sky'){ return this.skyTopAt(wx,wz); }
     if(this.dim==='moon'){
       var mb=this.noise.fbm(wx*0.012+40, wz*0.012-40, 3);
@@ -1693,6 +1707,7 @@ var World = {
           continue;
         }
       }
+      if(biome===3 && getLocal(blocks,lx,h,lz)===B.SAND && getLocal(blocks,lx,h+1,lz)===B.AIR && hash3(wx,140,wz,this.seed^0xDEAD)<0.02){ setLocal(blocks,lx,h+1,lz,B.DEAD_BUSH); }
       if(hash3(wx,1,wz,this.seed^777) < dens){
         var th = (jungle?8:(spruce?6:4)) + Math.floor(hash3(wx,2,wz,this.seed)*(jungle?6:(spruce?4:5)));
         for(var t=1;t<=th && h+t<WORLD_H;t++) setLocal(blocks,lx,h+t,lz,logT);
@@ -2791,6 +2806,7 @@ function decorFor(id, f, frontF){
   var face=(cat===0)?0:(cat===1)?1:2;         // 0 top,1 bottom,2 side-plain
   if(frontF==null) frontF=4;
   if(id===B.BEEHIVE) return 42*8+face;
+  if(id===B.RAIL) return 43*8+face;
   if(isChest(id)){ if(f===frontF) face=3; return 1*8+face; }    // front faces placement direction
   if(id===B.FURNACE){ if(f===frontF) face=3; return 2*8+face; }
   if(isCrafting(id)) return 3*8+face;
@@ -2811,9 +2827,16 @@ function decorFor(id, f, frontF){
   if(id===B.BIRCH_LOG) return 41*8+face;
   if(id===B.PUMPKIN) return 39*8+face;
   if(id===B.MELON_BLOCK) return 40*8+face;
-  if(id===B.LOG||id===B.SPRUCE_LOG||id===B.CHERRY_LOG) return 17*8+face;
+  if(id===B.SPRUCE_LOG) return 48*8+face;
+  if(id===B.CHERRY_LOG) return 49*8+face;
+  if(id===B.LOG) return 17*8+face;
   if(id===B.LEAVES||id===B.SPRUCE_LEAVES||id===B.BIRCH_LEAVES||id===B.CHERRY_LEAVES||id===B.JUNGLE_LEAVES) return 18*8+face;
   if(id===B.SNOW) return 19*8+face;
+  if(id===B.MOONSTONE_ORE) return 50*8+2;
+  if(id===B.AMETHYST_ORE) return 44*8+2;
+  if(id===B.SILVER_ORE) return 45*8+2;
+  if(id===B.SKY_CRYSTAL_ORE) return 46*8+2;
+  if(id===B.EMBERGLOW_ORE) return 47*8+2;
   if(id===B.AETHERIUM_ORE) return 20*8+2;
   if(id===B.BRASS_BLOCK) return 21*8+face;
   if(id===B.ASH) return 22*8+face;
@@ -3506,6 +3529,7 @@ var rainMat=new THREE.LineBasicMaterial({ color:0x9fc2e6, transparent:true, opac
 var rainMesh=new THREE.LineSegments(rainGeo, rainMat); rainMesh.frustumCulled=false; rainMesh.visible=false; scene.add(rainMesh);
 var weather='clear', weatherTimer=70+Math.random()*120, rainAmt=0;
 var stormy=false, snowing=false;
+var storms=[], _cloudGray=1;
 var ashStorm=0, ashStormTimer=30, ashStormOn=false, dimStash={};
 var rainSrc=null, rainGainNode=null, rainFilter=null, rainNoiseBuf=null, thunderCd=18+Math.random()*24;
 function getRainNoise(){ if(rainNoiseBuf||!actx) return rainNoiseBuf; var a=actx, n=Math.floor(a.sampleRate*3.4); rainNoiseBuf=a.createBuffer(1,n,a.sampleRate);
@@ -3719,14 +3743,27 @@ function tickWeather(dt){
   weatherTimer-=dt;
   if(weatherTimer<=0){
     if(weather==='clear'){ weather='rain'; stormy=Math.random()<0.4; weatherTimer=(stormy?25:40)+Math.random()*45; thunderCd=(stormy?4:12)+Math.random()*10; if(actx) startRainSound();
+      var _sa=Math.random()*6.283, _sd=Math.random()*70;                                     // a storm cell forms nearby and drifts
+      storms.push({x:Player.pos.x+Math.cos(_sa)*_sd, z:Player.pos.z+Math.sin(_sa)*_sd, r:8, rMax:45+Math.random()*55, vx:(Math.random()-0.5)*1.6, vz:(Math.random()-0.5)*1.6, dying:false});
       }
-    else { weather='clear'; weatherTimer=120+Math.random()*180; }
+    else { weather='clear'; weatherTimer=120+Math.random()*180; for(var _si=0;_si<storms.length;_si++) storms[_si].dying=true; }
   }
   snowing = (weather==='rain') && cold;
   rainMat.color.setHex(snowing?0xffffff:0x9fc2e6);
-  var target = (weather==='rain')?(stormy?1.0:0.66):0;
+  var inStorm=false;
+  for(var _s2=storms.length-1;_s2>=0;_s2--){ var _st=storms[_s2];
+    _st.x+=_st.vx*dt; _st.z+=_st.vz*dt;
+    if(!_st.dying){ _st.r+=(_st.rMax-_st.r)*Math.min(1,dt*0.08); if(Math.random()<dt*0.004) _st.dying=true; }   // storms can die down on their own
+    else { _st.r-=dt*3.5; if(_st.r<=4){ storms.splice(_s2,1); continue; } }
+    var _sdx=Player.pos.x-_st.x, _sdz=Player.pos.z-_st.z;
+    if(_sdx*_sdx+_sdz*_sdz < _st.r*_st.r) inStorm=true;
+  }
+  if(weather==='rain' && !storms.length){ weather='clear'; }
+  var target = inStorm?(stormy?1.0:0.7):0;
   rainAmt += (target-rainAmt)*Math.min(1,dt*0.5);
-  if(rainAmt<0.01 && weather==='clear') stopRainSound();
+  if(rainAmt<0.01) stopRainSound(); else if(actx && rainAmt>0.05) startRainSound();
+  var _cg=inStorm?0.6:1; _cloudGray += (_cg-_cloudGray)*Math.min(1,dt*0.6);
+  cloudMat.color.setRGB(_cloudGray,_cloudGray,Math.min(1,_cloudGray+0.03));   // sky grays over the storm, white elsewhere
   var thunderThresh = stormy?0.4:0.85;
   if(weather==='rain' && !snowing && rainAmt>thunderThresh){ thunderCd-=dt; if(thunderCd<=0){ thunderCd=(stormy?8:22)+Math.random()*20; thunder(); lightningFlash(); maybeLightningFire(); } }
   tickRain(dt);
@@ -3838,6 +3875,20 @@ function chunkFrag(alpha, grain){
     '       dc = mix(dc, vec3(0.16,0.13,0.1), toolm*0.85);',
     '       dc = mix(dc, vec3(0.62,0.64,0.68), (sawBody+sawTeeth)*0.5);',
     '     }',
+    '   } else if(base==48.0){',                          // SPRUCE: dark rough bark strips
+    '     if(face>1.5){ float st2=abs(fract(uv.x*7.0)-0.5); dc*=0.7+0.42*smoothstep(0.12,0.3,st2); dc*=0.9+0.12*n2(uv*11.0); }',
+    '     else { float rr2=length(uv-0.5); dc*=0.86+0.18*(0.5+0.5*sin(rr2*34.0)); }',
+    '   } else if(base==49.0){',                          // CHERRY: smooth reddish bark with dark knots
+    '     if(face>1.5){ dc*=0.96+0.06*n2(uv*6.0);',
+    '       vec2 kp=floor(uv*4.0)+mod(floor(vWorld.xz),32.0); float knot=step(0.9, fract(sin(dot(kp,vec2(12.9,78.2)))*437.5));',
+    '       float kd=length(fract(uv*4.0)-0.5); dc=mix(dc, dc*0.45, knot*(1.0-smoothstep(0.1,0.24,kd))); ',
+    '       dc*=1.0-0.14*lineAt(uv.y,0.33,0.02)-0.14*lineAt(uv.y,0.66,0.02); }',
+    '     else { float rr3=length(uv-0.5); dc*=0.88+0.16*(0.5+0.5*sin(rr3*30.0)); }',
+    '   } else if(base==43.0){',                          // RAIL: metal lines over ties
+    '     float tie=step(fract(uv.y*4.0),0.32);',
+    '     dc=mix(dc*0.85, vec3(0.42,0.32,0.2), tie);',
+    '     float rl=step(abs(uv.x-0.28),0.06)+step(abs(uv.x-0.72),0.06);',
+    '     dc=mix(dc, vec3(0.75,0.78,0.84), clamp(rl,0.0,1.0));',
     '   } else if(base==42.0){',                          // BEEHIVE: honey bands + entrance hole
     '     if(face>1.5){ float band=fract(uv.y*3.0); dc*=(band<0.18)?0.6:1.02;',
     '       float hole=step(abs(uv.x-0.5),0.12)*step(abs(uv.y-0.3),0.09); dc=mix(dc, vec3(0.1,0.08,0.05), hole); }',
@@ -3854,18 +3905,19 @@ function chunkFrag(alpha, grain){
     '       float inrow=1.0-smoothstep(0.16,0.24,abs(fract(uv.y*9.0)-0.5));',
     '       dc=mix(dc, vec3(0.13,0.12,0.11), dash*inrow*0.85); }',
     '     else { float rr=length(uv-0.5); dc*=0.9+0.14*(0.5+0.5*sin(rr*36.0)); }',
-    '   } else if(base>=4.0 && base<=10.5){',            // ORES: chunky mineral blobs on stone
-    '     vec3 ore = base==4.0?vec3(0.11,0.11,0.13):base==5.0?vec3(0.84,0.70,0.55):base==6.0?vec3(0.98,0.83,0.32):base==7.0?vec3(0.44,0.92,0.92):base==8.0?vec3(0.92,0.20,0.18):base==9.0?vec3(0.86,0.50,0.28):vec3(0.86,0.90,0.96);',
-    '     dc *= 0.9+0.12*n2(floor(uv*16.0));',                                        // stone grain
-    '     vec2 gc=floor(uv*4.0); vec2 gf=fract(uv*4.0)-0.5;',
-    '     float rnd=fract(sin(dot(gc+mod(floor(vWorld.xz),256.0), vec2(12.9898,78.233))+mod(floor(vWorld.y),256.0)*7.31)*43758.5453);',
-    '     float has=step(0.45,rnd);',
-    '     float d2=max(abs(gf.x),abs(gf.y))*1.05+length(gf)*0.2;',                    // big square nugget
-    '     float blob=1.0-smoothstep(0.34,0.42,d2);',
-    '     float edge=smoothstep(0.36,0.44,d2)-smoothstep(0.44,0.55,d2);',
-    '     dc=mix(dc, ore, blob*has*vDetail);',
-    '     dc=mix(dc, ore*0.4, edge*has*0.7*vDetail);',                               // dark outline around each blob
-    '     dc+=ore*0.25*(1.0-smoothstep(0.0,0.12,d2))*has*vDetail;',                  // bright center speck
+    '   } else if((base>=4.0 && base<=10.5) || (base>=44.0 && base<=47.5) || base==50.0){',   // ORES: organic mineral patches in stone
+    '     vec3 ore = base==4.0?vec3(0.11,0.11,0.13):base==5.0?vec3(0.84,0.70,0.55):base==6.0?vec3(0.98,0.83,0.32):base==7.0?vec3(0.44,0.92,0.92):base==8.0?vec3(0.92,0.20,0.18):base==9.0?vec3(0.86,0.50,0.28):base==10.0?vec3(0.86,0.90,0.96):base==44.0?vec3(0.72,0.42,0.95):base==45.0?vec3(0.90,0.92,0.97):base==46.0?vec3(0.5,0.88,1.0):base==50.0?vec3(0.82,0.9,1.0):vec3(0.95,0.75,0.4);',
+    '     dc *= 0.9+0.14*n2(uv*9.0+mod(floor(vWorld.xz),32.0));',                     // stone grain behind
+    '     vec2 wo=mod(floor(vWorld.xz),64.0)+mod(floor(vWorld.y),64.0);',
+    '     vec2 pgrid=floor(uv*8.0); vec2 pf=fract(uv*8.0);',                          // classic 8x8 pixel grid
+    '     float ph=fract(sin(dot(pgrid+wo, vec2(127.1,311.7)))*43758.5);',
+    '     float on=step(ph,0.17);',                                                   // a few cells per face carry ore
+    '     float dd=abs(pf.x-0.5)+abs(pf.y-0.5);',
+    '     float nug=on*(1.0-step(0.42,dd));',                                         // crisp diamond nugget
+    '     float rim=on*(step(0.42,dd)-step(0.58,dd));',
+    '     dc=mix(dc, ore, nug*vDetail);',
+    '     dc=mix(dc, mix(dc,vec3(0.0),0.45), rim*0.8*vDetail);',                      // dark outline pixel ring
+    '     dc=mix(dc, min(ore*1.5,vec3(1.0)), nug*step(dd,0.16)*0.9*vDetail);',        // bright centre pixel
     '   } else if(base>=11.0){ dc = mix(dc, blockTex(base, face, uv, vWorld, dc), vDetail); }',
     ' }',
     ' dc = torchLit(dc, vWorld);',
@@ -3879,7 +3931,14 @@ function chunkFrag(alpha, grain){
     ' vec3 wc = vColor * (1.0 + 0.06*w*anyWater);',
     ' wc = torchLit(wc, vWorld);',
     ' vec3 c = mix(uFogColor, wc, vFog);',
-    ' float _wa = mix('+alpha+', 0.68, isWater); _wa = mix(_wa, 0.96, isSwamp);'
+    ' float _wa = mix('+alpha+', 0.68, isWater); _wa = mix(_wa, 0.96, isSwamp);',
+    ' float isGlass = '+(alpha<0.99?'(step(0.86, vColor.r)*step(0.88, vColor.g)*step(0.88, vColor.b)*(1.0-isWater))':'0.0')+';',
+    ' vec3 fw2=fract(vWorld.xyz+0.0005);',
+    ' float ex2=min(fw2.x,1.0-fw2.x), ey2=min(fw2.y,1.0-fw2.y), ez2=min(fw2.z,1.0-fw2.z);',
+    ' float _em2=ex2+ey2+ez2-max(max(ex2,ey2),ez2);',           // distance to the nearest face edge
+    ' float frame2=1.0-smoothstep(0.05,0.09,_em2);',
+    ' _wa = mix(_wa, mix(0.14, 0.9, frame2), isGlass);',        // pane: almost invisible, edges frosted
+    ' c = mix(c, vec3(0.97,0.99,1.0), isGlass*frame2*0.65);'
   ];
   var helpers = grain ? [
     'float lineAt(float v, float c, float w){ return 1.0 - smoothstep(0.0, w, abs(v-c)); }',
@@ -3977,12 +4036,12 @@ function showCrack(bx,by,bz, nx,ny,nz, stage){
 
 /* ------------------------- CHUNK MANAGEMENT ----------------------------- */
 var buildQueue=[];
-var plantAtlasMat=null, PLANT_N=28;
+var plantAtlasMat=null, PLANT_N=29;
 function makePlantAtlas(){
   var c=16, cv=document.createElement('canvas'); cv.width=c*PLANT_N; cv.height=c; var x=cv.getContext('2d'); x.clearRect(0,0,cv.width,c);
   function stem(o,col){ x.fillStyle=col||'#3f8a30'; x.fillRect(o+7,7,2,9); }
   // 0 grass tuft
-  for(var i=0;i<6;i++){ var bx=(1+i*2.4)|0, bh=7+((i*97)%7); x.fillStyle=(i%2)?'#3f8a30':'#4f9e3a'; x.fillRect(bx,c-bh,2,bh); }
+  for(var i=0;i<6;i++){ var bx=(1+i*2.4)|0, bh=7+((i*97)%7); x.fillStyle=(i%2)?'#c4d2b6':'#d6e2c8'; x.fillRect(bx,c-bh,2,bh); }
   // 1 generic sapling
   x.fillStyle='#5b3b1e'; x.fillRect(16+7,9,2,7); x.fillStyle='#3f7d34'; x.fillRect(16+4,3,8,7); x.fillStyle='#54a043'; x.fillRect(16+6,1,4,4);
   // 2 wheat
@@ -4036,6 +4095,10 @@ function makePlantAtlas(){
   // 24 hanging vines: drooping green strands
   o=384; x.fillStyle='#3f7a34'; x.fillRect(o+2,0,2,13); x.fillRect(o+6,0,2,16); x.fillRect(o+10,0,2,11); x.fillRect(o+13,0,2,14);
   x.fillStyle='#549a44'; x.fillRect(o+3,3,1,2); x.fillRect(o+7,6,1,2); x.fillRect(o+11,4,1,2); x.fillRect(o+14,8,1,2);
+  // 28 dead bush (dry tan twigs)
+  o=448; x.strokeStyle='#9a7a44'; x.lineWidth=1;
+  x.fillStyle='#9a7a44'; x.fillRect(o+7,8,2,8);
+  x.fillStyle='#8a6a3a'; x.fillRect(o+4,6,2,2); x.fillRect(o+5,7,2,2); x.fillRect(o+10,5,2,2); x.fillRect(o+9,7,2,2); x.fillRect(o+3,10,2,2); x.fillRect(o+12,9,2,2);
   // 25 orange tulip
   o=400; x.fillStyle='#3f8a38'; x.fillRect(o+7,7,2,9); x.fillRect(o+4,10,3,2); x.fillStyle='#e8862a'; x.fillRect(o+5,3,6,5); x.fillStyle='#f6a850'; x.fillRect(o+6,4,2,2);
   // 26 bluebell
@@ -4045,8 +4108,9 @@ function makePlantAtlas(){
   var t=new THREE.CanvasTexture(cv); t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; return t;
 }
 function ensurePlantMats(){ if(plantAtlasMat) return;
-  plantAtlasMat=new THREE.MeshBasicMaterial({map:makePlantAtlas(),transparent:true,alphaTest:0.45,side:THREE.DoubleSide,fog:true}); }
-function pushCross(pos,uv,ix,ref, cx,by,cz,half,h, cell){
+  plantAtlasMat=new THREE.MeshBasicMaterial({map:makePlantAtlas(),transparent:true,alphaTest:0.45,side:THREE.DoubleSide,fog:true,vertexColors:true}); }
+function pushCross(pos,uv,ix,ref, cx,by,cz,half,h, cell, tr,tg,tb){
+  if(ref.c){ var _r=(tr==null?1:tr),_g=(tg==null?1:tg),_b=(tb==null?1:tb); for(var _q3=0;_q3<8;_q3++) ref.c.push(_r,_g,_b); }
   var y0=by,y1=by+h, u0=cell/PLANT_N, u1=(cell+1)/PLANT_N;
   var quads=[[cx-half,cz-half,cx+half,cz+half],[cx-half,cz+half,cx+half,cz-half]];
   for(var q=0;q<2;q++){ var a=quads[q], v=ref.v;
@@ -4054,6 +4118,7 @@ function pushCross(pos,uv,ix,ref, cx,by,cz,half,h, cell){
     uv.push(u0,0, u1,0, u1,1, u0,1); ix.push(v,v+1,v+2, v,v+2,v+3); ref.v+=4; }
 }
 function pushFlat(pos,uv,ix,ref, cx,by,cz,half,cell){   // a single horizontal quad (lilypads etc.)
+  if(ref.c){ for(var _q4=0;_q4<4;_q4++) ref.c.push(1,1,1); }
   var u0=cell/PLANT_N, u1=(cell+1)/PLANT_N;
   pos.push(cx-half,by,cz-half, cx+half,by,cz-half, cx+half,by,cz+half, cx-half,by,cz+half);
   uv.push(u0,0, u1,0, u1,1, u0,1); ix.push(ref.v,ref.v+1,ref.v+2, ref.v,ref.v+2,ref.v+3); ref.v+=4;
@@ -4064,10 +4129,12 @@ function cropStage(tl){
   return tl.t<9?0 : tl.t<18?1 : tl.t<=26?2 : 3;  // sprout / young / tall / ripe
 }
 var CROP_H=[0.14,0.30,0.46,0.62];
+var GRASS_TINT=[[0.45,0.78,0.32],[0.36,0.70,0.27],[0.48,0.74,0.40],[0.66,0.69,0.42],[0.40,0.66,0.44],[0.50,0.80,0.36],[0.47,0.76,0.38],[0.45,0.78,0.32],[0.75,0.71,0.31],[0.58,0.75,0.58],[0.27,0.72,0.27],[0.52,0.74,0.30],[0.37,0.52,0.27]];
+function grassTintAt(wx,wz){ try{ if(World.dim==='sky') return [0.5,0.88,0.72]; var b=World.biomeAt(wx,wz); return GRASS_TINT[b]||GRASS_TINT[0]; }catch(e){ return GRASS_TINT[0]; } }
 function buildPlantMesh(ch){
   if(ch.pmesh){ scene.remove(ch.pmesh); ch.pmesh.geometry.dispose(); ch.pmesh=null; }
   ensurePlantMats();
-  var p=[],u=[],ix=[],ref={v:0};
+  var p=[],u=[],ix=[],ref={v:0}; ref.c=[];
   for(var lx=0;lx<CHUNK;lx++) for(var lz=0;lz<CHUNK;lz++){
     var wx=ch.cx*CHUNK+lx, wz=ch.cz*CHUNK+lz, sy=-1;
     for(var y=WORLD_H-2;y>1;y--){ if(isSolid(ch.blocks[idx(lx,y,lz)])){ sy=y; break; } }
@@ -4075,7 +4142,7 @@ function buildPlantMesh(ch){
     if(ch.blocks[idx(lx,sy+1,lz)]!==B.AIR) continue;
     if(World.grassTaken && World.grassTaken[wx+','+(sy+1)+','+wz]) continue;
     var gr=hash3(wx,5,wz,World.seed^9);
-    if(gr<0.13) pushCross(p,u,ix,ref, lx+0.5, sy+1, lz+0.5, 0.42, 0.38+hash3(wx,6,wz,World.seed)*0.22, 0);       // grass tuft
+    if(gr<0.13){ var _gt=grassTintAt(wx,wz); pushCross(p,u,ix,ref, lx+0.5, sy+1, lz+0.5, 0.42, 0.38+hash3(wx,6,wz,World.seed)*0.22, 0, _gt[0],_gt[1],_gt[2]); }       // grass tuft tinted to its biome
     else if(gr<0.17) pushCross(p,u,ix,ref, lx+0.5, sy+1, lz+0.5, 0.4, 0.5+hash3(wx,6,wz,World.seed)*0.2, 5);  // fern
     else if(gr<0.205){ var fc=6+(hash3(wx,7,wz,World.seed^21)*5|0); pushCross(p,u,ix,ref, lx+0.5, sy+1, lz+0.5, 0.34, 0.5, fc); } // flower (cells 6-10)
   }
@@ -4091,7 +4158,7 @@ function buildPlantMesh(ch){
       pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, CROP_H[st], cell); }
   }
   // cobwebs (cross-shaped, in caves/structures)
-  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.8, 0); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 1.0, 5); } else if(wbid===B.APPLE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 20); } else if(wbid===B.ORANGE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 21); } else if(wbid===B.LEMON_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 22); } else if(wbid===B.FIG_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 23); } else if(wbid===B.BLUEBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 17); } else if(wbid===B.STRAWBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 18); } else if(wbid===B.GRAPE_VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 19); } else if(wbid===B.VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 1.0, 24); } else if(wbid===B.TULIP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 25); } else if(wbid===B.BLUEBELL){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DAISY){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 27); } else if(wbid===B.GLOWBLOOM){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } } }
+  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.8, 0); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 1.0, 5); } else if(wbid===B.APPLE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 20); } else if(wbid===B.ORANGE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 21); } else if(wbid===B.LEMON_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 22); } else if(wbid===B.FIG_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 23); } else if(wbid===B.BLUEBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 17); } else if(wbid===B.STRAWBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 18); } else if(wbid===B.GRAPE_VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 19); } else if(wbid===B.VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 1.0, 24); } else if(wbid===B.TULIP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 25); } else if(wbid===B.BLUEBELL){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DAISY){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 27); } else if(wbid===B.GLOWBLOOM){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DEAD_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.75, 28); } } }
   // lilypads floating on swamp water
   for(var llx=0;llx<CHUNK;llx++) for(var llz=0;llz<CHUNK;llz++){
     var lwx=ch.cx*CHUNK+llx, lwz=ch.cz*CHUNK+llz;
@@ -4100,7 +4167,7 @@ function buildPlantMesh(ch){
       if(isSolid(bid)) break;
     }
   }
-  if(p.length){ var g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(p,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(u,2)); g.setIndex(ix);
+  if(p.length){ var g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(p,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(u,2)); g.setAttribute('color',new THREE.Float32BufferAttribute(ref.c,3)); g.setIndex(ix);
     var m=new THREE.Mesh(g,plantAtlasMat); m.position.set(ch.cx*CHUNK,0,ch.cz*CHUNK); scene.add(m); ch.pmesh=m; }
 }
 function rebuildChunkMesh(ch){
@@ -4290,10 +4357,13 @@ function onLadder(){ var bx=Math.floor(Player.pos.x), bz=Math.floor(Player.pos.z
 }
 function stepUpTo(nx,nz){
   if(!Player.onGround && Player.vel.y>0.5) return null;   // only step while grounded/settling
-  // don't auto-step onto a lily pad (it's a thin surface on water) — walk into/over it instead
   var fbx=Math.floor(nx), fbz=Math.floor(nz), fby=Math.floor(Player.pos.y);
   for(var _c=0;_c<2;_c++){ var _bb=World.getBlock(fbx,fby+_c,fbz); if(_bb===B.LILY_PAD) return null; }
-  for(var up=0.12; up<=0.6; up+=0.12){
+  // only step onto a genuine 1-high step: solid at foot level, clear air for 2 blocks above it
+  var _ob=World.getBlock(fbx,fby,fbz);
+  if(!isSolid(_ob)) return null;
+  if(isSolid(World.getBlock(fbx,fby+1,fbz)) || isSolid(World.getBlock(fbx,fby+2,fbz))) return null;   // it's a wall/tree, not a step
+  for(var up=0.12; up<=0.62; up+=0.12){
     if(!collides(nx, Player.pos.y+up, nz)) return Player.pos.y+up;
   }
   return null;
@@ -4638,6 +4708,7 @@ function tryHarvest(matureOnly){
   sfxBreak(); triggerHandSwing(); return true;
 }
 function breakBlock(hit){
+  if(hit && World.getBlock(hit.x,hit.y,hit.z)===B.DEAD_BUSH){ if(Math.random()<0.5) spawnDrop(hit.x,hit.y,hit.z,'STICK',1); World.setBlock(hit.x,hit.y,hit.z,B.AIR,true); try{sfxBreak(B.DEAD_BUSH);}catch(_){ } return; }
   if(hit && World.getBlock(hit.x,hit.y,hit.z)===B.MELON_BLOCK){ spawnDrop(hit.x,hit.y,hit.z,'MELON_SLICE',3+(Math.random()*3|0)); World.setBlock(hit.x,hit.y,hit.z,B.AIR,true); try{sfxBreak(B.MELON_BLOCK);}catch(_){ } return; }
   { var _shid=hit&&World.getBlock(hit.x,hit.y,hit.z); var _shs=inv.hotbar[hotbarSel]; var _hasShears=_shs&&ITEMS[_shs.key]&&ITEMS[_shs.key].shears;
     if(_hasShears && isLeafId(_shid)){ spawnDrop(hit.x,hit.y,hit.z, BLOCKS[_shid].key, 1); World.setBlock(hit.x,hit.y,hit.z,B.AIR,true); try{ damageTool(); sfxBreak(_shid); }catch(_){ } return; } }
@@ -5623,6 +5694,8 @@ shaped([['POLISHED_STONE','POLISHED_STONE'],['POLISHED_STONE','POLISHED_STONE']]
 shapeless([{key:'POLISHED_STONE',qty:1},{key:'AMETHYST',qty:1}], 'CHISELED_STONE', 1);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],['IRON_INGOT','STICK','IRON_INGOT'],['IRON_INGOT',null,'IRON_INGOT']], 'RAIL', 16);
 shaped([['IRON_INGOT',null,'IRON_INGOT'],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'MINECART', 1);
+shaped([['BRASS_INGOT','GLASS','BRASS_INGOT'],['PLANKS','FURNACE','PLANKS'],['IRON_INGOT','IRON_INGOT','IRON_INGOT']], 'MOTORCAR', 1);
+shaped([['IRON_PLATE','GLASS','IRON_PLATE'],['IRON_PLATE','BRASS_INGOT','IRON_PLATE'],['IRON_INGOT',null,'IRON_INGOT']], 'TRUCK', 1);
 shapeless([{key:'APPLE',qty:1},{key:'SAPLING',qty:1}], 'APPLE_SAPLING', 1);
 shapeless([{key:'ORANGE',qty:1},{key:'SAPLING',qty:1}], 'ORANGE_SAPLING', 1);
 shapeless([{key:'LEMON',qty:1},{key:'SAPLING',qty:1}], 'LEMON_SAPLING', 1);
@@ -5954,7 +6027,7 @@ function machineLayout(p, widget){
 }
 function spacer(h){ var d=document.createElement('div'); d.style.height=h+'px'; return d; }
 
-function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER'||k==='ANY_PLANKS'||k==='MOTORCAR'||k==='TRUCK') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
+function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER'||k==='ANY_PLANKS') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
 var palNameEl=null, invNameEl=null, lastSlotName='';
 function cosCss(cat,base){ var c=cosItem(cat, playerCos[cat]); if(c&&c.col!=null){ return '#'+('000000'+c.col.toString(16)).slice(-6); } return base; }
 function makeAvatarPreview(){
@@ -7520,35 +7593,55 @@ function makeRocket(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,
 }
 function makeWheelMesh(){ var m=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.26,0.15,10), new THREE.MeshBasicMaterial({color:0x22262a})); m.rotation.z=Math.PI/2; return m; }
 function makeCar(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
-  var BODY=0xc0392b, DARK=0x7a241c, GLASS=0x223038, CHR=0xd8dde2;
-  p(1.06,0.3,2.7,BODY,0,0.42,0);                        // low main body (long, sleek)
-  p(1.02,0.22,1.5,DARK,0,0.62,0);                       // lower waist accent
-  p(0.92,0.34,1.15,BODY,0,0.74,-0.15);                  // raised cabin roof
-  p(0.86,0.3,0.04,GLASS,0,0.74,0.44);                   // windshield
-  p(0.86,0.3,0.04,GLASS,0,0.74,-0.72);                  // rear window
-  p(0.04,0.28,1.1,GLASS,0.44,0.74,-0.14); p(0.04,0.28,1.1,GLASS,-0.44,0.74,-0.14);  // side windows
-  p(1.0,0.16,0.14,0x1a1a1e,0,0.4,1.34);                 // front bumper / grille
-  p(1.0,0.12,0.12,0x2a2a2e,0,0.4,-1.34);                // rear bumper
-  p(0.22,0.09,0.05,0xfff2c0,-0.34,0.46,1.36); p(0.22,0.09,0.05,0xfff2c0,0.34,0.46,1.36);  // headlights
-  p(0.2,0.08,0.04,0xe0402e,-0.34,0.46,-1.36); p(0.2,0.08,0.04,0xe0402e,0.34,0.46,-1.36);  // taillights
-  p(0.16,0.5,2.4,mixHex(BODY,0xffffff,0.15),0,0.5,0);   // racing stripe down the middle
-  p(0.9,0.06,0.5,0x14100e,0,0.9,-0.2);                  // (seat area, when open)
-  var ws=[[-0.56,0.26,0.86],[0.56,0.26,0.86],[-0.56,0.26,-0.86],[0.56,0.26,-0.86]], wl=[];
-  for(var i=0;i<4;i++){ var w=makeWheelMesh(); w.position.set(ws[i][0],ws[i][1],ws[i][2]); g.add(w);
-    var hub=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.16,8), new THREE.MeshBasicMaterial({color:CHR})); hub.rotation.z=Math.PI/2; hub.position.copy(w.position); g.add(hub);
+  var WOOD=0x8a5f34, WOODD=0x6b4726, MET=0x99a1af, DK=0x3a3f47, FIRE=0xff7a2a, BRASS=0xb08d3a;
+  p(1.0,0.22,2.5,MET,0,0.44,0);                         // steel chassis
+  p(0.95,0.62,0.62,MET,0,0.88,0.85);                    // boiler front
+  p(0.7,0.44,0.05,DK,0,0.86,1.17);                      // boiler face plate
+  p(0.26,0.26,0.05,FIRE,0,0.82,1.2);                    // glowing firebox
+  p(1.06,0.16,0.14,MET,0,0.5,1.32);                     // riveted front bumper
+  p(0.06,0.06,0.06,DK,-0.4,0.5,1.4); p(0.06,0.06,0.06,DK,-0.14,0.5,1.4); p(0.06,0.06,0.06,DK,0.14,0.5,1.4); p(0.06,0.06,0.06,DK,0.4,0.5,1.4);   // bumper studs
+  p(0.12,0.12,0.12,BRASS,-0.56,1.05,0.85); p(0.12,0.12,0.12,BRASS,0.56,1.05,0.85);       // brass lamp housings
+  p(0.08,0.08,0.05,FIRE,-0.56,1.05,0.94); p(0.08,0.08,0.05,FIRE,0.56,1.05,0.94);         // lamp glow
+  p(0.95,0.72,1.05,WOOD,0,0.94,-0.28);                  // wooden slat cab
+  p(0.97,0.06,1.07,WOODD,0,0.76,-0.28); p(0.97,0.06,1.07,WOODD,0,1.0,-0.28);             // slat lines
+  p(0.5,0.4,0.04,0xd9cfae,0,1.02,-0.83);                // parchment rear window
+  p(0.07,0.62,0.07,MET,-0.45,1.62,0.18); p(0.07,0.62,0.07,MET,0.45,1.62,0.18); p(0.07,0.62,0.07,MET,-0.45,1.62,-0.72); p(0.07,0.62,0.07,MET,0.45,1.62,-0.72);   // canopy posts
+  p(1.15,0.09,1.35,WOOD,0,1.95,-0.27);                  // plank canopy roof
+  p(0.4,0.28,0.34,DK,0,2.12,-0.05);                     // rooftop furnace
+  p(0.2,0.16,0.04,FIRE,0,2.08,0.13);                    // furnace mouth
+  p(0.16,0.7,0.16,GRYc(),0,2.5,-0.45); p(0.26,0.09,0.26,GRYc(),0,2.88,-0.45);            // chimney + cap
+  function GRYc(){ return 0x7d828c; }
+  p(0.14,0.14,0.14,BRASS,0.5,1.0,-0.85); p(0.12,0.12,0.12,BRASS,0.5,1.16,-0.85);         // brass coil at the rear
+  var ws=[[-0.56,0.34,0.85],[0.56,0.34,0.85],[-0.56,0.34,-0.85],[0.56,0.34,-0.85]], wl=[];
+  for(var i=0;i<4;i++){ var w=makeWheelMesh(); w.scale.set(1.25,1.25,1.25); w.position.set(ws[i][0],ws[i][1],ws[i][2]); g.add(w);
+    var sp1=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.56,0.07), new THREE.MeshBasicMaterial({color:0x9aa2b0})); sp1.position.copy(w.position); g.add(sp1);
+    var sp2=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.07,0.56), new THREE.MeshBasicMaterial({color:0x9aa2b0})); sp2.position.copy(w.position); g.add(sp2);
+    var hub=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,0.14,8), new THREE.MeshBasicMaterial({color:0xd08a3a})); hub.rotation.z=Math.PI/2; hub.position.copy(w.position); g.add(hub);
     wl.push(w); }
   g.userData.wheels=wl; return g;
 }
 function makeTruck(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
-  p(1.2,0.34,2.6,0x5a6472,0,0.58,-0.2);                 // chassis
-  p(1.1,0.6,0.9,0x6e7a8a,0,1.02,0.75);                  // cab
-  p(0.95,0.3,0.06,0xcfe4f0,0,1.12,1.18);                // windscreen
-  p(1.0,0.14,0.24,0xb08d3a,0,0.6,1.28);                 // grille
-  p(1.15,0.1,1.5,0x4a525e,0,0.78,-0.75);                // bed floor
-  p(1.15,0.26,0.08,0x4a525e,0,0.95,-1.48); p(0.08,0.26,1.5,0x4a525e,-0.56,0.95,-0.75); p(0.08,0.26,1.5,0x4a525e,0.56,0.95,-0.75);   // bed sides
-  p(0.09,0.5,0.09,0x4a4f55,0.5,1.2,0.35);               // exhaust stack
-  var ws=[[-0.62,0.3,0.85],[0.62,0.3,0.85],[-0.62,0.3,-0.85],[0.62,0.3,-0.85]], wl=[];
-  for(var i=0;i<4;i++){ var w=makeWheelMesh(); w.position.set(ws[i][0],ws[i][1],ws[i][2]); g.add(w); wl.push(w); }
+  var WHT=0xe8eaee, PAN=0xd7dade, DK=0x23262b, GRY=0x878c95, ORNG=0xe08a2a, BRASS=0xb08d3a, COPR=0xb46a3a;
+  p(1.2,0.26,2.75,0x3a3e44,0,0.5,0);                    // chassis
+  p(1.16,0.5,0.55,WHT,0,0.86,1.12);                     // hood (low, flat)
+  p(1.14,0.82,0.95,WHT,0,1.06,0.42);                    // tall boxy cab
+  p(0.98,0.4,0.05,DK,0,1.22,0.92);                      // windshield
+  p(0.05,0.34,0.6,DK,0.58,1.2,0.42); p(0.05,0.34,0.6,DK,-0.58,1.2,0.42);   // side windows
+  p(0.3,0.34,0.05,DK,0,1.2,-0.06);                      // rear cab window
+  p(1.1,0.12,1.35,PAN,0,0.72,-0.85);                    // bed floor
+  p(1.14,0.34,0.07,WHT,0,0.92,-1.5); p(0.07,0.34,1.4,WHT,-0.56,0.92,-0.82); p(0.07,0.34,1.4,WHT,0.56,0.92,-0.82);   // bed walls
+  p(1.16,0.05,0.05,BRASS,0,1.1,-1.5);                   // brass rivet rail on the tailgate
+  p(1.05,0.3,0.06,DK,0,0.72,1.42);                      // dark grille panel
+  p(0.9,0.035,0.03,BRASS,0,0.66,1.46); p(0.9,0.035,0.03,BRASS,0,0.73,1.46); p(0.9,0.035,0.03,BRASS,0,0.8,1.46);   // brass grille bars
+  p(1.18,0.14,0.16,GRY,0,0.5,1.45); p(1.18,0.12,0.14,GRY,0,0.5,-1.44);     // bumpers
+  p(0.2,0.12,0.05,0xf6f2dc,-0.42,0.86,1.42); p(0.2,0.12,0.05,0xf6f2dc,0.42,0.86,1.42);   // headlights
+  p(0.1,0.08,0.05,ORNG,-0.585,0.86,0.9); p(0.1,0.08,0.05,ORNG,0.585,0.86,0.9);           // orange side markers
+  p(0.05,0.12,0.14,DK,-0.66,1.3,0.78); p(0.05,0.12,0.14,DK,0.66,1.3,0.78);               // mirrors
+  p(0.12,0.85,0.12,GRY,0.48,1.5,-0.12); p(0.18,0.07,0.18,COPR,0.48,1.9,-0.12);           // steampunk smokestack behind the cab
+  var ws=[[-0.62,0.3,0.9],[0.62,0.3,0.9],[-0.62,0.3,-0.9],[0.62,0.3,-0.9]], wl=[];
+  for(var i=0;i<4;i++){ var w=makeWheelMesh(); w.position.set(ws[i][0],ws[i][1],ws[i][2]); g.add(w);
+    var hub=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.14,8), new THREE.MeshBasicMaterial({color:GRY})); hub.rotation.z=Math.PI/2; hub.position.copy(w.position); g.add(hub);
+    wl.push(w); }
   g.userData.wheels=wl; return g;
 }
 function makePlane(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
@@ -8161,7 +8254,7 @@ function animalTick(e,dt){
   if(e.kind==='rabbit' && e.onGround && sp>0){ e.hopCd=(e.hopCd>0)?e.hopCd-dt:0; if(e.hopCd<=0){ e.vel.y=4.6; e.hopCd=0.42; } }   // hop
   var inW=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.2),Math.floor(e.pos.z))).liquid;
   var headW2=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.7),Math.floor(e.pos.z))).liquid;
-  if(inW && e.kind!=='duck' && e.kind!=='crab'){ e.vel.y+=34*dt; if(e.vel.y>2.2)e.vel.y=2.2; e.vel.y*=0.86; if(!headW2&&e.vel.y>0)e.vel.y*=0.4; e.swimming=true; }
+  if(inW && e.kind!=='duck' && e.kind!=='crab'){ if(headW2){ e.vel.y+=34*dt; if(e.vel.y>2.2)e.vel.y=2.2; e.vel.y*=0.86; } else { e.vel.y*=0.4; if(Math.abs(e.vel.y)<0.9) e.vel.y=0; } e.swimming=true; }
   else { e.vel.y-=18*dt; if(e.vel.y<-30)e.vel.y=-30; e.swimming=false; }
   e.onGround=false;
   if(e.kind==='duck'){
@@ -8288,6 +8381,7 @@ function dropCubeColors(blockId){
 }
 function spawnDrop(x,y,z,key,qty){
   if(!ITEMS[key]) return;
+  for(var _n2=0;_n2<4 && isSolid(World.getBlock(Math.floor(x),Math.floor(y),Math.floor(z)));_n2++) y++;   // never bury a drop inside a block
   // merge into a nearby drop of the same item
   for(var mi=0;mi<drops.length;mi++){ var dd=drops[mi]; if(dd.item.key===key){ var ddx=dd.pos.x-(x+0.5), ddz=dd.pos.z-(z+0.5), ddy=dd.pos.y-(y+0.4);
     if(ddx*ddx+ddy*ddy+ddz*ddz < 1.4){ dd.item.qty+=qty; dd.life=Math.max(dd.life,300); return; } } }
@@ -8431,6 +8525,12 @@ function openFishDex(){
   var cb=document.createElement('button'); cb.className='mbtn'; cb.textContent='Close'; cb.onclick=function(){ closeScreen(); }; p.appendChild(cb);
   screenEl.appendChild(p); bindScreenBg();
 }
+var _zzTex=null;
+function zzTex(){ if(_zzTex) return _zzTex;
+  var cv=document.createElement('canvas'); cv.width=cv.height=32; var x=cv.getContext('2d');
+  x.fillStyle='#fff'; x.font='bold 20px monospace'; x.fillText('Z',4,22); x.font='bold 13px monospace'; x.fillText('z',19,13);
+  _zzTex=new THREE.CanvasTexture(cv); return _zzTex;
+}
 var _bflyTex=null, _fflyTex=null;
 function butterflyTex(){ if(_bflyTex) return _bflyTex;
   var cv=document.createElement('canvas'); cv.width=cv.height=32; var x=cv.getContext('2d');
@@ -8464,7 +8564,7 @@ function tickAmbients(dt){
   }
   for(var i=ambients.length-1;i>=0;i--){ var a=ambients[i]; a.t-=dt; a.ph+=dt*(a.fly?2:7);
     a.m.position.x+=a.vx*dt; a.m.position.z+=a.vz*dt;
-    a.m.position.y+=Math.sin(a.ph)*(a.fly?0.004:0.012);
+    a.m.position.y+=a.zz?dt*0.5:Math.sin(a.ph)*(a.fly?0.004:0.012);
     if(a.fly){ a.m.material.opacity=0.4+0.6*Math.abs(Math.sin(a.ph*0.7)); }   // fireflies pulse-glow
     var wrongTime=(a.fly!==isNight);
     if(a.t<=0 || wrongTime){ scene.remove(a.m); ambients.splice(i,1); }
@@ -8712,10 +8812,8 @@ function tickEntities(dt){
     var feetLiquid=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.2),Math.floor(e.pos.z))).liquid;
     var headLiquid=blk(World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.7),Math.floor(e.pos.z))).liquid;
     if(feetLiquid && e.kind!=='crab'){
-      e.vel.y += 34*dt;
-      if(e.vel.y>2.4) e.vel.y=2.4;
-      e.vel.y *= 0.86;
-      if(!headLiquid && e.vel.y>0) e.vel.y*=0.4;
+      if(headLiquid){ e.vel.y += 34*dt; if(e.vel.y>2.4) e.vel.y=2.4; e.vel.y *= 0.86; }
+      else { e.vel.y*=0.4; if(Math.abs(e.vel.y)<0.9) e.vel.y=0; }
       e.swimming=true;
     } else {
       e.vel.y-=18*dt; if(e.vel.y<-30)e.vel.y=-30;
@@ -8733,6 +8831,15 @@ function tickEntities(dt){
     if(e.kind==='creeper'){ e.steamCd=(e.steamCd||0)-dt; if(e.steamCd<=0){ e.steamCd=0.2+Math.random()*0.14; spawnSteam(e.pos.x, e.pos.y+1.15, e.pos.z, e.mesh.userData?e.mesh.userData.steamCol:0xe8eef7); } }   // smokestack puffs steam out the top
     var _ddx=e.pos.x-Player.pos.x, _ddz=e.pos.z-Player.pos.z;
     if(_ddx*_ddx+_ddz*_ddz>1296){ } else {   // skip cosmetic animation beyond 36 blocks
+    var _isN2=(typeof timeOfDay!=='undefined') && timeOfDay>0.54 && timeOfDay<0.96;
+    if(MOBDEF[e.kind] && MOBDEF[e.kind].passive && e.kind!=='fish' && e.kind!=='seahorse' && e.kind!=='villager' && e.kind!=='cart'){
+      if(_isN2 && !e.sleep && !e.provoked && Math.hypot(e.vel.x,e.vel.z)<0.05 && Math.random()<0.002){ e.sleep=true; }
+      if(!_isN2) e.sleep=false;
+      if(e.sleep){ e.vel.x=0; e.vel.z=0; e.mesh.rotation.z=0.5; e.mesh.position.y-=0.18;
+        e._zz=(e._zz||0)-dt; if(e._zz<=0){ e._zz=1.6; try{ var _zm=new THREE.Sprite(new THREE.SpriteMaterial({map:zzTex(), transparent:true, depthWrite:false})); _zm.scale.set(0.28,0.28,1); _zm.position.set(e.pos.x+0.2, e.pos.y+1.1, e.pos.z); scene.add(_zm); ambients.push({m:_zm, t:1.4, ph:0, fly:false, vx:0.05, vz:0, zz:true}); }catch(_){ } }
+        continue; }
+      else e.mesh.rotation.z=0;
+    }
     var _msp=Math.hypot(e.vel.x,e.vel.z);
     var moving = _msp>0.1;
     var _gait = 0.010 + Math.min(0.02, _msp*0.02);                       // faster steps when moving faster
@@ -8921,7 +9028,7 @@ function maybeSpawnSeahorse(){
   if(n>=4 || Math.random()>0.02) return;
   var ang=Math.random()*6.28, dist=10+Math.random()*14;
   var x=Math.floor(Player.pos.x+Math.cos(ang)*dist), z=Math.floor(Player.pos.z+Math.sin(ang)*dist);
-  for(var y=SEA;y>SEA-16;y--){ if(World.getBlockLoaded(x,y,z)===B.WATER && World.getBlockLoaded(x,y-1,z)===B.WATER){ spawnEnemy('seahorse', x+0.5, y-0.5, z+0.5); return; } }
+  for(var y=SEA;y>SEA-16;y--){ if(World.getBlockLoaded(x,y,z)===B.WATER && World.getBlockLoaded(x,y-1,z)===B.WATER && World.getBlockLoaded(x,y-2,z)===B.WATER && World.getBlockLoaded(x,y-3,z)===B.WATER){ spawnEnemy('seahorse', x+0.5, y-1.5, z+0.5); return; } }
 }
 function maybeSpawnFish(){
   var fishCount=0; for(var i=0;i<entities.length;i++) if(entities[i].kind==='fish') fishCount++;
@@ -10254,11 +10361,15 @@ function physics(dt){
         var syf=surfaceY(fx,fz); if(syf>0){ Player.pos.y=syf+0.1; Player.vel.set(0,0,0); }
       } else {
         // feet sunk into a solid block (collision let us through) - pop up to its top (works in flight too). Check the whole footprint, not just the centre.
-        var fy=Math.floor(Player.pos.y+0.08), hw2=Player.width/2-0.02, sunk=false, topY=fy+1.0;
-        var cxs=[Player.pos.x-hw2, Player.pos.x+hw2], czs=[Player.pos.z-hw2, Player.pos.z+hw2];
-        for(var ci=0;ci<2 && !sunk;ci++) for(var cj=0;cj<2 && !sunk;cj++){
-          var bf2=World.getBlock(Math.floor(cxs[ci]),fy,Math.floor(czs[cj]));
-          if(isSolid(bf2) && !blk(bf2).shape && !blk(bf2).liquid){ sunk=true; }
+        // only rescue when the CENTRE of the body is truly inside a block (fell through a floor),
+        // never on corner grazes against walls/trees - that was teleporting players onto roofs
+        var fy=Math.floor(Player.pos.y+0.08), sunk=false, topY=fy+1.0;
+        var bfC=World.getBlock(Math.floor(Player.pos.x),fy,Math.floor(Player.pos.z));
+        if(isSolid(bfC) && !blk(bfC).shape && !blk(bfC).liquid){
+          // and only pop up into an actual gap right above (a floor top), never up a wall or tree column
+          var ab1=World.getBlock(Math.floor(Player.pos.x),fy+1,Math.floor(Player.pos.z));
+          var ab2=World.getBlock(Math.floor(Player.pos.x),fy+2,Math.floor(Player.pos.z));
+          if(!isSolid(ab1) && !isSolid(ab2)) sunk=true;
         }
         if(sunk){ Player.pos.y=topY; if(Player.vel.y<0) Player.vel.y=0; if(!Player.flying) Player.onGround=true; }
       }
@@ -10307,9 +10418,10 @@ function physics(dt){
   if(rpgBiomeCd<=0){ rpgBiomeCd=1.0; var _bi=World.biomeAt(Math.floor(Player.pos.x),Math.floor(Player.pos.z));
     if(_bi!==rpgLastBiome){ if(rpgLastBiome!=null){ if(!rpgSeenBiome[_bi]){ rpgSeenBiome[_bi]=1; rpgAddXP('exploration',30); } else rpgAddXP('exploration',3); } rpgLastBiome=_bi; } }
   Player.sneakGuard = Player.sneaking && grounded && !Player.flying;
-  var accel = ridingBoat ? 2.6 : (Player.onGround?40:8);   // boats are heavy: slow to build speed, glide to a stop
-  Player.vel.x += (wishX*speed - Player.vel.x)*Math.min(1,accel*dt);
-  Player.vel.z += (wishZ*speed - Player.vel.z)*Math.min(1,accel*dt);
+  var _inCart=(riding && Player.riding.kind==='cart');
+  var accel = _inCart ? 0 : (ridingBoat ? 2.6 : (Player.onGround?40:8));   // carts steer themselves along the rails
+  if(!_inCart){ Player.vel.x += (wishX*speed - Player.vel.x)*Math.min(1,accel*dt);
+  Player.vel.z += (wishZ*speed - Player.vel.z)*Math.min(1,accel*dt); }
   if(ridingBoat && (Math.abs(wishX)+Math.abs(wishZ))<0.05){ Player.vel.x*=(1-Math.min(1,dt*0.9)); Player.vel.z*=(1-Math.min(1,dt*0.9)); }   // water drag: coast a long way
   // gravity / flight
   var climbing = !Player.flying && !Player.inWater && onLadder();
@@ -10830,8 +10942,13 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 210';
+var VERSION='Update 215';
 var CHANGELOG=[
+  { v:'Update 215', t:'The Garage Update', items:['<b>Ore blocks sit in true stone now</b> \u2014 the block base is stone-coloured, only the nuggets carry the mineral colour','<b>The Truck is back, remodeled</b> \u2014 white boxy pickup with a flat hood, tall cab, dark grille with brass bars, orange side markers, mirrors, open bed\u2026 and a steampunk smokestack behind the cab','<b>The Motorcar returns as a steampunk jalopy</b> \u2014 wooden slat cab, steel boiler nose with a glowing firebox, brass lamps, plank canopy with a rooftop furnace and chimney, big spoked wheels','Both are craftable again (brass, iron, glass \u2014 the jalopy wants a furnace at its heart)'] },
+  { v:'Update 214', t:'Roof-Pop Squashed, Clear Glass, Classic Ores', items:['<b>Found the real roof/treetop teleport!</b> A fall-through-floor rescuer was misfiring when your body grazed a wall corner \u2014 it hoisted you up the column one block per frame, straight onto roofs and canopies. It now only rescues when you\u2019re genuinely buried, and only into an open gap','<b>Glass is actually clear now</b> \u2014 near-invisible pane with a soft frosted frame around each block edge, classic style','<b>Ores redone classic-style</b> \u2014 crisp pixel nuggets with dark outlines and a bright centre on real stone, no more smeared blobs'] },
+  { v:'Update 213', t:'Living Weather & Blended Biomes', items:['<b>Rainstorms are real storm cells now</b> \u2014 they form nearby, drift across the land, grow, and die down. Rain falls only inside the storm, the sky grays overhead and stays white outside \u2014 you can literally walk out of the rain','<b>Grass tufts match their biome</b> \u2014 lush green in plains, deep jungle green, olive in savanna, murky in swamps, minty in the Skylands','<b>Biome borders blend</b> \u2014 heights ease across biome lines instead of harsh straight-wall cutoffs (new land only; old chunks keep their shape)','<b>Moonstone Ore finally has its texture</b> \u2014 pale mineral veins in moon rock'] },
+  { v:'Update 212', t:'Fix Shader Crash', items:['<b>Fixed the graphics crash</b> from the new ore textures \u2014 a variable was named \u201cpatch\u201d, which is a reserved word in the graphics language on some devices. Renamed; ores render fine now'] },
+  { v:'Update 211', t:'Ore Overhaul, Sleeping Animals & Big Fixes', items:['<b>Ore textures completely redone</b> \u2014 organic mineral patches with dark rims and bright cores, sitting in real stone (no more grid look). Amethyst, Silver, Emberglow and Sky Crystal ores got their missing textures too','<b>No more popping onto treetops or roofs</b> \u2014 auto-step now only climbs genuine one-block steps, never walls, trunks or houses','<b>Swimming animals ride the surface calmly</b> \u2014 the up-down spazzing is gone, and <b>seahorses only spawn in deep ocean water</b>','<b>Minecarts actually roll now</b> (movement code was overriding them), rails have a proper tie-and-rail texture, and the cart has an inventory icon','<b>Animals sleep at night</b> \u2014 they lie down with Zzz\u2019s drifting up, and wake at dawn','<b>Dead bushes</b> dot the deserts and snap into sticks','<b>Spruce and cherry logs got unique bark</b> like birch did','Drops can no longer get stuck inside hillsides'] },
   { v:'Update 210', t:'THE SKYLANDS \u2014 New Dimension!', items:['<b>A whole new dimension of floating islands</b> \u2014 craft a <b>Skygate</b> (moonstone + emberglow around glass), place it, and tap it to rise into the Skylands','<b>Islands drift over an endless void</b> \u2014 pale Cloudstone with teal Sky Grass, ragged undersides, big islands and tiny stepping-stones. Don\u2019t fall\u2026','<b>Sky trees</b> with pale trunks and cyan canopies, and glowing <b>Glowblooms</b> that light the tops at night','<b>Sky Crystal Ore</b> \u2014 a new gem found only up there','<b>Floaty gravity</b> \u2014 lighter than home, heavier than the Moon. Long jumps between islands','A return Skygate spawns beside you; no monsters spoil the peace up there \u2014 Part 2 will bring its own creatures'] },
   { v:'Update 209', t:'Fruit Saplings, Dyeable Airships & Spread-Out Structures', items:['<b>Fruit saplings!</b> Combine a fruit with a sapling (apple, orange, lemon or fig) and plant it \u2014 it grows a fruit-bearing tree. Farm your orchards','<b>Dye the airship balloon</b> \u2014 tap your airship while holding any dye','<b>Structures spread out properly</b> \u2014 dungeons, sunken ships and sky wrecks now keep their distance from each other instead of clustering','(Flower/bush hover fix from the last update applies to freshly generated or replaced plants)'] },
   { v:'Update 208', t:'Beehive Texture Fix', items:['<b>Beehives look like beehives again</b> \u2014 an old texture code collision was painting crafting-table tools onto them after the table redo. Hives now have their own honey-banded texture with an entrance hole'] },
