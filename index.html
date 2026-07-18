@@ -418,7 +418,7 @@ window.addEventListener('error', function(ev){
 /* ----------------------------- CONFIG ----------------------------------- */
 var CHUNK = 16, WORLD_H = 176, SEA = 60;
 var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ('ontouchstart' in window && window.innerWidth < 1000);
-var RENDER_DIST = IS_MOBILE ? 4 : 7;
+var RENDER_DIST = IS_MOBILE ? 8 : 12;   // matches the default render distance in the games people know
 var lookSens = 1.0;
 var difficulty = 'normal'; // peaceful | easy | normal
 function mobDmgMult(){ if(gameMode==='creative') return 0; return difficulty==='peaceful'?0 : difficulty==='easy'?0.5 : 1; }
@@ -509,6 +509,15 @@ defBlock({key:'BOILER', name:'Boiler', col:[110,86,64], top:[126,100,74], side:[
 defBlock({key:'BLUE_OBSIDIAN', name:'Blue Obsidian', col:[26,32,72], top:[34,42,92], side:[22,28,64], spec:[90,190,255], solid:true, tool:'pickaxe', tier:4, hard:11.0, light:3, drop:'BLUE_OBSIDIAN' });
 defBlock({key:'VOID_BRICK', name:'Void Brick', col:[32,38,78], top:[42,50,96], side:[28,34,70], spec:[110,200,255], solid:true, tool:'pickaxe', tier:3, hard:6.0 });
 defBlock({key:'VOID_LAMP', name:'Void Lamp', col:[60,120,200], spec:[150,225,255], solid:true, tool:'pickaxe', hard:1.4, light:15 });
+defBlock({key:'RED_SAND', name:'Red Sand', col:[186,98,52], top:[200,110,60], side:[176,90,46], solid:true, tool:'shovel', hard:0.5 });
+defBlock({key:'TERRACOTTA', name:'Terracotta', col:[158,96,64], top:[170,106,72], side:[150,90,58], solid:true, tool:'pickaxe', hard:1.6 });
+defBlock({key:'COCONUT', name:'Coconut', col:[122,84,48], top:[138,98,58], side:[112,76,42], solid:true, tool:'axe', hard:0.6, drop:'COCONUT_FRUIT' });
+defBlock({key:'BAMBOO', name:'Bamboo', col:[132,196,84], solid:false, transparent:true, thin:true, cross:true, hard:0.2, drop:'BAMBOO_CANE' });
+defBlock({key:'MOSS_BLOCK', name:'Moss Block', col:[86,124,52], top:[96,138,58], side:[80,116,48], solid:true, tool:'shovel', hard:0.5 });
+defBlock({key:'DRIPSTONE', name:'Dripstone', col:[142,110,94], top:[156,122,104], side:[134,102,86], solid:true, tool:'pickaxe', hard:1.6 });
+defBlock({key:'DRIP_SPIKE', name:'Dripstone Spike', col:[150,116,98], solid:false, transparent:true, thin:true, cross:true, hard:0.6, drop:'DRIPSTONE' });
+defBlock({key:'GLOWBERRY', name:'Glow Berries', col:[240,178,70], spec:[255,220,140], solid:false, transparent:true, thin:true, cross:true, light:9, hard:0.1, drop:'GLOW_BERRY' });
+defBlock({key:'ICE', name:'Ice', col:[168,206,238], top:[186,220,246], side:[160,200,234], spec:[228,244,255], solid:true, transparent:true, tool:'pickaxe', hard:0.6, drop:'ICE' });
 defBlock({key:'DEAD_BUSH', name:'Dead Bush', col:[154,122,68], solid:false, transparent:true, thin:true, cross:true, hard:0.05 });
 defBlock({key:'TOBACCO_PLANT', name:'Tobacco Plant', col:[120,150,70], solid:false, transparent:true, thin:true, cross:true, hard:0.1, drop:'TOBACCO_LEAF' });
 defBlock({key:'BANANA_BUNCH', name:'Banana Bunch', col:[230,200,66], top:[240,214,80], side:[214,182,54], solid:false, transparent:true, hard:0.2, tool:'axe', drop:'BANANA' });
@@ -823,6 +832,9 @@ mat('SPORE_CAP','Spore Cap',[126,214,170],{food:3,heal:2,stack:64});
 mat('BRASS_GEAR','Brass Gear',[204,164,80],{stack:64});
 mat('STEAM_CORE','Steam Core',[190,210,220],{stack:16});
 mat('BLUE_OBSIDIAN','Blue Obsidian',[60,110,220],{stack:64});
+mat('COCONUT_FRUIT','Coconut',[176,140,96],{food:4,heal:2,stack:64});
+mat('BAMBOO_CANE','Bamboo',[132,196,84],{stack:64});
+mat('GLOW_BERRY','Glow Berry',[240,178,70],{food:2,heal:1,stack:64});
 mat('AMBROSIUM_SHARD','Ambrosium Shard',[255,220,110],{stack:64});
 mat('TOBACCO_LEAF','Tobacco Leaf',[150,170,80],{stack:64,smeltTo:'DRIED_TOBACCO'});
 mat('DRIED_TOBACCO','Dried Tobacco',[150,120,60],{stack:64});
@@ -1478,6 +1490,8 @@ var World = {
     var sMaple  = this.bnoise.fbm(wx*f-1500,wz*f+260, 2) - 0.05;
     var sWet    = this.bnoise.fbm(wx*f+1850,wz*f-1320,2) - 0.05;
     var sRedwood= this.bnoise.fbm(wx*f+2300,wz*f-830, 2) - 0.14;
+    var sBad    = this.bnoise.fbm(wx*f-2600,wz*f+1900,2) - 0.10;
+    var sBamboo = this.bnoise.fbm(wx*f+3100,wz*f+2400,2) - 0.16;
     var best=sPlains, bi=0;
     if(sOak>best){best=sOak;bi=1;}
     if(sMtn>best){best=sMtn;bi=2;}
@@ -1491,6 +1505,8 @@ var World = {
     if(sMaple>best){best=sMaple;bi=11;}
     if(sWet>best){best=sWet;bi=12;}
     if(sRedwood>best){best=sRedwood;bi=13;}
+    if(sBad>best){best=sBad;bi=14;}
+    if(sBamboo>best){best=sBamboo;bi=15;}
     return bi;
   },
   _biomeH: function(bi, wx, wz, base){
@@ -1498,6 +1514,10 @@ var World = {
     if(bi===2){ var m = this.noise.fbm(wx*0.02+9, wz*0.02-9, 5); var amp = 55 + 75*Math.max(0, this.noise.fbm(wx*0.004-77, wz*0.004+77, 2)+0.2); return SEA + 8 + Math.pow(Math.max(0,(m+0.2)),1.4)*amp + base*9; }
     if(bi===3){ return SEA + 1 + base*6 + this.noise.fbm(wx*0.05,wz*0.05,2)*2; }
     if(bi===12){ return SEA + Math.floor(base*2.4) + (this.noise.fbm(wx*0.06+3,wz*0.06-3,2))*1.2; }
+    if(bi===14){ var mesa=this.noise.fbm(wx*0.012-330, wz*0.012+330, 3);
+      var step=Math.floor(Math.max(0,mesa+0.15)*5)*4;                       // stepped mesa plateaus and hoodoos
+      return SEA + 4 + step + base*5; }
+    if(bi===15){ return SEA + 2 + base*7; }                                 // bamboo grove: gentle rolling
     return SEA + 1 + base*10;
   },
   skyMask: function(wx,wz,layer){
@@ -1577,9 +1597,14 @@ var World = {
       var id = B.AIR;
       if(y===0){ id=B.BEDROCK; }
       else if(y < h-4){ id=B.STONE; }
-      else if(y < h){ id = (biome===3)? B.SAND : ((h>SEA+30 || (biome===2 && h>SEA+18))? B.STONE : B.DIRT); }
+      else if(y < h){
+        var _beach=(h<=SEA+2 && h>=SEA-2 && biome!==9 && biome!==12);
+        id = (biome===3||_beach)? B.SAND : (biome===14? B.TERRACOTTA : ((h>SEA+30 || (biome===2 && h>SEA+18))? B.STONE : B.DIRT));
+      }
       else if(y === h){
         if(biome===3) id=B.SAND;
+        else if(biome===14) id=B.RED_SAND;
+        else if(h<=SEA+2 && h>=SEA-2 && biome!==9 && biome!==12) id=B.SAND;   // shoreline beaches
         else if(biome===2 && h>SEA+30) id=B.SNOW;
         else if(biome===4 && h>SEA+22) id=B.SNOW;
         else if(biome===9) id=B.SNOW;
@@ -1754,6 +1779,28 @@ var World = {
     o=vein(0x9292, 2, 0.0040, 0.68, B.AMETHYST_ORE, 5, 26); if(o>0)return o;
     return B.STONE;
   },
+  decorateCaves: function(blocks, lx,lz, wx,wz, h){
+    // which kind of cave system runs beneath here?
+    var kind=this.noise.fbm(wx*0.006+1700, wz*0.006-1700, 2);
+    var lush=(kind>0.12), drip=(kind<-0.14);
+    if(!lush && !drip) return;
+    var top=Math.min(h-4, WORLD_H-2);
+    for(var y=6; y<top; y++){
+      if(getLocal(blocks,lx,y,lz)!==B.AIR) continue;
+      var below=getLocal(blocks,lx,y-1,lz), above=getLocal(blocks,lx,y+1,lz);
+      var onFloor=(below===B.STONE||below===B.DEEPSLATE||below===B.DIRT);
+      var onCeil=(above===B.STONE||above===B.DEEPSLATE);
+      if(lush){
+        if(onFloor && hash3(wx,y,wz,this.seed^0x1055)<0.55){ setLocal(blocks,lx,y-1,lz,B.MOSS_BLOCK); }
+        if(onCeil && hash3(wx,y+3,wz,this.seed^0x1056)<0.08){ setLocal(blocks,lx,y,lz,B.GLOWBERRY); }
+        else if(onFloor && hash3(wx,y+7,wz,this.seed^0x1057)<0.05){ setLocal(blocks,lx,y,lz,B.GLOWBERRY); }
+      } else {
+        if(onFloor && hash3(wx,y,wz,this.seed^0x2055)<0.4){ setLocal(blocks,lx,y-1,lz,B.DRIPSTONE); }
+        if(onCeil && hash3(wx,y+3,wz,this.seed^0x2056)<0.16){ setLocal(blocks,lx,y,lz,B.DRIP_SPIKE); }
+        else if(onFloor && hash3(wx,y+9,wz,this.seed^0x2057)<0.12){ setLocal(blocks,lx,y,lz,B.DRIP_SPIKE); }
+      }
+    }
+  },
   genTrees: function(chunk){
     var cx=chunk.cx, cz=chunk.cz, blocks=chunk.blocks;
     for(var lx=-2; lx<CHUNK+2; lx++) for(var lz=-2; lz<CHUNK+2; lz++){
@@ -1804,16 +1851,18 @@ var World = {
       else if(biome===12){ dens=0.013; }                                            // swamp: scattered oaks
       else if(biome===10){ leafT=B.JUNGLE_LEAVES; dens=0.05; jungle=true; }        // jungle: dense, tall
       else if(biome===11){ logT=B.LOG; leafT=B.MAPLE_LEAVES; dens=0.03; }            // maple woods: dense autumn oaks
+      else if(biome===14){ dens=0; }                                                // badlands: bare
+      else if(biome===15){ logT=B.LOG; leafT=B.JUNGLE_LEAVES; dens=0.008; }   // bamboo grove: occasional tall tree
       else if(biome===12){ dens=0.01; }                                             // wetland: sparse oak on the islands
       // beach coconut palms on shoreline sand
-      if(getLocal(blocks,lx,h,lz)===B.SAND && h<=SEA+2 && h>=SEA-1 && hash3(wx,88,wz,this.seed^0xC0C0)<0.025){
+      if(getLocal(blocks,lx,h,lz)===B.SAND && h<=SEA+3 && h>=SEA-2 && biome!==3 && hash3(wx,88,wz,this.seed^0xC0C0)<0.075){
         var pth=5+(hash3(wx,89,wz,this.seed)*3|0), lean=(hash3(wx,90,wz,this.seed)<0.5)?1:-1;
         for(var pt=1;pt<=pth;pt++){ var pxo=(pt>pth-3)?lean:0; setLocal(blocks,lx+pxo,h+pt,lz,B.LOG); }
         var ptop=h+pth, ptx=lx+lean;
         var fr=[[2,0],[-2,0],[0,2],[0,-2],[1,1],[-1,1],[1,-1],[-1,-1]];
         for(var fi=0;fi<fr.length;fi++){ setLocal(blocks,ptx+fr[fi][0],ptop,lz+fr[fi][1],B.JUNGLE_LEAVES); }
         setLocal(blocks,ptx,ptop+1,lz,B.JUNGLE_LEAVES); setLocal(blocks,ptx-1,ptop,lz,B.JUNGLE_LEAVES); setLocal(blocks,ptx+1,ptop,lz,B.JUNGLE_LEAVES);
-        setLocal(blocks,ptx,ptop-1,lz,B.LOG);   // coconut cluster
+        setLocal(blocks,ptx,ptop-1,lz,B.COCONUT);   // coconut cluster hanging under the fronds
       }
       if(getLocal(blocks,lx,h,lz)===B.GRASS && h>SEA && getLocal(blocks,lx,h+1,lz)===B.AIR){
         var _br=hash3(wx,120,wz,this.seed^0xB77);
@@ -1843,6 +1892,14 @@ var World = {
         }
       }
       if(biome===3 && getLocal(blocks,lx,h,lz)===B.SAND && getLocal(blocks,lx,h+1,lz)===B.AIR && hash3(wx,140,wz,this.seed^0xDEAD)<0.02){ setLocal(blocks,lx,h+1,lz,B.DEAD_BUSH); }
+      if(biome===14 && getLocal(blocks,lx,h+1,lz)===B.AIR && hash3(wx,141,wz,this.seed^0xBAD5)<0.03){ setLocal(blocks,lx,h+1,lz,B.DEAD_BUSH); }
+      if(biome===14 && getLocal(blocks,lx,h+1,lz)===B.AIR && hash3(wx,142,wz,this.seed^0xBAD6)<0.012){ setLocal(blocks,lx,h+1,lz,B.CACTUS); setLocal(blocks,lx,h+2,lz,B.CACTUS); }
+      try{ this.decorateCaves(blocks,lx,lz,wx,wz,h); }catch(_){ }
+      if(biome===15 && getLocal(blocks,lx,h,lz)===B.GRASS && getLocal(blocks,lx,h+1,lz)===B.AIR){
+        var _bm=hash3(wx,143,wz,this.seed^0xBA30);
+        if(_bm<0.34){ var _bh=3+((hash3(wx,144,wz,this.seed)*4)|0);
+          for(var _bt=1;_bt<=_bh;_bt++) setLocal(blocks,lx,h+_bt,lz,B.BAMBOO); }
+      }
       if((biome===0||biome===1||biome===5) && getLocal(blocks,lx,h,lz)===B.GRASS && getLocal(blocks,lx,h+1,lz)===B.AIR && hash3(wx,151,wz,this.seed^0x70BACC)<0.0009){ setLocal(blocks,lx,h+1,lz,B.TOBACCO_PLANT); }   // very rare tobacco
       if(hash3(wx,1,wz,this.seed^777) < dens){
         var th = (jungle?8:(spruce?6:4)) + Math.floor(hash3(wx,2,wz,this.seed)*(jungle?6:(spruce?4:5)));
@@ -3214,6 +3271,11 @@ function decorFor(id, f, frontF){
   if(id===B.BOILER) return 69*8+face;
   if(id===B.BLUE_OBSIDIAN) return 70*8+face;
   if(id===B.VOID_BRICK) return 71*8+face;
+  if(id===B.TERRACOTTA) return 72*8+face;
+  if(id===B.COCONUT) return 73*8+face;
+  if(id===B.MOSS_BLOCK) return 74*8+face;
+  if(id===B.DRIPSTONE) return 75*8+face;
+  if(id===B.ICE) return 76*8+face;
   if(isChest(id)){ if(f===frontF) face=3; return 1*8+face; }    // front faces placement direction
   if(id===B.FURNACE){ if(f===frontF) face=3; return 2*8+face; }
   if(isCrafting(id)) return 3*8+face;
@@ -4055,14 +4117,15 @@ function updatePortals(dt){
   var pulse=0.68+0.24*Math.sin(portalT*3.1), oy=(portalT*0.26)%1, ox=Math.sin(portalT*0.9)*0.12;   // brighter, faster swirl
   for(var mk in portalMeshes){ var mm=portalMeshes[mk]; if(!mm) continue; if(mm.material.map){ mm.material.map.offset.y=oy; mm.material.map.offset.x=ox; } mm.material.opacity=pulse; }
 }
-function buildPortal(nx,ny,nz){
+function buildPortal(nx,ny,nz,gateId,frameId){
+  gateId=gateId||B.RIFT_GATE; frameId=frameId||B.RIFT_FRAME;
   var alongX = Math.abs(Math.sin(Player.yaw)) <= Math.abs(Math.cos(Player.yaw));   // player facing Z -> portal runs along X
   var ux=alongX?1:0, uz=alongX?0:1, w, hh;
-  for(w=0;w<2;w++) for(hh=0;hh<3;hh++) World.setBlock(nx+ux*w, ny+hh, nz+uz*w, B.RIFT_GATE, true);   // 2 wide x 3 tall energy
+  for(w=0;w<2;w++) for(hh=0;hh<3;hh++) World.setBlock(nx+ux*w, ny+hh, nz+uz*w, gateId, true);   // 2 wide x 3 tall energy
   for(w=-1;w<=2;w++) for(hh=-1;hh<=3;hh++){
     if(w>=0&&w<=1&&hh>=0&&hh<=2) continue;                                   // skip the interior
     var bx=nx+ux*w, by=ny+hh, bz=nz+uz*w;
-    if(World.getBlock(bx,by,bz)===B.AIR) World.setBlock(bx,by,bz,B.RIFT_FRAME,true);   // frame, only into air
+    if(World.getBlock(bx,by,bz)===B.AIR) World.setBlock(bx,by,bz,frameId,true);   // frame, only into air
   }
   for(var cd=-1;cd<=2;cd++){ World.markDirty((nx+ux*cd)>>4,(nz+uz*cd)>>4); }
   forceTorchRescan(); _portalPx=1e9;   // force a portal rescan
@@ -4198,6 +4261,23 @@ function tickWeather(dt){
   var target = inStorm?(stormy?1.0:0.7):0;
   rainAmt += (target-rainAmt)*Math.min(1,dt*0.5);
   if(rainAmt<0.01) stopRainSound(); else if(actx && rainAmt>0.05) startRainSound();
+  // ---- water freezes over in the cold, where no light warms it ----
+  if(World.dim==='overworld' && frame%20===0){
+    try{
+      var _fx0=Math.floor(Player.pos.x), _fz0=Math.floor(Player.pos.z);
+      for(var _ft=0;_ft<8;_ft++){
+        var _fx=_fx0+((Math.random()*32)|0)-16, _fz=_fz0+((Math.random()*32)|0)-16;
+        var _fb=World.biomeAt(_fx,_fz);
+        var _cold=(_fb===9 || _fb===4);                       // snowy plains / taiga are always cold
+        if(!_cold && !(snowing && weather!=='clear')) continue;
+        var _fy=surfaceY(_fx,_fz); if(_fy<1) continue;
+        if(World.getBlock(_fx,_fy,_fz)!==B.WATER) continue;
+        if(World.getBlock(_fx,_fy+1,_fz)!==B.AIR) continue;    // must be open to the sky
+        if(World.blockLightAt(_fx,_fy+1,_fz)>4) continue;      // a nearby torch or lamp keeps it thawed
+        World.setBlock(_fx,_fy,_fz,B.ICE,true);
+      }
+    }catch(_){ }
+  }
   var _cg=inStorm?0.6:1; _cloudGray += (_cg-_cloudGray)*Math.min(1,dt*0.6);
   cloudMat.color.setRGB(_cloudGray,_cloudGray,Math.min(1,_cloudGray+0.03));   // sky grays over the storm, white elsewhere
   var thunderThresh = stormy?0.4:0.85;
@@ -4313,6 +4393,28 @@ function chunkFrag(alpha, grain){
     '       dc = mix(dc, vec3(0.16,0.13,0.1), toolm*0.85);',
     '       dc = mix(dc, vec3(0.62,0.64,0.68), (sawBody+sawTeeth)*0.5);',
     '     }',
+    '   } else if(base==76.0){',                          // ICE: cracked frozen sheet
+    '     float ic=abs(sin(uv.x*7.0+uv.y*3.0))*abs(sin(uv.y*9.0-uv.x*2.0));',
+    '     dc*=0.9+0.16*n2(uv*6.0);',
+    '     dc=mix(dc, vec3(0.95,0.99,1.0), smoothstep(0.55,0.9,ic)*0.5);',
+    '   } else if(base==74.0){',                          // MOSS: soft clumpy growth
+    '     float mn=n2(uv*5.0)*0.6 + n2(uv*11.0)*0.4;',
+    '     dc*=0.74+0.46*mn;',
+    '     dc=mix(dc, vec3(0.24,0.42,0.16), step(mn,0.32)*0.5);',
+    '   } else if(base==75.0){',                          // DRIPSTONE: banded flowstone
+    '     float dr=abs(fract(uv.y*3.0)-0.5);',
+    '     dc*=0.82+0.3*smoothstep(0.05,0.45,dr);',
+    '     dc*=0.94+0.12*n2(uv*8.0);',
+    '   } else if(base==72.0){',                          // TERRACOTTA: banded mesa strata by world height
+    '     float band=floor(mod(vWorld.y,9.0));',
+    '     vec3 c1=vec3(0.62,0.38,0.25), c2=vec3(0.74,0.46,0.28), c3=vec3(0.55,0.32,0.22), c4=vec3(0.70,0.55,0.40);',
+    '     vec3 strat = band<2.0? c1 : band<4.0? c2 : band<6.0? c3 : band<7.0? c4 : c2;',
+    '     dc=mix(dc, strat, 0.75);',
+    '     dc*=0.94+0.12*n2(uv*7.0);',
+    '   } else if(base==73.0){',                          // COCONUT: husky brown fruit cluster
+    '     float cl=1.0-smoothstep(0.18,0.34,length(fract(uv*2.0)-0.5));',
+    '     dc*=0.82+0.24*n2(uv*9.0);',
+    '     dc=mix(dc, vec3(0.34,0.22,0.12), cl*0.55);',
     '   } else if(base==70.0){',                          // BLUE OBSIDIAN: black glass shot through with cyan veins
     '     float vn=abs(sin(uv.x*9.0+uv.y*5.0)) * abs(sin(uv.y*11.0-uv.x*4.0));',
     '     float vein=smoothstep(0.62,0.92,vn);',
@@ -4702,7 +4804,7 @@ function buildPlantMesh(ch){
       pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, CROP_H[st], cell); }
   }
   // cobwebs (cross-shaped, in caves/structures)
-  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.8, 0); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 1.0, 5); } else if(wbid===B.APPLE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 20); } else if(wbid===B.ORANGE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 21); } else if(wbid===B.LEMON_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 22); } else if(wbid===B.FIG_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 23); } else if(wbid===B.BLUEBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 17); } else if(wbid===B.STRAWBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 18); } else if(wbid===B.GRAPE_VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 19); } else if(wbid===B.VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 1.0, 24); } else if(wbid===B.TULIP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 25); } else if(wbid===B.BLUEBELL){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DAISY){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 27); } else if(wbid===B.GLOWBLOOM){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DEAD_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.75, 28); } else if(wbid===B.CRYSTAL_CLUSTER){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.4, 0.8, 26, 0.7,1.0,1.2); } else if(wbid===B.TOBACCO_PLANT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 1.0, 1, 0.7,0.85,0.4); } } }
+  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.8, 0); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 1.0, 5); } else if(wbid===B.APPLE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 20); } else if(wbid===B.ORANGE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 21); } else if(wbid===B.LEMON_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 22); } else if(wbid===B.FIG_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 23); } else if(wbid===B.BLUEBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 17); } else if(wbid===B.STRAWBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 18); } else if(wbid===B.GRAPE_VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 19); } else if(wbid===B.VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 1.0, 24); } else if(wbid===B.TULIP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 25); } else if(wbid===B.BLUEBELL){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DAISY){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 27); } else if(wbid===B.GLOWBLOOM){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DEAD_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.75, 28); } else if(wbid===B.CRYSTAL_CLUSTER){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.4, 0.8, 26, 0.7,1.0,1.2); } else if(wbid===B.TOBACCO_PLANT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 1.0, 1, 0.7,0.85,0.4); } else if(wbid===B.BAMBOO){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.0, wzz+0.5, 0.16, 1.0, 0, 0.55,0.85,0.35); } else if(wbid===B.GLOWBERRY){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.4, 0.85, 26, 1.0,0.78,0.3); } else if(wbid===B.DRIP_SPIKE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.0, wzz+0.5, 0.3, 1.0, 28, 0.62,0.48,0.4); } } }
   // lilypads floating on swamp water
   for(var llx=0;llx<CHUNK;llx++) for(var llz=0;llz<CHUNK;llz++){
     var lwx=ch.cx*CHUNK+llx, lwz=ch.cz*CHUNK+llz;
@@ -5880,7 +5982,8 @@ function doPlace(){
               isSolid(World.getBlock(nx+1,ny,nz)) || isSolid(World.getBlock(nx,ny,nz-1)) || isSolid(World.getBlock(nx,ny,nz+1));
     if(!sup) return;
   }
-  if(pid===B.RIFT_GATE){ buildPortal(nx,ny,nz); if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(pid); toast('\uD83C\uDF00 A rift portal tears open'); return; }
+  if(pid===B.RIFT_GATE){ buildPortal(nx,ny,nz,B.RIFT_GATE,B.RIFT_FRAME); if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(pid); toast('\uD83C\uDF00 A rift portal tears open'); return; }
+  if(pid===B.SKY_RIFT){ buildPortal(nx,ny,nz,B.SKY_RIFT,B.SKYGATE); if(gameMode!=='creative') consumeSlot(slot,1); renderHotbar(); sfxPlace(pid); toast('\u2601\uFE0F A skyward rift tears open'); return; }
   World.setBlock(nx,ny,nz,pid,true); forceTorchRescan(); rpgMarkPlaced(nx,ny,nz);
   if(blk(pid).log){ World.tiles[World.ck(nx,ny,nz)]={axis: hit.ny!==0?'y':(hit.nx!==0?'x':'z')}; }
   if(pid===B.FURNACE) World.tiles[World.ck(nx,ny,nz)]={type:'furnace', input:null, fuel:null, output:null, burn:0, burnMax:0, cook:0, front:placeFrontFace()};
@@ -6266,6 +6369,10 @@ shaped([[null,'EMBERGLOW',null],['BRASS_INGOT','GLASS','BRASS_INGOT'],[null,'BRA
 shaped([['RIVETED_IRON','STEAM_CORE','RIVETED_IRON'],['RIVETED_IRON','EMBERGLOW','RIVETED_IRON'],[null,'BRASS_GEAR',null]], 'BOILER', 1);
 shaped([['CINDERSTEEL_INGOT','STEAM_CORE','CINDERSTEEL_INGOT'],[null,'BRASS_GEAR',null],[null,'STICK',null]], 'DWARVEN_DRILL', 1);
 shaped([['BLUE_OBSIDIAN','BLUE_OBSIDIAN'],['BLUE_OBSIDIAN','BLUE_OBSIDIAN']], 'VOID_BRICK', 4);
+shapeless([{key:'BAMBOO_CANE',qty:2}], 'STICK', 1);
+shapeless([{key:'MOSS_BLOCK',qty:1},{key:'DIRT',qty:1}], 'GRASS', 1);
+
+shaped([['BAMBOO_CANE','BAMBOO_CANE'],['BAMBOO_CANE','BAMBOO_CANE']], 'PLANKS', 2);
 shaped([[null,'BLUE_OBSIDIAN',null],['BLUE_OBSIDIAN','EMBERGLOW','BLUE_OBSIDIAN'],[null,'BLUE_OBSIDIAN',null]], 'VOID_LAMP', 2);
 shaped([['BLUE_OBSIDIAN'],['BLUE_OBSIDIAN'],['CINDERSTEEL_INGOT']], 'VOIDFORGED_SWORD', 1);
 shaped([['BLUE_OBSIDIAN','BLUE_OBSIDIAN','BLUE_OBSIDIAN'],[null,'CINDERSTEEL_INGOT',null],[null,'CINDERSTEEL_INGOT',null]], 'VOIDFORGED_PICK', 1);
@@ -9899,6 +10006,21 @@ function tickEntities(dt){
     if(e.swimming && e.kind!=='crab'){ e._swb=Math.sin(now*0.0025+(e.wdir||0))*0.1; } else e._swb=0;
     e.mesh.position.copy(e.pos);
     tickBlink(e,dt);
+    // creatures wander into portals too - they vanish through, and things wander back out
+    if(e!==Player.riding && !e.ridden && MOBDEF[e.kind] && !MOBDEF[e.kind].boss){
+      var _pb2=World.getBlock(Math.floor(e.pos.x),Math.floor(e.pos.y+0.4),Math.floor(e.pos.z));
+      if(_pb2===B.RIFT_GATE || _pb2===B.SKY_RIFT){
+        try{ spawnSteam(e.pos.x, e.pos.y+0.6, e.pos.z, (_pb2===B.SKY_RIFT)?0x8ae8ff:0xc95cf0); }catch(_){ }
+        scene.remove(e.mesh); entities.splice(i,1);
+        // something steps out of the rift from the other side
+        if(Math.random()<0.45){
+          var _out = (_pb2===B.SKY_RIFT) ? ['skywisp','skysheep','moa','swet'][(Math.random()*4)|0]
+                                         : ['cinderkin','cogling','gloomstalker','sporeling'][(Math.random()*4)|0];
+          try{ spawnEnemy(_out, e.pos.x+(Math.random()*2-1), e.pos.y, e.pos.z+(Math.random()*2-1)); }catch(_){ }
+        }
+        continue;
+      }
+    }
     if(e.kind==='skycarver' && e.mesh.userData.wings && !e.ridden){
       var _beat=Math.sin(now*0.0035);
       var _kf=_beat*0.6+0.12; e.mesh.userData.wings[0].rotation.z=_kf; e.mesh.userData.wings[1].rotation.z=-_kf;
@@ -11997,7 +12119,7 @@ function loop(t){
   if(frame%4===0){ var ce=document.getElementById('coords');
     if(ce && !showCoords){ ce.textContent=''; }
     else if(ce){ var bi9=World.biomeAt(Math.floor(Player.pos.x),Math.floor(Player.pos.z));
-      var bn=(World.dim==='sky')?'Skylands':(World.dim==='underforge')?(bi9===104?'The Cogworks':bi9===102?'Fungal Hollows':bi9===103?'Molten Foundry':bi9===101?'Cinder Wastes':'Ash Desert'):(['Plains','Forest','Mountains','Desert','Taiga','Birch Forest','Cherry Grove','Ocean','Savanna','Snowy Plains','Jungle','Maple Forest','Swamp'][bi9]||'');
+      var bn=(World.dim==='sky')?'Skylands':(World.dim==='underforge')?(bi9===104?'The Cogworks':bi9===102?'Fungal Hollows':bi9===103?'Molten Foundry':bi9===101?'Cinder Wastes':'Ash Desert'):(['Plains','Forest','Mountains','Desert','Taiga','Birch Forest','Cherry Grove','Ocean','Savanna','Snowy Plains','Jungle','Maple Forest','Swamp','Redwood Forest','Badlands','Bamboo Grove'][bi9]||'');
       var txt='XYZ: '+Math.floor(Player.pos.x)+' '+Math.floor(Player.pos.y)+' '+Math.floor(Player.pos.z)+'   '+bn;
       var hs=inv.hotbar[hotbarSel];
       if(hs && hs.key==='COMPASS' && World.dim==='overworld'){
@@ -12078,8 +12200,11 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 249';
+var VERSION='Update 252';
 var CHANGELOG=[
+  { v:'Update 252', t:'Portals For Everyone &amp; Freezing Water', items:['<b>Sky Rifts now build a full portal when placed</b>, exactly like Rift Gates \u2014 a 2\u00d73 sheet of energy in a proper frame, the classic portal size. Both are identical in creative','<b>Creatures use portals too</b> \u2014 wander a mob into a rift and it steps through in a puff of light\u2026 and something from the other side often wanders back out. Sky rifts breathe out wisps and moas; rift gates cough up cinderkin and coglings','<b>Travel between the far dimensions</b> \u2014 build a Rift Gate up in the Skylands to drop straight into the UnderForge, or raise a Sky Rift down in the UnderForge to climb straight to the Skylands','<b>ICE</b> \u2014 open water freezes over in snowy plains and taiga, and anywhere it\u2019s snowing. Keep a torch or lamp nearby and the water stays thawed'] },
+  { v:'Update 251', t:'Caves Come Alive &amp; Farther Horizons', items:['<b>View distance now matches the defaults you\u2019re used to</b> \u2014 8 chunks on mobile, 12 on desktop (up from 4 and 7). The world opens right up. If your device struggles, dial it back in Settings','<b>LUSH CAVES</b> \u2014 some cave systems are carpeted in thick moss with clusters of <b>glow berries</b> hanging from the ceilings and sprouting from the floor, lighting the dark in warm gold. The berries are edible','<b>DRIPSTONE CAVES</b> \u2014 others are floored in banded flowstone and bristling with <b>dripstone spikes</b> hanging above and rising below','<b>New blocks</b> \u2014 Moss Block, Dripstone, Dripstone Spike and Glow Berries. Moss and dirt together make grass again'] },
+  { v:'Update 250', t:'Beaches, Badlands &amp; Bamboo', items:['<b>Real beaches at last</b> \u2014 sand only ever generated in deserts, which is why you never saw a coconut palm: there was no shoreline for them to grow on. Every coast now has a proper sand beach, and <b>coconut palms lean over the water</b> three times as often, heavy with <b>coconuts you can eat</b>','<b>NEW BIOME: The Badlands</b> \u2014 stepped mesa plateaus and hoodoos of banded terracotta over red sand, strata shifting colour with height, dotted with dead bushes and cacti','<b>NEW BIOME: Bamboo Grove</b> \u2014 rolling green country thick with tall bamboo stalks. Cut canes for sticks and planks','<b>Redwood Forest, Badlands and Bamboo Grove now show their names</b> on the location readout'] },
   { v:'Update 249', t:'THE VOIDFORGE \u2014 Blue Obsidian', items:['<b>BLUE OBSIDIAN</b>, found nowhere but the UnderForge \u2014 born where the deep lava cooled against the rock. Black volcanic glass shot through with glowing cyan veins, richest in seams at the very bottom of the world. It takes a tier-4 pickaxe to break','<b>VOIDFORGED GEAR</b> \u2014 temper blue obsidian with cindersteel for the finest arms ever made: the <b>Voidforged Blade</b> (15 damage, the strongest weapon in the game), pickaxe, axe, and a full <b>Voidforged armour set</b> with 26 total defence','<b>Void Brick and Void Lamps</b> for building \u2014 cut obsidian blocks with glowing mortar, and a lamp that burns brighter than anything else in the world','<b>THE OBSIDIAN SHRINE</b> \u2014 a stepped obsidian platform ringing a sunken lava pool, four great pillars crowned with void lamps and joined by arch beams, offering vaults and a mimic','<b>THE VOIDWARDEN</b> guards it \u2014 a towering figure of living obsidian with burning seams, a crown of shards and a blazing eye band. Fell it for blue obsidian, a key, and the <b>Voidcore</b>: carry it and you see clearly in the deepest dark'] },
   { v:'Update 248', t:'THE COGWORKS \u2014 Dwarven Steam &amp; Iron', items:['<b>A fifth UnderForge biome: The Cogworks</b> \u2014 brass-plated ground over riveted iron, hissing steam stacks, squat boilers, scattered cogwork and dwarven lamps glowing in the murk','<b>Seven new steampunk blocks</b> \u2014 Brass Brick, Cogwork Block (a great gear face), Pipework, Riveted Iron, Steam Vent, Dwarven Lamp (light 14) and the Boiler with its glowing fire door','<b>THE IRON SPAN</b> \u2014 a Nether-fortress-style dwarven bridge striding the ash: a railed five-wide walkway 48 blocks long on pipe pillars, lamp posts every few paces, <b>towers at each end</b> with chests, locked vaults and a mimic, and a <b>boiler house</b> at the midpoint venting steam','<b>Three new denizens</b> \u2014 skittering brass <b>Coglings</b>, hulking <b>Steamguards</b> with boiler stacks and burning visors (they drop steam cores and rarely the <b>Gearheart</b>), and bearded <b>Runesmiths</b> tending the machines','<b>New crafting</b> \u2014 brass gears, steam cores, and the <b>Dwarven Drill</b>: the fastest pickaxe ever forged'] },
   { v:'Update 247', t:'Sky Dungeons Rebuilt \u2014 Full Complexes', items:['<b>Sky dungeons are now proper multi-room complexes</b> \u2014 nine connected rooms spanning 48\u00d748 blocks (a 3\u00d73 chunk footprint) instead of a single cramped box','<b>A real layout</b> \u2014 doorways link every room, four pillars and crystal lamps light each hall, corner rooms are <b>treasure vaults</b> with locked chests and mimics, side rooms are guard rooms, and the centre is a <b>towering boss hall</b> with a raised dais and corner braziers','<b>You can actually find them now</b> \u2014 every complex raises a <b>7\u00d77 stone plinth on the island surface</b> with four tall corner pillars, glowing lamps on top, arch beams and torches flanking an open shaft leading straight down into the dungeon','<b>All three tiers rebuilt</b> \u2014 Bronze (holystone &amp; cloudbrick, the Slider), Silver (polished stone &amp; crystal, the Valkyrie), Gold (gold-blocked halls lit by ambrosium, the Sun Spirit)'] },
