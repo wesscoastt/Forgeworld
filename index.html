@@ -490,7 +490,9 @@ defBlock({key:'GOLD_OAK_LOG', name:'Golden Oak Log', col:[168,140,92], top:[148,
 defBlock({key:'GOLDEN_LEAVES', name:'Golden Oak Leaves', col:[122,178,96], spec:[255,214,90], solid:true, transparent:true, leaf:true, light:4, hard:0.2 });
 defBlock({key:'AMBRO_TORCH', name:'Ambrosium Torch', col:[255,220,110], solid:false, transparent:true, thin:true, light:13, hard:0.05 });
 defBlock({key:'GOLD_BLOCK', name:'Gold Block', col:[232,190,70], top:[244,204,84], side:[224,182,62], spec:[255,230,140], solid:true, tool:'pickaxe', tier:2, hard:3.0 });
+defBlock({key:'LOCKED_CHEST', name:'Locked Chest', col:[150,120,60], top:[170,140,74], side:[140,110,54], spec:[220,180,80], solid:true, tool:'axe', hard:2.5 });
 defBlock({key:'DEAD_BUSH', name:'Dead Bush', col:[154,122,68], solid:false, transparent:true, thin:true, cross:true, hard:0.05 });
+defBlock({key:'TOBACCO_PLANT', name:'Tobacco Plant', col:[120,150,70], solid:false, transparent:true, thin:true, cross:true, hard:0.1, drop:'TOBACCO_LEAF' });
 defBlock({key:'BANANA_BUNCH', name:'Banana Bunch', col:[230,200,66], top:[240,214,80], side:[214,182,54], solid:false, transparent:true, hard:0.2, tool:'axe', drop:'BANANA' });
 defBlock({key:'CACTUS', name:'Cactus', col:[54,116,58], top:[92,156,86], side:[48,104,52], solid:true, hard:0.5, hurt:1 });
 defBlock({key:'BEEHIVE', name:'Beehive', col:[198,142,52], top:[150,104,38], side:[206,150,54], solid:true, hard:0.5 });
@@ -796,7 +798,12 @@ mat('MOONSTONE','Moonstone',[182,198,244],{stack:64});
 mat('EMBERGLOW','Emberglow Dust',[248,190,110],{stack:64});
 mat('AMETHYST','Amethyst',[190,120,240],{stack:64});
 mat('SKY_CRYSTAL','Sky Crystal',[140,230,255],{stack:64});
+mat('DUNGEON_KEY','Dungeon Key',[230,200,90],{stack:16});
 mat('AMBROSIUM_SHARD','Ambrosium Shard',[255,220,110],{stack:64});
+mat('TOBACCO_LEAF','Tobacco Leaf',[150,170,80],{stack:64,smeltTo:'DRIED_TOBACCO'});
+mat('DRIED_TOBACCO','Dried Tobacco',[150,120,60],{stack:64});
+mat('CIGARETTE','Cigarette',[235,235,225],{stack:16});
+ITEMS.CIGARETTE.smokable=true;
 mat('GOLDEN_AMBER','Golden Amber',[255,200,80],{food:3,heal:3,stack:64});
 mat('SILVER_INGOT','Silver Ingot',[230,232,240],{stack:64});
 mat('MELON_SLICE','Melon Slice',[236,90,110],{food:2,stack:64});
@@ -992,6 +999,19 @@ function iconFor(key){
       x.fillStyle=css([210,70,70]); x.fillRect(10,16,4,4);       // little dabs of art
       x.fillStyle=css([70,120,210]); x.fillRect(17,10,4,4);
       x.fillStyle=css([90,190,90]); x.fillRect(15,18,5,3);
+      _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key];
+    }
+    if(it.key==='CIGARETTE'){
+      x.fillStyle=css([238,238,230]); x.fillRect(5,14,20,5);            // white paper
+      x.fillStyle=css([210,170,90]); x.fillRect(21,14,5,5);            // tan filter
+      x.fillStyle=css([60,50,40]); x.fillRect(4,14,2,5);               // lit tip base
+      x.fillStyle=css([255,140,40]); x.fillRect(3,15,2,3);            // ember
+      _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key];
+    }
+    if(it.key==='TOBACCO_LEAF'||it.key==='DRIED_TOBACCO'){
+      var _tc=(it.key==='DRIED_TOBACCO')?[150,120,60]:[120,165,70];
+      x.fillStyle=css(_tc); x.beginPath(); x.moveTo(16,4); x.lineTo(25,16); x.lineTo(16,28); x.lineTo(7,16); x.closePath(); x.fill();
+      x.strokeStyle=css([80,60,30]); x.beginPath(); x.moveTo(16,5); x.lineTo(16,27); x.stroke();
       _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key];
     }
     if(it.key==='MINECART'){
@@ -1738,6 +1758,7 @@ var World = {
         }
       }
       if(biome===3 && getLocal(blocks,lx,h,lz)===B.SAND && getLocal(blocks,lx,h+1,lz)===B.AIR && hash3(wx,140,wz,this.seed^0xDEAD)<0.02){ setLocal(blocks,lx,h+1,lz,B.DEAD_BUSH); }
+      if((biome===0||biome===1||biome===5) && getLocal(blocks,lx,h,lz)===B.GRASS && getLocal(blocks,lx,h+1,lz)===B.AIR && hash3(wx,151,wz,this.seed^0x70BACC)<0.0009){ setLocal(blocks,lx,h+1,lz,B.TOBACCO_PLANT); }   // very rare tobacco
       if(hash3(wx,1,wz,this.seed^777) < dens){
         var th = (jungle?8:(spruce?6:4)) + Math.floor(hash3(wx,2,wz,this.seed)*(jungle?6:(spruce?4:5)));
         for(var t=1;t<=th && h+t<WORLD_H;t++) setLocal(blocks,lx,h+t,lz,logT);
@@ -2510,7 +2531,8 @@ var World = {
     }
     for(var pp2=0;pp2<4;pp2++){ var ppx=x0+2+(pp2%2)*6, ppz=z0+2+((pp2/2)|0)*4;
       for(var py2=1;py2<rh-1;py2++) setLocal(ch.blocks,ppx,by+py2,ppz,B.POLISHED_STONE); }
-    setLocal(ch.blocks,x0+1,by+1,z0+7,B.CHEST); setLocal(ch.blocks,x0+9,by+1,z0+7,B.CHEST);
+    setLocal(ch.blocks,x0+1,by+1,z0+7,B.LOCKED_CHEST); setLocal(ch.blocks,x0+9,by+1,z0+7,B.CHEST);
+    World.tiles[World.ck(cx*CHUNK+x0+5,by+1,cz*CHUNK+z0+2)]={type:'mimicnest'}; setLocal(ch.blocks,x0+5,by+1,z0+2,B.CHEST);
     setLocal(ch.blocks,x0+1,by+1,z0+1,B.CRYSTAL_BLOCK); setLocal(ch.blocks,x0+9,by+1,z0+1,B.CRYSTAL_BLOCK);
     var sx2=x0+5, sz2=z0+4;                                             // entrance shaft up to daylight
     for(var sy2=by+rh-1; sy2<=top+1; sy2++){ setLocal(ch.blocks,sx2,sy2,sz2,B.AIR); setLocal(ch.blocks,sx2+1,sy2,sz2,B.AIR); }
@@ -2533,7 +2555,8 @@ var World = {
       setLocal(ch.blocks,x,y,z, wall ? (edge?B.GOLD_BLOCK:((hash3(cx+dx,956+dy,cz+dz,this.seed)<0.8)?B.CLOUDBRICK:B.GOLD_BLOCK)) : B.AIR);
     }
     setLocal(ch.blocks,x0+5,by+1,z0+5,B.GOLD_BLOCK);
-    setLocal(ch.blocks,x0+1,by+1,z0+9,B.CHEST); setLocal(ch.blocks,x0+9,by+1,z0+9,B.CHEST); setLocal(ch.blocks,x0+5,by+1,z0+9,B.CHEST);
+    setLocal(ch.blocks,x0+1,by+1,z0+9,B.LOCKED_CHEST); setLocal(ch.blocks,x0+9,by+1,z0+9,B.LOCKED_CHEST); setLocal(ch.blocks,x0+5,by+1,z0+9,B.CHEST);
+    World.tiles[World.ck(cx*CHUNK+x0+3,by+1,cz*CHUNK+z0+5)]={type:'mimicnest'}; setLocal(ch.blocks,x0+3,by+1,z0+5,B.CHEST);
     setLocal(ch.blocks,x0+1,by+1,z0+1,B.AMBRO_TORCH); setLocal(ch.blocks,x0+9,by+1,z0+1,B.AMBRO_TORCH);
     var gx2=x0+5, gz2=z0+1;                                             // golden entrance shaft
     for(var gy2=by+rh-1; gy2<=top+1; gy2++){ setLocal(ch.blocks,gx2,gy2,gz2,B.AIR); setLocal(ch.blocks,gx2+1,gy2,gz2,B.AIR); }
@@ -3287,7 +3310,7 @@ function buildAvatarModel(L){ var g=new THREE.Group();
 }
 var playerAvatar=buildAvatarModel(avatarLimbs); playerAvatar.visible=false; var _avBaseY=playerAvatar.position.y||0;
 scene.add(playerAvatar);
-var MOB_NAMES={skycarver:'Skycarver', valkyrie:'The Valkyrie', sunspirit:'The Sun Spirit', slider:'The Slider', skywisp:'Sky Wisp', skysheep:'Sky Sheep', skywhale:'Sky Whale', warden:'The Warden', cart:'Minecart', cockatrice:'Cockatrice', moa:'Moa', swet:'Swet',  zombie:'Zombie', zombie_villager:'Zombie Villager', zombie_dwarf:'Zombie Dwarf', skeleton:'Skeleton', creeper:'Cogspider', spooler:'Spooler', villager:'Villager', dwarf:'Dwarf', knight:'Knight', cow:'Cow', pig:'Pig', sheep:'Sheep', chicken:'Chicken', horse:'Horse', zombie_horse:'Zombie Horse', skeleton_horse:'Skeleton Horse', seahorse:'Seahorse', fish:'Fish', bird:'Bird', bear:'Bear', boar:'Boar', fox:'Fox', rabbit:'Rabbit', deer:'Deer', dog:'Dog', cat:'Cat', monkey:'Monkey', frog:'Frog', crab:'Crab', bee:'Bee', cinderkin:'Cinderkin', forgewright:'Forgewright' };
+var MOB_NAMES={mimic:'Mimic', skycarver:'Skycarver', valkyrie:'The Valkyrie', sunspirit:'The Sun Spirit', slider:'The Slider', skywisp:'Sky Wisp', skysheep:'Sky Sheep', skywhale:'Sky Whale', warden:'The Warden', cart:'Minecart', cockatrice:'Cockatrice', moa:'Moa', swet:'Swet',  zombie:'Zombie', zombie_villager:'Zombie Villager', zombie_dwarf:'Zombie Dwarf', skeleton:'Skeleton', creeper:'Cogspider', spooler:'Spooler', villager:'Villager', dwarf:'Dwarf', knight:'Knight', cow:'Cow', pig:'Pig', sheep:'Sheep', chicken:'Chicken', horse:'Horse', zombie_horse:'Zombie Horse', skeleton_horse:'Skeleton Horse', seahorse:'Seahorse', fish:'Fish', bird:'Bird', bear:'Bear', boar:'Boar', fox:'Fox', rabbit:'Rabbit', deer:'Deer', dog:'Dog', cat:'Cat', monkey:'Monkey', frog:'Frog', crab:'Crab', bee:'Bee', cinderkin:'Cinderkin', forgewright:'Forgewright' };
 var _shadowTex=null;
 function shadowTexture(){ if(_shadowTex) return _shadowTex; var c=document.createElement('canvas'); c.width=c.height=64; var x=c.getContext('2d'); var g=x.createRadialGradient(32,32,2,32,32,31); g.addColorStop(0,'rgba(0,0,0,0.75)'); g.addColorStop(0.55,'rgba(0,0,0,0.45)'); g.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=g; x.fillRect(0,0,64,64); _shadowTex=new THREE.CanvasTexture(c); _shadowTex.needsUpdate=true; return _shadowTex; }
 function makeBlobShadow(sz){ var mat=new THREE.MeshBasicMaterial({map:shadowTexture(), transparent:true, opacity:0.7, depthWrite:false, depthTest:false, fog:false}); var m=new THREE.Mesh(new THREE.PlaneGeometry(sz,sz), mat); m.rotation.x=-Math.PI/2; m.renderOrder=999; scene.add(m); return m; }
@@ -3528,6 +3551,21 @@ var handAnim=0;
 function _breathePlayer(){ return Math.sin(now*0.0022)*0.03; }
 function triggerHandSwing(){ handAnim=0.26; }
 function updateHand(){
+  // cigarette in the mouth while smoking
+  if(typeof playerAvatar!=='undefined' && playerAvatar){
+    if(Player.smokingT>0){
+      if(!Player._cigMesh){
+        var _cg=new THREE.Group();
+        var _stick=new THREE.Mesh(new THREE.BoxGeometry(0.28,0.05,0.05), new THREE.MeshBasicMaterial({color:0xeeeee6}));
+        _stick.position.set(0.16,0,0); _cg.add(_stick);
+        var _em=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.06,0.06), new THREE.MeshBasicMaterial({color:0xff7a1a}));
+        _em.position.set(0.32,0,0); _cg.add(_em);
+        _cg.position.set(0.12,1.62,0.22);   // at the mouth of the avatar head
+        Player._cigMesh=_cg; playerAvatar.add(_cg);
+      }
+      Player._cigMesh.visible=true;
+    } else if(Player._cigMesh){ Player._cigMesh.visible=false; }
+  }
   var sp=Math.hypot(Player.vel.x,Player.vel.z);
   var bob=Math.sin(now*0.009)*Math.min(0.05, sp*0.014);
   var _chew=(eatAnim>0)?Math.sin((0.34-eatAnim)/0.34*Math.PI):0;   // 0..1..0 bob toward the mouth
@@ -3577,6 +3615,15 @@ var moonSprite=new THREE.Sprite(new THREE.SpriteMaterial({ color:0xe6ecff, fog:f
 function makeGlowTex(){ var c=document.createElement('canvas'); c.width=c.height=64; var x=c.getContext('2d');
   var g=x.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,'rgba(255,245,210,0.9)'); g.addColorStop(0.4,'rgba(255,210,140,0.32)'); g.addColorStop(1,'rgba(255,200,140,0)');
   x.fillStyle=g; x.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); }
+function makeRayTex(){ var c=document.createElement('canvas'); c.width=c.height=128; var x=c.getContext('2d'); x.clearRect(0,0,128,128);
+  x.translate(64,64);
+  for(var i=0;i<16;i++){ x.rotate(Math.PI/8); var w=2+(i%3); x.fillStyle='rgba(255,246,210,'+(0.06+(i%2)*0.05)+')'; x.beginPath(); x.moveTo(-w,0); x.lineTo(w,0); x.lineTo(0.5,60); x.lineTo(-0.5,60); x.closePath(); x.fill(); }
+  var g=x.createRadialGradient(0,0,0,0,0,60); g.addColorStop(0,'rgba(255,246,214,0.5)'); g.addColorStop(1,'rgba(255,246,214,0)'); x.fillStyle=g; x.beginPath(); x.arc(0,0,60,0,6.283); x.fill();
+  return new THREE.CanvasTexture(c); }
+var sunRays=new THREE.Sprite(new THREE.SpriteMaterial({ map:makeRayTex(), color:0xfff2c8, transparent:true, opacity:0.0, fog:false, blending:THREE.AdditiveBlending, depthWrite:false, rotation:0 }));
+sunRays.scale.set(150,150,1); skyGroup.add(sunRays);
+var moonRays=new THREE.Sprite(new THREE.SpriteMaterial({ map:makeRayTex(), color:0xbcd0ff, transparent:true, opacity:0.0, fog:false, blending:THREE.AdditiveBlending, depthWrite:false, rotation:0 }));
+moonRays.scale.set(105,105,1); skyGroup.add(moonRays);
 var sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({ map:makeGlowTex(), color:0xfff0c0, transparent:true, opacity:0.0, fog:false, blending:THREE.AdditiveBlending, depthWrite:false }));
 sunGlow.scale.set(150,150,1); skyGroup.add(sunGlow);
 // vibrant gradient sky dome (vertex-coloured, recoloured each frame for time-of-day + sunset glow)
@@ -3882,8 +3929,10 @@ function tickWeather(dt){
 }
 function tickSky(){
   skyGroup.position.copy(camera.position);
-  if(World.dim==='underforge'){ sunSprite.visible=false; moonSprite.visible=false; sunGlow.visible=false; if(starMat)starMat.opacity=0; cloudGroup.visible=false; return; }
+  if(World.dim==='underforge'){ sunSprite.visible=false; moonSprite.visible=false; sunGlow.visible=false; if(sunRays)sunRays.visible=false; if(moonRays)moonRays.visible=false; if(starMat)starMat.opacity=0; cloudGroup.visible=false; return; }
   sunSprite.visible=true; moonSprite.visible=true; sunGlow.visible=true; cloudGroup.visible=true;
+  if(sunRays){ sunRays.position.copy(sunSprite.position); sunRays.material.rotation += 0.0009; sunRays.material.opacity = Math.max(0, (sunU.value-0.15))*0.5; sunRays.visible=sunRays.material.opacity>0.01; }
+  if(moonRays){ moonRays.position.copy(moonSprite.position); moonRays.material.rotation -= 0.0006; moonRays.material.opacity = Math.max(0, (0.5-sunU.value))*0.4; moonRays.visible=moonRays.material.opacity>0.01; }
   if(World.dim==='moon'){ moonSprite.visible=false; sunGlow.visible=false; cloudGroup.visible=false; if(starMat)starMat.opacity=Math.max(starMat.opacity,0.9); }
   var a = timeOfDay*Math.PI*2 - Math.PI/2, R=340;
   sunSprite.position.set(Math.cos(a)*R, Math.sin(a)*R, R*0.15);
@@ -4062,6 +4111,10 @@ function chunkFrag(alpha, grain){
     ' float anyWater = clamp(isWater+isSwamp, 0.0, 1.0);',
     ' float w = sin(mod(vWorld.x,256.0)*1.7 + uTime*1.6) + sin(mod(vWorld.z,256.0)*2.1 + uTime*1.3) + sin(mod(vWorld.x+vWorld.z,256.0)*1.1 - uTime*1.9);',
     ' vec3 wc = vColor * (1.0 + 0.06*w*anyWater);',
+    ' float isLeaf = step(0.16, vColor.g) * step(vColor.r, vColor.g*0.94) * step(vColor.b, vColor.g*0.96) * step(vColor.g, 0.72) * (1.0-anyWater);',
+    ' if(isLeaf>0.5){ float ln = 0.5 + 0.25*sin(vWorld.x*3.1 + vWorld.y*1.7) + 0.25*sin(vWorld.z*3.7 - vWorld.y*2.1) + 0.2*sin((vWorld.x+vWorld.z)*6.3);',
+    '   wc *= 0.8 + 0.3*ln;',
+    '   wc *= 1.0 - 0.4*step(ln, 0.34); }',
     ' wc = torchLit(wc, vWorld);',
     ' vec3 c = mix(uFogColor, wc, vFog);',
     ' float _wa = mix('+alpha+', 0.68, isWater); _wa = mix(_wa, 0.96, isSwamp);',
@@ -4101,7 +4154,7 @@ function chunkFrag(alpha, grain){
   ] : [];
   return ['precision highp float;',
     'varying vec3 vColor; varying float vFog; varying vec3 vWorld; varying vec2 vUV; varying float vDecor;',
-    'uniform vec3 uFogColor; uniform vec4 uTorch[16]; uniform int uTorchN; uniform float uTorchFlk;'].concat(grain?['uniform vec3 uCamPos;']:['uniform float uTime;']).concat([
+    'uniform vec3 uFogColor; uniform vec4 uTorch[16]; uniform int uTorchN; uniform float uTorchFlk; uniform float uSun; uniform float uTime;'].concat(grain?['uniform vec3 uCamPos;']:[]).concat([
     'vec3 torchLit(vec3 col, vec3 wp){ float tl=0.0; for(int i=0;i<16;i++){ if(i>=uTorchN) break; vec3 d=wp-uTorch[i].xyz; float dd=dot(d,d); float f=clamp(1.0-dd*0.0022,0.0,1.0); f=f*f; tl+=f*uTorch[i].w; } tl=min(tl*uTorchFlk,1.0); vec3 warm=vec3(1.0,0.74,0.5); return col*(1.0+warm*tl*0.46)+warm*tl*0.13; }'
     ]).concat(helpers).concat([
     'void main(){']).concat(body).concat([' gl_FragColor=vec4(c, _wa);','}']).join('\n');
@@ -4109,7 +4162,7 @@ function chunkFrag(alpha, grain){
 var torchUVals=[]; for(var _ti=0;_ti<16;_ti++) torchUVals.push(new THREE.Vector4(0,0,0,0));
 var torchU={value:torchUVals}, torchNU={value:0}, torchFlkU={value:1.0};
 var chunkMat=new THREE.ShaderMaterial({
-  uniforms:{ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTorch:torchU, uTorchN:torchNU, uTorchFlk:torchFlkU, uCamPos:{value:new THREE.Vector3()} },
+  uniforms:{ uSun:sunU, uFogColor:fogColorU, uFogNear:{value:fogNear}, uFogFar:{value:fogFar}, uTime:{value:0}, uTorch:torchU, uTorchN:torchNU, uTorchFlk:torchFlkU, uCamPos:{value:new THREE.Vector3()} },
   vertexShader: chunkVert,
   fragmentShader: chunkFrag('1.0', true)
 });
@@ -4291,7 +4344,7 @@ function buildPlantMesh(ch){
       pushCross(p,u,ix,ref, lxp+0.5, ty, lzp+0.5, 0.4, CROP_H[st], cell); }
   }
   // cobwebs (cross-shaped, in caves/structures)
-  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.8, 0); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 1.0, 5); } else if(wbid===B.APPLE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 20); } else if(wbid===B.ORANGE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 21); } else if(wbid===B.LEMON_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 22); } else if(wbid===B.FIG_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 23); } else if(wbid===B.BLUEBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 17); } else if(wbid===B.STRAWBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 18); } else if(wbid===B.GRAPE_VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 19); } else if(wbid===B.VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 1.0, 24); } else if(wbid===B.TULIP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 25); } else if(wbid===B.BLUEBELL){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DAISY){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 27); } else if(wbid===B.GLOWBLOOM){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DEAD_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.75, 28); } else if(wbid===B.CRYSTAL_CLUSTER){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.4, 0.8, 26, 0.7,1.0,1.2); } } }
+  for(var wxx=0;wxx<CHUNK;wxx++) for(var wzz=0;wzz<CHUNK;wzz++){ for(var wyy=1;wyy<WORLD_H-1;wyy++){ var wbid=ch.blocks[idx(wxx,wyy,wzz)]; if(wbid===B.COBWEB){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.5, wzz+0.5, 0.5, 1.0, 34); } else if(wbid===B.SEAGRASS){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.8, 0); } else if(wbid===B.KELP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 1.0, 5); } else if(wbid===B.APPLE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 20); } else if(wbid===B.ORANGE_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 21); } else if(wbid===B.LEMON_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 22); } else if(wbid===B.FIG_FRUIT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.2, wzz+0.5, 0.36, 0.7, 23); } else if(wbid===B.BLUEBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 17); } else if(wbid===B.STRAWBERRY_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 18); } else if(wbid===B.GRAPE_VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 0.85, 19); } else if(wbid===B.VINE){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.5, 1.0, 24); } else if(wbid===B.TULIP){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 25); } else if(wbid===B.BLUEBELL){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DAISY){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 27); } else if(wbid===B.GLOWBLOOM){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.9, 26); } else if(wbid===B.DEAD_BUSH){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 0.75, 28); } else if(wbid===B.CRYSTAL_CLUSTER){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.4, 0.8, 26, 0.7,1.0,1.2); } else if(wbid===B.TOBACCO_PLANT){ pushCross(p,u,ix,ref, wxx+0.5, wyy+0.02, wzz+0.5, 0.42, 1.0, 1, 0.7,0.85,0.4); } } }
   // lilypads floating on swamp water
   for(var llx=0;llx<CHUNK;llx++) for(var llz=0;llz<CHUNK;llz++){
     var lwx=ch.cx*CHUNK+llx, lwz=ch.cz*CHUNK+llz;
@@ -5171,7 +5224,27 @@ function doPlace(){
   if(hit.id===B.SOLAR_PANEL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.ENERGY_CELL){ openGenerator(World.ck(hit.x,hit.y,hit.z)); return; }
   if(hit.id===B.HOPPER){ openHopper(World.ck(hit.x,hit.y,hit.z)); return; }
-  if(isChest(hit.id)){ openChest(World.ck(hit.x,hit.y,hit.z)); return; }
+  if(hit.id===B.LOCKED_CHEST){
+    var _hk=null, _hall=inv.hotbar.concat(inv.main||[]);
+    for(var _ki=0;_ki<_hall.length;_ki++){ if(_hall[_ki] && _hall[_ki].key==='DUNGEON_KEY'){ _hk=_hall[_ki]; break; } }
+    if(!_hk){ toast('\uD83D\uDD12 Locked \u2014 you need a Dungeon Key'); return; }
+    consumeSlot(_hk,1);
+    World.setBlock(hit.x,hit.y,hit.z,B.CHEST,true);
+    var _lk=World.ck(hit.x,hit.y,hit.z);
+    if(!World.tiles[_lk]){ World.tiles[_lk]={type:'chest', items:newArray(27)};
+      var _loot=['SKY_CRYSTAL','AMBROSIUM_SHARD','GOLDEN_AMBER','GOLD_INGOT','DIAMOND','VALKYRIE_LANCE','CLOUD_CHARM'];
+      for(var _lo=0;_lo<6;_lo++){ if(Math.random()<0.7){ var _lit=_loot[(Math.random()*_loot.length)|0]; World.tiles[_lk].items[_lo]={key:_lit, n:1+(Math.random()*3|0)}; } } }
+    toast('\uD83D\uDD13 The key turns\u2026'); sfxClick(); openChest(_lk); return;
+  }
+  if(isChest(hit.id)){
+    var _ck2=World.ck(hit.x,hit.y,hit.z), _mt2=World.tiles[_ck2];
+    if(_mt2 && _mt2.type==='mimicnest' && !_mt2.sprung){ _mt2.sprung=true;
+      World.setBlock(hit.x,hit.y,hit.z,B.AIR,true);
+      var _mm2=spawnEnemy('mimic', hit.x+0.5, hit.y+0.2, hit.z+0.5);
+      toast('\uD83E\uDD41 It\u2019s a MIMIC!'); try{ sfxHurt(); }catch(_){ } return;
+    }
+    openChest(_ck2); return;
+  }
   if(hit.id===B.BED){ sleepInBed(hit); return; }
   if(hit.id===B.BEEHIVE){ harvestHive(hit.x,hit.y,hit.z); return; }
   if(hit.id===B.FURN){ var _fk=World.ck(hit.x,hit.y,hit.z); var _ftile=World.tiles[_fk];
@@ -5220,6 +5293,19 @@ function doPlace(){
   }
   if(hit.id===B.RIFT_GATE){ travelDim(World.dim==='underforge'?'overworld':'underforge'); return; }
   if(slot && slot.key==='MAP'){ openMapScreen(); return; }
+  if(slot && ITEMS[slot.key] && ITEMS[slot.key].smokable){
+    // need Flint & Steel somewhere in the inventory to light it
+    var _hasFS=false, _all=inv.hotbar.concat(inv.main||[]);
+    for(var _fi=0;_fi<_all.length;_fi++){ if(_all[_fi] && _all[_fi].key==='FLINT_STEEL'){ _hasFS=true; break; } }
+    if(!_hasFS){ toast('\uD83E\uDEA8 Need Flint & Steel to light it'); return; }
+    if(Player._smokeCd && Player._smokeCd>0){ toast('Still smoking\u2026'); return; }
+    Player.smokingT=3.2;                       // the animation/puff duration
+    Player.swiftT=Math.max(Player.swiftT||0, 30);   // 30s speed boost, RV-style
+    Player._smokeCd=6;
+    consumeSlot(slot,1); renderHotbar(); sfxClick();
+    toast('\uD83D\uDEAC *puff* \u2014 Swiftness for 30s');
+    return;
+  }
   if(slot && ITEMS[slot.key] && ITEMS[slot.key].igniter){
     var fbx=hit.x+hit.nx, fby=hit.y+hit.ny, fbz=hit.z+hit.nz;
     // try to ignite a built portal frame first (obsidian or rift frame rectangle, like the classic)
@@ -5806,6 +5892,7 @@ shaped([['BRASS_INGOT','BRASS_INGOT','BRASS_INGOT'],['BRASS_INGOT','BRASS_INGOT'
 shaped([['OBSIDIAN','BRASS_INGOT','OBSIDIAN'],['BRASS_INGOT','DIAMOND','BRASS_INGOT'],['OBSIDIAN','BRASS_INGOT','OBSIDIAN']], 'RIFT_GATE', 1);
 shapeless([{key:'OBSIDIAN',qty:1},{key:'EMBERGLOW',qty:1}], 'RIFT_FRAME', 1);
 shapeless([{key:'FLINT',qty:1},{key:'IRON_INGOT',qty:1}], 'FLINT_STEEL', 1);
+shapeless([{key:'DRIED_TOBACCO',qty:1},{key:'PAPER',qty:1}], 'CIGARETTE', 2);
 shaped([['CLOUDSTONE','CLOUDSTONE'],['CLOUDSTONE','CLOUDSTONE']], 'CLOUDBRICK', 4);
 shaped([['SKY_CRYSTAL','SKY_CRYSTAL'],['SKY_CRYSTAL','SKY_CRYSTAL']], 'CRYSTAL_BLOCK', 1);
 shaped([['AMBROSIUM_SHARD'],['STICK']], 'AMBRO_TORCH', 4);
@@ -7662,15 +7749,67 @@ function makeCreeper(){
   return g;
 }
 function makeBird(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(g,w,h,d,c,x,y,z); }
-  var pal=[[0x3a4a6a,0x6a86b8],[0x6a2a2a,0xb05a4a],[0x2a2a2a,0x555555],[0x7a5a2a,0xc8a04a]];
-  var pick=pal[Math.random()*pal.length|0], BODY=pick[0], WING=pick[1];
-  p(0.34,0.26,0.5,BODY,0,0,0);                 // body
-  p(0.26,0.24,0.26,BODY,0,0.12,0.3);           // head
-  p(0.16,0.07,0.12,0xe6a23a,0,0.1,0.5);        // beak
-  p(0.06,0.06,0.02,0x101014,-0.1,0.16,0.42); p(0.06,0.06,0.02,0x101014,0.1,0.16,0.42); // eyes
-  var w1=p(0.5,0.06,0.34,WING,-0.36,0.04,0), w2=p(0.5,0.06,0.34,WING,0.36,0.04,0);     // wings
-  p(0.16,0.1,0.34,WING,0,0.02,-0.4);           // tail
-  g.userData.wings=[w1,w2]; return g; }
+  var pal=[[0x3a4a6a,0x6a86b8,0x9fb4e0],[0x7a2a2a,0xb05a4a,0xe08a6a],[0x2a2a2e,0x4a4a52,0x7a7a82],[0x7a5a2a,0xc8a04a,0xe8c86a],[0x2a5a3a,0x4a8a5a,0x7ab88a]];
+  var pick=pal[Math.random()*pal.length|0], BODY=pick[0], WING=pick[1], BELLY=pick[2];
+  p(0.36,0.34,0.6,BODY,0,0,0);                    // plump body
+  p(0.3,0.16,0.52,BELLY,0,-0.12,0.02);            // pale belly
+  p(0.28,0.28,0.28,BODY,0,0.2,0.32);              // head
+  p(0.1,0.16,0.1,WING,0,0.36,0.3);                // little crest
+  p(0.14,0.09,0.18,0xe6a23a,0,0.16,0.56);         // beak
+  p(0.07,0.07,0.03,0xf4f4f8,-0.09,0.24,0.44); p(0.07,0.07,0.03,0xf4f4f8,0.09,0.24,0.44);   // eye whites
+  p(0.04,0.04,0.02,0x101014,-0.09,0.24,0.47); p(0.04,0.04,0.02,0x101014,0.09,0.24,0.47);   // pupils
+  var w1=p(0.12,0.28,0.5,WING,-0.24,0.02,-0.02), w2=p(0.12,0.28,0.5,WING,0.24,0.02,-0.02);  // folded wings on the sides
+  p(0.1,0.06,0.42,WING,-0.26,0.14,-0.05); p(0.1,0.06,0.42,WING,0.26,0.14,-0.05);            // wing tops (lighter)
+  p(0.22,0.08,0.28,WING,0,0.0,-0.42);             // tail base
+  p(0.09,0.05,0.22,BODY,-0.08,0.0,-0.6); p(0.09,0.05,0.22,BODY,0.08,0.0,-0.6);              // forked tail feathers
+  p(0.05,0.12,0.05,0xd8a038,-0.1,-0.28,0.06); p(0.05,0.12,0.05,0xd8a038,0.1,-0.28,0.06);    // legs
+  p(0.09,0.04,0.09,0xd8a038,-0.1,-0.34,0.08); p(0.09,0.04,0.09,0xd8a038,0.1,-0.34,0.08);    // feet
+  g.userData.wings=[w1,w2];
+  return g;
+}
+function skycarverTick(e,dt){
+  // ===== SELF-CONTAINED FLIGHT: mirrors birdTick so nothing in the shared pipeline can interfere =====
+  if(e._cruise==null) e._cruise = 108 + Math.abs((Math.floor(e.pos.x)*7 + Math.floor(e.pos.z)*13) % 20);
+  // pick a distant island to travel toward every so often
+  e._goalCd=(e._goalCd||0)-dt;
+  if(e._goalCd<=0){ e._goalCd=9+Math.random()*7;
+    for(var gi=0; gi<8; gi++){
+      var ga=Math.random()*6.283, gr=50+Math.random()*110;
+      var gx=e.pos.x+Math.cos(ga)*gr, gz=e.pos.z+Math.sin(ga)*gr;
+      if(World.skyTopAt(Math.floor(gx),Math.floor(gz))>0){ e.wgoal=Math.atan2(gx-e.pos.x, gz-e.pos.z); break; }
+    }
+    if(e.wgoal==null) e.wgoal=Math.random()*6.283;
+  }
+  // ease the heading toward the goal (slow, graceful)
+  var cd=(e.wgoal-(e.wdir||0)); while(cd>Math.PI)cd-=6.283; while(cd<-Math.PI)cd+=6.283;
+  e._turn=cd;
+  e.wdir=(e.wdir||0)+cd*Math.min(1,dt*0.5);
+  // MOVE: direct position writes, exactly like birds - no collision, no gravity, nothing can stop it
+  var spd=4.0;
+  e.pos.x += Math.sin(e.wdir)*spd*dt;
+  e.pos.z += Math.cos(e.wdir)*spd*dt;
+  var bob=Math.sin(now*0.0007 + e.pos.x*0.05)*1.5;
+  var targetY=e._cruise+bob;
+  e.pos.y += (targetY-e.pos.y)*Math.min(1,dt*0.9);
+  if(e.pos.y<95) e.pos.y=95;                                  // absolute floor: never touches the islands
+  e.mesh.position.copy(e.pos);
+  // FACE + BANK + PITCH
+  e.mesh.rotation.set(0,0,0,'YXZ');
+  e.mesh.rotation.y = -e.wdir + Math.PI;
+  var bank=Math.max(-0.55, Math.min(0.55, cd*1.8));
+  e.mesh.rotation.z = bank;
+  e.mesh.rotation.x = Math.max(-0.25, Math.min(0.25, (targetY-e.pos.y)*-0.08));
+  // GIANT WING FLAP
+  if(e.mesh.userData.wings){
+    var beat=Math.sin(now*0.0032);
+    var fl=beat*0.7+0.1;
+    e.mesh.userData.wings[0].rotation.z = fl;
+    e.mesh.userData.wings[1].rotation.z = -fl;
+    e.mesh.userData.wings[0].rotation.x = beat*0.22;
+    e.mesh.userData.wings[1].rotation.x = beat*0.22;
+  }
+  if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++){ if(mm[mi].__base==null) mm[mi].__base=mm[mi].color.getHex(); if(red){ mm[mi].color.setHex(mixHex(mm[mi].__base,0xffffff,0.55)); } else { mm[mi].color.setHex(mm[mi].__base); } } } }
+}
 function birdTick(e,dt){
   e.wcd-=dt; if(e.wcd<=0){ e.wcd=2.5+Math.random()*3; e.wdir+=(Math.random()-0.5)*1.6; }
   var sy=surfaceY(Math.floor(e.pos.x),Math.floor(e.pos.z)); if(sy<1) sy=SEA;
@@ -7679,6 +7818,7 @@ function birdTick(e,dt){
   e.pos.x += Math.cos(e.wdir)*e.speed*dt; e.pos.z += Math.sin(e.wdir)*e.speed*dt;
   e.mesh.position.copy(e.pos); e.mesh.rotation.y=-e.wdir+Math.PI/2;
   var flap=Math.sin(now*0.02)*0.6; if(e.mesh.userData.wings){ e.mesh.userData.wings[0].rotation.z=flap; e.mesh.userData.wings[1].rotation.z=-flap; }
+  if((e.kind==='moa'||e.kind==='cockatrice') && e.mesh.userData.wings){ var mf=Math.sin(now*0.015)*0.7; e.mesh.userData.wings[0].rotation.z=mf; e.mesh.userData.wings[1].rotation.z=-mf; }
   if(e.hurt>0){ e.hurt-=dt; var red=e.hurt>0, mm=e.mesh.__mats; if(mm){ for(var mi=0;mi<mm.length;mi++){ if(mm[mi].__base==null) mm[mi].__base=mm[mi].color.getHex(); if(red){ mm[mi].__flash=mm[mi].__base; mm[mi].color.setHex(mixHex(mm[mi].__base,0xffffff,0.55)); } else { mm[mi].color.setHex(mm[mi].__base); } } } }
 }
 function maybeBirdEggs(){
@@ -8259,7 +8399,7 @@ function makeRabbit(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,
 var MOBDEF={
   zombie:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:3}, zombie_villager:{hp:20,w:0.6,h:1.9,sp:2.1,dmg:4}, zombie_dwarf:{hp:18,w:0.6,h:1.42,sp:2.0,dmg:4}, skeleton:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:2},
   spooler:{hp:8,w:0.8,h:0.6,sp:4.0,dmg:0}, creeper:{hp:14,w:0.9,h:0.9,sp:3.0,dmg:3},   // Cogspider: brass boiler-spider
-  skycarver:{hp:40,w:2.4,h:1.4,sp:2.0,dmg:0,passive:true}, skywisp:{hp:8,w:0.5,h:0.5,sp:1.4,dmg:0,passive:true}, cockatrice:{hp:14,w:0.7,h:1.1,sp:3.4,dmg:3}, moa:{hp:20,w:0.8,h:1.7,sp:2.6,dmg:0,passive:true}, swet:{hp:10,w:0.8,h:0.7,sp:2.4,dmg:2}, skysheep:{hp:12,w:0.9,h:1.2,sp:1.6,dmg:0,passive:true}, skywhale:{hp:70,w:3.5,h:2.2,sp:1.2,dmg:0,passive:true}, cart:{hp:20,w:0.9,h:0.7,sp:0,dmg:0,passive:true}, valkyrie:{hp:170,w:0.9,h:2.2,sp:3.6,dmg:7,boss:true}, sunspirit:{hp:200,w:1.2,h:1.2,sp:2.8,dmg:8,boss:true}, slider:{hp:130,w:1.8,h:1.8,sp:3.4,dmg:5,boss:true}, warden:{hp:150,w:0.9,h:2.5,sp:2.7,dmg:6,boss:true}, fish:{hp:3,w:0.4,h:0.3,sp:2.0,dmg:0}, seahorse:{hp:14,w:0.6,h:1.1,sp:3.0,dmg:0,passive:true,water:true}, cow:{hp:14,w:0.8,h:1.3,sp:1.4,dmg:0,passive:true},
+  skycarver:{hp:40,w:2.4,h:1.4,sp:2.0,dmg:0,passive:true}, skywisp:{hp:8,w:0.5,h:0.5,sp:1.4,dmg:0,passive:true}, cockatrice:{hp:14,w:0.7,h:1.1,sp:3.4,dmg:3}, moa:{hp:20,w:0.8,h:1.7,sp:2.6,dmg:0,passive:true}, swet:{hp:10,w:0.8,h:0.7,sp:2.4,dmg:2}, skysheep:{hp:12,w:0.9,h:1.2,sp:1.6,dmg:0,passive:true}, skywhale:{hp:70,w:3.5,h:2.2,sp:1.2,dmg:0,passive:true}, cart:{hp:20,w:0.9,h:0.7,sp:0,dmg:0,passive:true}, valkyrie:{hp:170,w:0.9,h:2.2,sp:3.6,dmg:7,boss:true}, sunspirit:{hp:200,w:1.2,h:1.2,sp:2.8,dmg:8,boss:true}, mimic:{hp:45,w:0.9,h:0.9,sp:3.0,dmg:5}, slider:{hp:130,w:1.8,h:1.8,sp:3.4,dmg:5,boss:true}, warden:{hp:150,w:0.9,h:2.5,sp:2.7,dmg:6,boss:true}, fish:{hp:3,w:0.4,h:0.3,sp:2.0,dmg:0}, seahorse:{hp:14,w:0.6,h:1.1,sp:3.0,dmg:0,passive:true,water:true}, cow:{hp:14,w:0.8,h:1.3,sp:1.4,dmg:0,passive:true},
   pig:{hp:10,w:0.7,h:0.9,sp:1.5,dmg:0,passive:true}, sheep:{hp:10,w:0.8,h:1.2,sp:1.4,dmg:0,passive:true},
   chicken:{hp:4,w:0.4,h:0.7,sp:1.7,dmg:0,passive:true},
   shark:{hp:18,w:0.6,h:0.6,sp:4.4,dmg:4}, crab:{hp:6,w:0.5,h:0.4,sp:1.3,dmg:0,passive:true},
@@ -8313,30 +8453,43 @@ function meshFor(kind){ switch(kind){
     var se2=se1.clone(); se2.position.x=0.15; sw2.add(se2);
     return sw2; }
   case 'skysheep':{ var ss=makeSheep(); ss.traverse(function(o){ if(o.material&&o.material.color){ o.material.color.setHex(mixHex(o.material.color.getHex(), 0xbfe8ff, 0.45)); if(o.material.__base!=null) o.material.__base=o.material.color.getHex(); } }); return ss; }
-  case 'skycarver':{ var kv=new THREE.Group(); kv.__mats=[]; (function(){ function p(w,h,d,c,x,y,z){ return partMesh(kv,w,h,d,c,x,y,z); }
-    var PALE=0xd9ded7, PAL2=0xc8cfc6, STONE=0x9aa39c, ICE=0x9fe0dc, ICED=0x63c4c0, MOSS=0x7aa348, MOSSD=0x5d8836, DK=0x28302c;
-    p(1.1,0.62,3.2,PALE,0,0.95,0);                        // long tapered body
-    p(0.9,0.5,0.8,PALE,0,0.9,1.9);                        // head block
-    p(0.62,0.32,0.6,PAL2,0,0.8,2.5);                      // snout
-    p(0.64,0.1,0.3,STONE,0,0.66,2.6);                     // under-jaw
-    p(0.14,0.14,0.08,DK,-0.4,1.0,2.2); p(0.14,0.14,0.08,DK,0.4,1.0,2.2);   // eyes
-    p(0.2,0.4,0.16,ICED,0,1.35,2.0);                      // crystal crest on the head
-    p(1.14,0.14,3.0,PAL2,0,0.6,0);                        // pale keel underside
-    // wings: broad layered slabs sweeping out and back, icy leading edges
-    p(2.3,0.14,1.5,PAL2,-1.6,0.95,0.2); p(2.3,0.14,1.5,PAL2,1.6,0.95,0.2);
-    p(1.5,0.12,1.1,PALE,-2.9,0.93,-0.2); p(1.5,0.12,1.1,PALE,2.9,0.93,-0.2);
-    p(2.2,0.08,0.24,ICE,-1.6,1.02,0.95); p(2.2,0.08,0.24,ICE,1.6,1.02,0.95);           // icy leading edge
-    p(0.9,0.08,0.7,ICE,-3.4,0.92,-0.5); p(0.9,0.08,0.7,ICE,3.4,0.92,-0.5);             // ice wing tips
-    // tail: taper + split fluke
-    p(0.7,0.4,1.2,PAL2,0,0.95,-2.0);
-    p(1.5,0.1,0.8,PALE,0,1.0,-2.9);
-    p(0.5,0.08,0.6,ICE,-0.8,1.0,-3.1); p(0.5,0.08,0.6,ICE,0.8,1.0,-3.1);
-    // the living back: moss carpet, grass tufts, crystal spurs and one tiny tree
-    p(0.95,0.12,2.4,MOSS,0,1.3,0.1);
-    p(0.2,0.14,0.2,MOSSD,-0.25,1.42,0.9); p(0.2,0.14,0.2,MOSSD,0.3,1.42,-0.3); p(0.2,0.14,0.2,MOSSD,-0.2,1.42,-0.9);   // tufts
-    p(0.16,0.5,0.16,ICED,0.28,1.6,0.5); p(0.12,0.36,0.12,ICE,0.1,1.52,-0.6); p(0.14,0.44,0.14,ICED,-0.3,1.56,0.1);     // crystal spurs
-    p(0.12,0.4,0.12,0x6b4726,0,1.55,-1.3); p(0.42,0.34,0.42,0x4f8a3c,0,1.85,-1.3);      // the tiny tree
-  })(); kv.scale.set(1.5,1.5,1.5); return kv; }
+  case 'skycarver':{ var kv=new THREE.Group(); kv.__mats=[]; function p(w,h,d,c,x,y,z){ return partMesh(kv,w,h,d,c,x,y,z); }
+    var PALE=0xdde2db, PAL2=0xc7cec6, STONE=0x969e97, ICE=0xa6ebe6, ICED=0x5bc6c1, MOSS=0x74a046, MOSSD=0x577f33, DK=0x232b27, GLD=0xc9a23a;
+    // long sleek body
+    p(1.0,0.56,3.8,PALE,0,0.95,0);
+    p(1.06,0.16,3.8,PAL2,0,1.22,0);                       // dorsal ridge plate
+    p(1.06,0.28,3.6,STONE,0,0.72,0);                      // carved underbelly
+    p(1.08,0.1,0.6,STONE,0,1.04,1.3); p(1.08,0.1,0.6,STONE,0,1.04,0); p(1.08,0.1,0.6,STONE,0,1.04,-1.3);   // rune ribs
+    p(0.05,0.2,0.2,GLD,0.56,0.95,-0.8); p(0.05,0.2,0.2,GLD,-0.56,0.95,0.8);   // gold sigils
+    // head + beak
+    p(0.82,0.5,0.95,PALE,0,0.92,2.25);
+    p(0.5,0.28,0.72,PAL2,0,0.82,2.9);
+    p(0.5,0.1,0.34,STONE,0,0.66,3.0);
+    p(0.2,0.2,0.05,0xffffff,-0.34,1.04,2.72); p(0.2,0.2,0.05,0xffffff,0.34,1.04,2.72);   // white eye backing
+    p(0.12,0.12,0.06,DK,-0.34,1.04,2.75); p(0.12,0.12,0.06,DK,0.34,1.04,2.75);            // dark pupils, proud of the head
+    p(0.16,0.44,0.14,ICED,0,1.38,2.15); p(0.1,0.3,0.1,ICE,0,1.66,1.95);       // crystal crest
+    // TAIL: taper + split icy fluke
+    p(0.6,0.36,1.3,PAL2,0,0.95,-2.2);
+    p(1.7,0.1,0.9,PALE,0,1.0,-3.2);
+    p(0.6,0.08,0.7,ICE,-1.0,1.0,-3.4); p(0.6,0.08,0.7,ICE,1.0,1.0,-3.4);
+    // LIVING BACK: moss, tufts, crystal spurs, a tiny tree
+    p(0.95,0.12,2.6,MOSS,0,1.32,0.1);
+    p(0.22,0.14,0.22,MOSSD,-0.25,1.44,0.9); p(0.22,0.14,0.22,MOSSD,0.3,1.44,-0.3); p(0.22,0.14,0.22,MOSSD,-0.2,1.44,-0.9);
+    p(0.16,0.5,0.16,ICED,0.28,1.62,0.5); p(0.12,0.36,0.12,ICE,0.1,1.54,-0.6); p(0.14,0.44,0.14,ICED,-0.3,1.58,0.1);
+    p(0.12,0.42,0.12,0x6b4726,0,1.56,-1.4); p(0.46,0.36,0.46,0x4f8a3c,0,1.88,-1.4);
+    // WINGS: big layered feathered slabs on flap-pivot groups
+    var _kw1=new THREE.Group(), _kw2=new THREE.Group(); _kw1.position.set(-0.5,1.0,0.1); _kw2.position.set(0.5,1.0,0.1); kv.add(_kw1); kv.add(_kw2);
+    function feather(gg,sgn){
+      var m1=partMesh(kv,2.6,0.14,1.7,PAL2,0,0,0); kv.remove(m1); gg.add(m1); m1.position.set(sgn*1.35,0,0.1);      // inner wing
+      var m2=partMesh(kv,2.0,0.12,1.3,PALE,0,0,0); kv.remove(m2); gg.add(m2); m2.position.set(sgn*3.2,-0.05,-0.15);  // mid wing
+      var m3=partMesh(kv,1.4,0.1,0.9,PAL2,0,0,0);  kv.remove(m3); gg.add(m3); m3.position.set(sgn*4.6,-0.1,-0.5);    // outer wing
+      var e1=partMesh(kv,2.4,0.06,0.22,ICE,0,0,0); kv.remove(e1); gg.add(e1); e1.position.set(sgn*1.6,0.08,0.95);    // icy leading edge
+      var t1=partMesh(kv,0.9,0.06,0.7,ICE,0,0,0);  kv.remove(t1); gg.add(t1); t1.position.set(sgn*5.1,-0.1,-0.9);    // ice wingtip
+    }
+    feather(_kw1,-1); feather(_kw2,1);
+    kv.userData.wings=[_kw1,_kw2];
+    kv.scale.set(1.7,1.7,1.7);
+    return kv; }
   case 'skywhale':{ var wgr=new THREE.Group(); wgr.__mats=[]; (function(){ function p(w,h,d,c,x,y,z){ return partMesh(wgr,w,h,d,c,x,y,z); }
     var BODY=0xb8bec6, CARV=0x8f96a0, PALE=0xe6e9ee, ICE=0xbfe6f2, DK=0x2a3038, GLD=0xc8a23a;
     p(1.3,1.05,4.8,BODY,0,1.3,0);                          // long sleek body
@@ -8371,6 +8524,15 @@ function meshFor(kind){ switch(kind){
     var se3=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,0.1), new THREE.MeshBasicMaterial({color:0x401808})); se3.position.set(-0.2,0.85,0.55); su.add(se3);
     var se4=se3.clone(); se4.position.x=0.2; su.add(se4);
     return su; }
+  case 'mimic':{ var mm=new THREE.Group(); mm.__mats=[];
+    var _mb=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.7,0.9), new THREE.MeshBasicMaterial({color:0x7a4a24})); _mb.position.y=0.35; mm.add(_mb);
+    var _ml=new THREE.Mesh(new THREE.BoxGeometry(0.92,0.28,0.92), new THREE.MeshBasicMaterial({color:0x6a3f1e})); _ml.position.y=0.78; mm.add(_ml);
+    var _mt1=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.22,0.06), new THREE.MeshBasicMaterial({color:0xf4f4f0}));
+    for(var _mi3=0;_mi3<5;_mi3++){ var t=_mt1.clone(); t.position.set(-0.32+_mi3*0.16,0.55,0.47); mm.add(t); }   // teeth
+    var _me1=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.14,0.06), new THREE.MeshBasicMaterial({color:0xff3020})); _me1.position.set(-0.24,0.92,0.42); mm.add(_me1);
+    var _me2=_me1.clone(); _me2.position.x=0.24; mm.add(_me2);
+    var _mlock=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,0.06), new THREE.MeshBasicMaterial({color:0xd8b13a})); _mlock.position.set(0,0.5,0.48); mm.add(_mlock);
+    return mm; }
   case 'slider':{ var sl=new THREE.Group(); sl.__mats=[];
     var slb=new THREE.Mesh(new THREE.BoxGeometry(1.7,1.7,1.7), new THREE.MeshBasicMaterial({color:0xc6c6bc})); slb.position.y=0.9; sl.add(slb);
     var slf=new THREE.Mesh(new THREE.BoxGeometry(1.2,1.2,0.08), new THREE.MeshBasicMaterial({color:0x8a8a80})); slf.position.set(0,0.9,0.88); sl.add(slf);
@@ -8874,6 +9036,12 @@ function explodeAt(x,y,z,r){
 var _uniqCd=0, _hasHeart=false, _hasMagnet=false, _hasCloud=false, _hasSun=false;
 function tickUniques(dt){
   if(Player.swiftT>0) Player.swiftT-=dt;
+  if(Player._smokeCd>0) Player._smokeCd-=dt;
+  if(Player.smokingT>0){ Player.smokingT-=dt;
+    // raise a hand to the mouth (handled in updateHand via Player.smokingT) and puff smoke
+    if(Math.random()<0.5){ try{ var _mh=Player.pos.y+Player.eye-0.1, _fx=-Math.sin(Player.yaw)*0.4, _fz=-Math.cos(Player.yaw)*0.4;
+      spawnSteam(Player.pos.x+_fx, _mh, Player.pos.z+_fz, 0xd8d8d8); }catch(_){ } }
+  }
   if(Player.regenT>0){ Player.regenT-=dt; Player._regAcc=(Player._regAcc||0)+dt; if(Player._regAcc>2.2){ Player._regAcc=0; if(Player.hp<Player.maxHp){ Player.hp=Math.min(Player.maxHp,Player.hp+1); updateStats(); } } }
   _uniqCd-=dt; if(_uniqCd>0) return; _uniqCd=1.0;
   _hasHeart=false; _hasMagnet=false;
@@ -8967,6 +9135,7 @@ function tickEntities(dt){
       else if(e.kind==='slider'){
         for(var _sl2=0;_sl2<5;_sl2++) spawnDrop(_bx,_by+1,_bz,'SKY_CRYSTAL',1+(Math.random()*2|0));
         if(_ur<0.4) spawnDrop(_bx,_by+1,_bz,'CLOUD_CHARM',1); else spawnDrop(_bx,_by+1,_bz,'AMBROSIUM_SHARD',4);
+        spawnDrop(_bx,_by+1,_bz,'DUNGEON_KEY',1+(Math.random()*2|0));
         toast('\uD83C\uDF89 The Slider crumbles! Loot bursts out!');
       }
       else if(_ur<0.28) spawnDrop(_bx,_by+1,_bz,'HEART_AMULET',1);
@@ -8977,6 +9146,7 @@ function tickEntities(dt){
       toast('\uD83C\uDF89 The Warden falls! Loot explodes out!'); }
     if(e && e.hp!=null && e.hp<=0 && e.kind==='skywisp' && !e._wd){ e._wd=1; if(Math.random()<0.6) spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'SKY_CRYSTAL',1); }
     if(e && e.hp!=null && e.hp<=0 && e.kind==='skysheep' && !e._wd){ e._wd=1; spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'WOOL',1+(Math.random()*2|0)); if(Math.random()<0.3) spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'SKY_CRYSTAL',1); }
+    if(e && e.hp!=null && e.hp<=0 && e.kind==='mimic' && !e._wd){ e._wd=1; var _mx=Math.floor(e.pos.x),_my=Math.floor(e.pos.y),_mz=Math.floor(e.pos.z); spawnDrop(_mx,_my+1,_mz,'DUNGEON_KEY',1); spawnDrop(_mx,_my+1,_mz,'GOLD_INGOT',2+(Math.random()*3|0)); if(Math.random()<0.3) spawnDrop(_mx,_my+1,_mz,'DIAMOND',1); toast('The mimic bursts \u2014 loot spills out!'); }
     if(e && e.hp!=null && e.hp<=0 && e.kind==='swet' && !e._wd){ e._wd=1; spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'SUGAR',1+(Math.random()*2|0)); }
     if(e && e.hp!=null && e.hp<=0 && e.kind==='cockatrice' && !e._wd){ e._wd=1; if(Math.random()<0.5) spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'GOLDEN_AMBER',1); }
     if(e && e.hp!=null && e.hp<=0 && e.kind==='skywhale' && !e._wd){ e._wd=1; spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'SKY_CRYSTAL',2+(Math.random()*3|0)); toast('The sky whale sighs its last\u2026'); }
@@ -9049,6 +9219,11 @@ function tickEntities(dt){
     if(e.kind==='airship'){ airshipTick(e,dt); continue; }
     try{ waterMobCheck(e,dt); }catch(_){ }
     if(e.kind==='car'||e.kind==='truck'||e.kind==='rocket'){ carTick(e,dt); continue; }
+    if(e.kind==='skycarver' && !e.ridden){ skycarverTick(e,dt);
+      if(e.hp<=0){ scene.remove(e.mesh); entities.splice(i,1); spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'SKY_CRYSTAL',2); giveXP(6); continue; }
+      if(dist>150){ scene.remove(e.mesh); entities.splice(i,1); }
+      continue;
+    }
     if(e.kind==='bird'){ birdTick(e,dt);
       if(e.hp<=0){ scene.remove(e.mesh); entities.splice(i,1); if(Math.random()<0.7) giveItem('FEATHER',1); giveXP(1); continue; }
       if(dist>92){ scene.remove(e.mesh); entities.splice(i,1); }
@@ -9093,12 +9268,20 @@ function tickEntities(dt){
         e.vel.x=-Math.sin(sang)*e.speed*1.25; e.vel.z=-Math.cos(sang)*e.speed*1.25;  // scatter away
         if(e.onGround && Math.hypot(e.vel.x,e.vel.z)>0.1){ var sahx=e.pos.x+Math.sign(e.vel.x)*0.4, sahz=e.pos.z+Math.sign(e.vel.z)*0.4; if(isSolid(World.getBlock(Math.floor(sahx),Math.floor(e.pos.y),Math.floor(sahz)))) e.vel.y=6.0; }
         if(dist>24) e.provoked=false;
+      } else if(e.kind==='skycarver'){
+        // Skycarver heading, velocity and facing are ALL handled in its flight-physics block below.
+        // Doing nothing here prevents two systems fighting (that was the spin).
+      } else if(e.kind==='skywisp'||e.kind==='skysheep'||e.kind==='moa'||e.kind==='sunspirit'||e.kind==='bird'){
+        e.wcd=(e.wcd||0)-dt; if(e.wcd<=0){ e.wcd=5+Math.random()*6; e.wgoal=Math.random()*6.283; }
+        var _cd=((e.wgoal||0)-(e.wdir||0)); while(_cd>Math.PI)_cd-=6.283; while(_cd<-Math.PI)_cd+=6.283;
+        e.wdir=(e.wdir||0)+_cd*Math.min(1,dt*0.6);
+        e.vel.x=Math.sin(e.wdir)*e.speed*0.3; e.vel.z=Math.cos(e.wdir)*e.speed*0.3;   // gentle forward drift so they actually travel
       } else {
         e.wcd=(e.wcd||0)-dt; if(e.wcd<=0){ e.wcd=2+Math.random()*3; e.wdir=Math.random()*6.283; e.wmove=Math.random()<0.5; }
         if(e.wmove){ e.vel.x=Math.sin(e.wdir)*e.speed*0.35; e.vel.z=Math.cos(e.wdir)*e.speed*0.35; }
         else { e.vel.x=0; e.vel.z=0; }
       }
-      if(Math.abs(e.vel.x)+Math.abs(e.vel.z)>0.04) e.mesh.rotation.y=Math.atan2(e.vel.x,e.vel.z); // face travel (+z front)
+      if(e.kind!=='skycarver' && Math.abs(e.vel.x)+Math.abs(e.vel.z)>0.04) e.mesh.rotation.y=Math.atan2(e.vel.x,e.vel.z); // face travel (skycarver faces via its flight block)
     } else if(e.kind==='skeleton' && dist<40){
       var ang=Math.atan2(dx,dz); e.mesh.rotation.y=ang;
       if(dist<5){ e.vel.x=-Math.sin(ang)*e.speed; e.vel.z=-Math.cos(ang)*e.speed; }      // kite away
@@ -9137,10 +9320,21 @@ function tickEntities(dt){
     } else if(e.kind==='sunspirit'){
       e.vel.y = Math.sin(now*0.0015+(e.wdir||0)*4.0)*0.9;   // the Sun Spirit burns aloft
     } else if(e.kind==='skycarver'){
-      if(e._cruise==null) e._cruise=e.pos.y;
-      var _kg=0; try{ for(var _kq=1;_kq<=4;_kq++){ if(isSolid(World.getBlockLoaded(Math.floor(e.pos.x),Math.floor(e.pos.y)-_kq,Math.floor(e.pos.z)))){ _kg=5-_kq; break; } } }catch(_){ }
-      e.vel.y = Math.sin(now*0.0007+(e.wdir||0)*4.0)*0.3 + _kg*0.6 + (e._cruise-e.pos.y)*0.12;
-      if(!e.ridden && Math.hypot(e.vel.x,e.vel.z)<0.3){ e.vel.x=-Math.sin(e.wdir||0)*0.9; e.vel.z=-Math.cos(e.wdir||0)*0.9; }
+      if(!e.ridden){
+        if(e._cruise==null) e._cruise=112 + (((e.pos.x*7+e.pos.z*13)%18)+18)%18;   // a high open-sky lane, above every island
+        e._goalCd=(e._goalCd||0)-dt;
+        if(e._goalCd<=0){ e._goalCd=8+Math.random()*8;
+          for(var _si=0;_si<6;_si++){ var _ta=Math.random()*6.283, _tr=40+Math.random()*90;
+            var _gx=e.pos.x+Math.cos(_ta)*_tr, _gz=e.pos.z+Math.sin(_ta)*_tr;
+            if(World.skyTopAt(Math.floor(_gx),Math.floor(_gz))>0){ e.wgoal=Math.atan2(-(_gx-e.pos.x), -(_gz-e.pos.z)); break; } }
+        }
+        var _cd2=((e.wgoal==null?(e.wdir||0):e.wgoal)-(e.wdir||0)); while(_cd2>Math.PI)_cd2-=6.283; while(_cd2<-Math.PI)_cd2+=6.283;
+        e._turn=_cd2; e.wdir=(e.wdir||0)+_cd2*Math.min(1,dt*0.5);
+        e.vel.x=-Math.sin(e.wdir)*3.2; e.vel.z=-Math.cos(e.wdir)*3.2;                   // strong steady forward flight
+        e.vel.y = Math.sin(now*0.0006+(e.wdir||0)*3.0)*0.35 + (e._cruise-e.pos.y)*0.6;  // firmly hold the high lane
+        if(e.pos.y<90) e.vel.y += 2.5;                                                  // hard floor: never sink to the void
+        e.mesh.rotation.y = -(e.wdir||0) + Math.PI; e._climb=e.vel.y;
+      }
     } else if(e.kind==='skywhale'){
       if(e._cruise==null) e._cruise=e.pos.y;
       var _wgd=0; try{ for(var _wq=1;_wq<=5;_wq++){ if(isSolid(World.getBlockLoaded(Math.floor(e.pos.x),Math.floor(e.pos.y)-_wq,Math.floor(e.pos.z)))){ _wgd=6-_wq; break; } } }catch(_){ }
@@ -9151,19 +9345,34 @@ function tickEntities(dt){
       e.swimming=false;
     }
     e.onGround=false;
-    var nx=e.pos.x+e.vel.x*dt; if(!entCollides(e,nx,e.pos.y,e.pos.z)) e.pos.x=nx; else e.vel.x=0;
-    var nz=e.pos.z+e.vel.z*dt; if(!entCollides(e,e.pos.x,e.pos.y,nz)) e.pos.z=nz; else e.vel.z=0;
-    var ny=e.pos.y+e.vel.y*dt;
-    if(!entCollides(e,e.pos.x,ny,e.pos.z)) e.pos.y=ny; else { if(e.vel.y<0) e.onGround=true; e.vel.y=0; }
+    var _flyer=(e.kind==='skycarver'||e.kind==='skywisp'||e.kind==='skysheep'||e.kind==='sunspirit'||e.kind==='bird'||e.kind==='moa'||e.kind==='skywhale');
+    if(_flyer && !e.ridden){
+      // flyers move freely through the sky - no terrain collision to snag them on treetops
+      e.pos.x+=e.vel.x*dt; e.pos.y+=e.vel.y*dt; e.pos.z+=e.vel.z*dt;
+    } else {
+      var nx=e.pos.x+e.vel.x*dt; if(!entCollides(e,nx,e.pos.y,e.pos.z)) e.pos.x=nx; else e.vel.x=0;
+      var nz=e.pos.z+e.vel.z*dt; if(!entCollides(e,e.pos.x,e.pos.y,nz)) e.pos.z=nz; else e.vel.z=0;
+      var ny=e.pos.y+e.vel.y*dt;
+      if(!entCollides(e,e.pos.x,ny,e.pos.z)) e.pos.y=ny; else { if(e.vel.y<0) e.onGround=true; e.vel.y=0; }
+    }
     if(e.swimming && e.kind!=='crab'){ e._swb=Math.sin(now*0.0025+(e.wdir||0))*0.1; } else e._swb=0;
     e.mesh.position.copy(e.pos);
+    if(e.kind==='skycarver' && e.mesh.userData.wings && !e.ridden){
+      var _beat=Math.sin(now*0.0035);
+      var _kf=_beat*0.6+0.12; e.mesh.userData.wings[0].rotation.z=_kf; e.mesh.userData.wings[1].rotation.z=-_kf;
+      e.mesh.userData.wings[0].rotation.x=_beat*0.18; e.mesh.userData.wings[1].rotation.x=_beat*0.18;
+      var _bank=Math.max(-0.6,Math.min(0.6,(e._turn||0)*1.6));
+      e.mesh.rotation.z=_bank+Math.sin(now*0.0012)*0.05;
+      e.mesh.rotation.x=-Math.max(-0.4,Math.min(0.4,(e._climb||0)*0.1));
+      e.mesh.position.y+=Math.sin(now*0.0018)*0.08;
+    }
     { var _vdx=e.pos.x-Player.pos.x, _vdz=e.pos.z-Player.pos.z; e.mesh.visible=(_vdx*_vdx+_vdz*_vdz<4096); }
     if(e._swb) e.mesh.position.y+=e._swb;
     if(e.kind==='creeper'){ e.steamCd=(e.steamCd||0)-dt; if(e.steamCd<=0){ e.steamCd=0.2+Math.random()*0.14; spawnSteam(e.pos.x, e.pos.y+1.15, e.pos.z, e.mesh.userData?e.mesh.userData.steamCol:0xe8eef7); } }   // smokestack puffs steam out the top
     var _ddx=e.pos.x-Player.pos.x, _ddz=e.pos.z-Player.pos.z;
     if(_ddx*_ddx+_ddz*_ddz>1296){ } else {   // skip cosmetic animation beyond 36 blocks
     var _isN2=(typeof timeOfDay!=='undefined') && timeOfDay>0.54 && timeOfDay<0.96;
-    if(MOBDEF[e.kind] && MOBDEF[e.kind].passive && e.kind!=='fish' && e.kind!=='seahorse' && e.kind!=='villager' && e.kind!=='cart'){
+    if(MOBDEF[e.kind] && MOBDEF[e.kind].passive && e.kind!=='fish' && e.kind!=='seahorse' && e.kind!=='villager' && e.kind!=='cart' && e.kind!=='skycarver' && e.kind!=='skywisp' && e.kind!=='skysheep' && e.kind!=='skywhale' && e.kind!=='moa' && e.kind!=='sunspirit' && e.kind!=='bird'){
       if(_isN2 && !e.sleep && !e.provoked && Math.hypot(e.vel.x,e.vel.z)<0.05 && Math.random()<0.002){ e.sleep=true; }
       if(!_isN2) e.sleep=false;
       if(e.sleep){ e.vel.x=0; e.vel.z=0; e.mesh.rotation.z=0.5; e.mesh.position.y-=0.18;
@@ -11105,6 +11314,7 @@ function loop(t){
   now=t; var dt=(t-last)/1000; last=t; if(dt>0.1)dt=0.1; frame++;
   if(_doorCd>0) _doorCd-=dt;   // door-use cooldown must tick every frame (doors could never close before)
   if(chunkMatT.uniforms.uTime) chunkMatT.uniforms.uTime.value = t*0.001;
+  if(chunkMat.uniforms.uTime) chunkMat.uniforms.uTime.value = t*0.001;
   if(chunkMat.uniforms.uCamPos) chunkMat.uniforms.uCamPos.value.copy(camera.position);
   if(!uiOpen){
     physics(dt);
@@ -11128,6 +11338,8 @@ function loop(t){
         if(_ce2 && ['skywisp','skysheep','skywhale','moa','cockatrice','swet'].indexOf(_ce2.kind)>=0){
           var _cdx2=_ce2.pos.x-Player.pos.x,_cdz2=_ce2.pos.z-Player.pos.z;
           if(_cdx2*_cdx2+_cdz2*_cdz2>8100){ scene.remove(_ce2.mesh); entities.splice(_ci2,1); } } }
+      var _kc=0; for(var _kq2=0;_kq2<entities.length;_kq2++) if(entities[_kq2] && entities[_kq2].kind==='skycarver') _kc++;
+      if(_kc<3){ for(var _kn3=0;_kn3<2;_kn3++){ var _ke2=spawnEnemy('skycarver', Player.pos.x+(Math.random()*90-45), 110+Math.random()*18, Player.pos.z+(Math.random()*90-45)); if(_ke2){ _ke2._cruise=110+Math.random()*18; _ke2.wdir=Math.random()*6.283; _ke2.wgoal=_ke2.wdir; } } }
       if(_wn<14){ var _wa2=Math.random()*6.283, _wd2=10+Math.random()*22;
         var _wx2=Math.floor(Player.pos.x+Math.cos(_wa2)*_wd2), _wz2=Math.floor(Player.pos.z+Math.sin(_wa2)*_wd2);
         var _wt2=World.skyTopAt(_wx2,_wz2);
@@ -11136,7 +11348,7 @@ function loop(t){
           if(_wr2<0.3) spawnEnemy('skywisp', _wx2+0.5, _wt2+2+Math.random()*2, _wz2+0.5);
           else if(_wr2<0.55) spawnEnemy('skysheep', _wx2+0.5, _wt2+1.5, _wz2+0.5);
           else if(_wr2<0.68){ var _kn2=2+((Math.random()*2)|0);   // Skycarvers travel in small herds
-            for(var _kh=0;_kh<_kn2;_kh++) spawnEnemy('skycarver', _wx2+0.5+(Math.random()*6-3), _wt2+6+Math.random()*4, _wz2+0.5+(Math.random()*6-3)); }
+            for(var _kh=0;_kh<_kn2;_kh++){ var _ke=spawnEnemy('skycarver', Player.pos.x+(Math.random()*80-40), 110+Math.random()*18, Player.pos.z+(Math.random()*80-40)); if(_ke){ _ke._cruise=110+Math.random()*18; _ke.wdir=Math.random()*6.283; _ke.wgoal=_ke.wdir; } } }
           else if(_wr2<0.82) spawnEnemy('moa', _wx2+0.5, _wt2+1.2, _wz2+0.5);
           else if(_wr2<0.93) spawnEnemy('cockatrice', _wx2+0.5, _wt2+1.2, _wz2+0.5);
           else spawnEnemy('swet', _wx2+0.5, _wt2+1.2, _wz2+0.5); } } }catch(_){ } }
@@ -11318,8 +11530,22 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 229';
+var VERSION='Update 243';
 var CHANGELOG=[
+  { v:'Update 243', t:'SKYCARVERS FLY \u2014 the real fix', items:['<b>The actual cause, at last:</b> Skycarvers are flagged as passive creatures, so the entity system routed them straight into the <b>ground-animal brain</b> and skipped past the flight code entirely. Every flight fix I made was sitting in a branch they never reached','<b>They now have their own flight routine</b>, called before anything else can touch them \u2014 the exact pattern the birds use (which always worked). Direct position control: no gravity, no collision, no ground brain','<b>Giant wings beat constantly</b>, they bank into turns, pitch as they rise and fall, hold a high sky lane (y110\u2013128, hard floor at 95), and steer toward distant islands to cross between them','A small herd now keeps station near you in the Skylands so you can always find them overhead'] },
+  { v:'Update 242', t:'Cigs in Mouth, Mimics &amp; Locked Chests', items:['<b>Cigarettes now show in your mouth</b> while smoking, with a glowing ember, plus proper inventory icons for cigarettes, tobacco leaf and dried tobacco','<b>Locked Chests</b> guard the best sky-dungeon loot \u2014 you need a <b>Dungeon Key</b> to open them (bosses drop keys). Inside: crystals, amber, gold, diamonds, even a Valkyrie Lance or Cloud Charm','<b>MIMICS!</b> Some dungeon chests are monsters in disguise \u2014 open the wrong one and it springs to life with gnashing teeth and glowing eyes. Kill it for a key and loot, just like the mod'] },
+  { v:'Update 241', t:'Skycarver Ground-Freeze Fixed', items:['<b>THE actual cause</b> \u2014 the night-time \u201canimals lie down and sleep\u201d system counted Skycarvers as sleepable. When one rolled the sleep chance it froze, dropped to the ground and skipped ALL flight code. Flyers are now excluded from sleeping entirely','<b>They spawn high in the open sky now</b> (y108\u2013124) already at cruising height, so you\u2019ll see them soaring and flapping from the moment they appear, never on the ground'] },
+  { v:'Update 240', t:'Tobacco &amp; Smokes', items:['<b>Wild tobacco plants</b> now grow \u2014 extremely rare, hidden in plains and forest grass. Find one and harvest the leaf','<b>Roll your own</b> \u2014 smelt tobacco leaves into dried tobacco, then combine dried tobacco + paper to craft cigarettes','<b>Light up with Flint &amp; Steel</b> (kept in your inventory) by tapping a cigarette in hand \u2014 you\u2019ll take a puff with rising smoke and get a <b>30-second speed boost</b>','A short cooldown between smokes'] },
+  { v:'Update 239', t:'Skycarver Spin Fixed + Eyes', items:['<b>Found the spin at last</b> \u2014 TWO systems were steering the Skycarver every frame: a random-wander heading AND the island-seeking flight code, each writing a different facing angle. That tug-of-war spun them in circles. The flight block now solely owns their heading, velocity and facing','<b>They fly properly now</b> \u2014 smooth banking cruise along the high sky lane between islands, wings beating','<b>Added eyes</b> \u2014 white backing with dark pupils set proud of the head so you can actually see them'] },
+  { v:'Update 238', t:'Skycarvers Actually Fly (for real)', items:['<b>Two real bugs found and fixed:</b>','<b>1 \u2014 They collided with terrain</b>, so one spawned under a tree could never climb through the leaves and just sat on the canopy. Flyers now move freely through the air with no terrain snagging','<b>2 \u2014 The flap animation lived in a function that only runs for small birds</b>, never for Skycarvers. Moved it into the main creature update, so now their wings beat, they bank into turns, and pitch as they climb and dive \u2014 every frame','Combined with the high-sky flight lane, they now soar between the islands the way they should'] },
+  { v:'Update 237', t:'Skycarvers Take Flight', items:['<b>They actually FLY now</b> \u2014 the old code read unloaded chunks as empty void, so they sank and skimmed the treetops. They now hold a high open-sky lane far above every island, with a hard floor so they can never fall into the void','<b>They travel BETWEEN islands</b> \u2014 every few seconds a Skycarver picks a distant island and banks toward it, so you\u2019ll see them cross the open sky from isle to isle','<b>Epic animation</b> \u2014 slow powerful wingbeats with the whole wing sweeping, banking rolls into every turn, nose pitching up as they climb and down as they dive, and a gentle body undulation. Avatar-style soaring','<b>Bigger, sleeker model</b> \u2014 longer body, three-section layered feathered wings with icy leading edges and tips, split icy tail fluke, crystal crest, and the living mossy back with its little tree, matching the concept'] },
+  { v:'Update 236', t:'Water Back to Clean', items:['<b>Removed the water light effect</b> \u2014 any procedural sparkle turns into a dot pattern on the blocky water surface, so it\u2019s gone. Water has its clean gentle wave shading back. The sun rays and moon rays in the SKY stay \u2014 those work great'] },
+  { v:'Update 235', t:'Real Water Shimmer', items:['<b>Water light redone</b> \u2014 the yellow polka-dots are gone. It\u2019s a proper rippling shimmer now: thin moving light crests dancing on the surface, warm gold under the sun and soft silver under the moon, dimmer at night than by day'] },
+  { v:'Update 234', t:'Leaf Shader Fixed', items:['<b>Fixed the shader crash</b> \u2014 the leaf shading ran before the colour variable existed in that shader branch. Moved it into the right place. Leaves, rays and water glint render now'] },
+  { v:'Update 233', t:'Fix Leaf Shader Crash', items:['<b>Fixed the shader crash for real</b> \u2014 the new leaf mottle used a noise helper that only exists in one of the two shader variants. Rewrote it with plain wave math that works everywhere. Leaves, rays and water glint all compile and render now'] },
+  { v:'Update 232', t:'Fix Shader Crash (rays/water)', items:['<b>Fixed the graphics crash</b> from the new sun-glint water \u2014 it referenced the sun brightness in the fragment shader where that value wasn\u2019t declared. Wired it through properly; leaves, rays and water glint all render now'] },
+  { v:'Update 231', t:'Wings, Leaves & Light Shafts', items:['<b>Flying animations</b> \u2014 Skycarvers now beat their great wings and bank gently as they cruise; Moas and Cockatrices flap theirs too','<b>Leaves look like real foliage</b> \u2014 a clumpy light-and-dark leaf mottle with little dark gaps between the clusters, much closer to the classic look, on every tree','<b>Sun rays &amp; moon rays</b> \u2014 volumetric-style light shafts fan out from the sun by day and the moon by night, slowly turning, fading with the light','<b>Water catches the light</b> \u2014 a moving specular glint dances on the surface, warm gold under the sun and cool silver under the moon, shader-style'] },
+  { v:'Update 230', t:'Sky Creatures Fly Right', items:['<b>Fixed the spinning</b> \u2014 flyers (Skycarvers, wisps, sky sheep, moas, birds) were running the ground-wander brain AND their own flight at once, which spun them in circles on treetops. They now turn slowly and smoothly and never touch the ground','<b>Skycarvers truly cruise the sky</b> \u2014 steady forward flight along their heading, rising high above any island they cross, facing where they fly. Real sky travel between the islands','<b>Bird got a proper model</b> \u2014 plump body with a pale belly, crest, folded wings, forked tail and little feet, in five colour morphs'] },
   { v:'Update 229', t:'THE SKYCARVER + Buried Sky Dungeons', items:['<b>THE SKYCARVER</b> \u2014 built to the concept sheet: a pale majestic glider with icy-edged layered wings, split tail fluke, crystal crest\u2026 and a living mossy back carrying grass, crystal spurs and one tiny tree. They travel in small herds, gliding between the islands','<b>Tame one with Ambrosium</b> (shard or amber), then tap to RIDE \u2014 look to steer, forward to glide, JUMP to climb, pitch down to dive, SNEAK to dismount. The skies belong to the Skyrider','<b>Sky Whales removed for rework</b> \u2014 the Skycarver takes their place in the sky','<b>Silver and Gold dungeons are buried inside the islands now</b> like the mod \u2014 look for a cloudbrick (or gold) ring on the surface with a torch-lit shaft leading down into the temple. No more floating gray boxes','<b>Village farms ring OUTSIDE the houses</b> \u2014 homes no longer spawn inside the crop fields','<b>Doors open the sensible way</b> \u2014 the leaf swings to the natural side now'] },
   { v:'Update 228', t:'Whales Reborn, Sheep Reborn', items:['<b>Sky Whales rebuilt from your reference</b> \u2014 long sleek carved bodies with rune bands and gold sigils, pale spine, dark mouth line, white eye spots, icy fins and a wide icy tail fluke. Bigger too','<b>Whales truly FLY now</b> \u2014 they hold a cruising altitude, climb away from any surface beneath them, and are always swimming forward through the sky. No more floor-gliding','<b>Sheep rebuilt classic-style</b> \u2014 big boxy wool body, brown face with a wool cap over the crown, tan ears, white eye patches, brown legs with dark hooves. Overworld sheep and Sky Sheep both wear the new look'] },
   { v:'Update 227', t:'Silver & Gold Dungeons', items:['<b>SILVER DUNGEONS</b> \u2014 white pillared temples of cloud-brick and polished stone floating high above the isles. Inside waits <b>THE VALKYRIE</b> \u2014 a winged pale knight, fast and fierce. She can yield the <b>Valkyrie Lance</b>, the strongest blade in the game (13 dmg)','<b>GOLD DUNGEONS</b> \u2014 gilded sanctums burning alone in the empty upper sky, gold-cornered with a central altar and triple chests. <b>THE SUN SPIRIT</b> hovers within \u2014 a blazing orb that hits like a furnace. Fell it for a rain of gold and maybe the <b>Sunstone</b>: a pocket sun that lights the world around you while carried','All three sky dungeon bosses show their names on the boss bar, and each has its own loot burst'] },
