@@ -1067,6 +1067,169 @@ function iconFor(key){
       x.fillStyle=css([90,190,90]); x.fillRect(15,18,5,3);
       _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key];
     }
+    // ---------- FOOD & ITEM ARTWORK ----------
+    function done(){ _iconCache[key]=cv.toDataURL(); _iconCanvasCache[key]=cv; return _iconCache[key]; }
+    function disc(cx,cy,r,c){ x.fillStyle=css(c); x.beginPath(); x.arc(cx,cy,r,0,6.283); x.fill(); }
+    function stemLeaf(cx,cy,lc){ x.fillStyle='#6b4a24'; x.fillRect(cx-1,cy-3,2,5); x.fillStyle=css(lc||[86,160,70]);
+      x.beginPath(); x.ellipse(cx+5,cy-2,5,3,-0.5,0,6.283); x.fill(); }
+    function bowl(fill){
+      x.fillStyle='#8a6a4a'; x.beginPath(); x.moveTo(4,17); x.lineTo(28,17); x.lineTo(24,28); x.lineTo(8,28); x.closePath(); x.fill();
+      x.fillStyle='#a8845e'; x.fillRect(3,15,26,3);
+      x.fillStyle=css(fill); x.beginPath(); x.ellipse(16,17,11,4,0,0,6.283); x.fill();
+    }
+    function meat(raw,c1,c2){
+      x.fillStyle=css(c1); x.beginPath(); x.ellipse(16,17,11,8,0.2,0,6.283); x.fill();
+      x.fillStyle=css(c2); x.beginPath(); x.ellipse(14,15,6,4,0.2,0,6.283); x.fill();
+      x.fillStyle='#f0e6d2'; x.beginPath(); x.ellipse(24,20,4,3,0.4,0,6.283); x.fill();   // bone / fat
+      if(!raw){ x.strokeStyle='rgba(60,32,16,0.7)'; x.lineWidth=1.4;
+        for(var g=0;g<3;g++){ x.beginPath(); x.moveTo(8+g*5,11+g); x.lineTo(14+g*5,23-g); x.stroke(); } }
+    }
+    function fishIcon(c1,c2,cooked){
+      x.fillStyle=css(c1); x.beginPath(); x.ellipse(15,16,10,6,0,0,6.283); x.fill();
+      x.fillStyle=css(c2); x.beginPath(); x.moveTo(25,16); x.lineTo(30,11); x.lineTo(30,21); x.closePath(); x.fill();
+      x.fillStyle=css(c2); x.beginPath(); x.moveTo(12,10); x.lineTo(18,6); x.lineTo(18,11); x.closePath(); x.fill();
+      x.fillStyle='#141414'; x.beginPath(); x.arc(9,15,1.6,0,6.283); x.fill();
+      if(cooked){ x.strokeStyle='rgba(70,40,20,0.6)'; x.lineWidth=1.3;
+        for(var g2=0;g2<2;g2++){ x.beginPath(); x.moveTo(11+g2*6,11); x.lineTo(13+g2*6,21); x.stroke(); } }
+    }
+    function berries(c1,c2,glow){
+      var pts=[[11,20,5],[20,19,5],[16,12,5],[22,25,3.5],[10,26,3.5]];
+      for(var i=0;i<pts.length;i++){ disc(pts[i][0],pts[i][1],pts[i][2],c1); disc(pts[i][0]-1.4,pts[i][1]-1.4,pts[i][2]*0.42,c2); }
+      x.fillStyle='#4e8a3a'; x.fillRect(15,5,2,5);
+      if(glow){ var g3=x.createRadialGradient(16,18,2,16,18,15); g3.addColorStop(0,'rgba(255,230,140,0.55)'); g3.addColorStop(1,'rgba(255,230,140,0)');
+        x.fillStyle=g3; x.fillRect(0,0,32,32); }
+    }
+    function bottle(liq){
+      x.fillStyle='#cfd8de'; x.fillRect(13,4,6,5);
+      x.fillStyle='#8a6a4a'; x.fillRect(12,2,8,3);
+      x.fillStyle='rgba(220,235,245,0.85)'; x.beginPath(); x.moveTo(11,10); x.lineTo(21,10); x.lineTo(24,28); x.lineTo(8,28); x.closePath(); x.fill();
+      x.fillStyle=css(liq); x.beginPath(); x.moveTo(12,15); x.lineTo(20,15); x.lineTo(22.5,27); x.lineTo(9.5,27); x.closePath(); x.fill();
+      x.fillStyle='rgba(255,255,255,0.5)'; x.fillRect(12,12,2,13);
+    }
+    var K=it.key;
+    // --- round fruit ---
+    if(K==='APPLE'||K==='APPLE_F'){ disc(16,18,10,[206,48,48]); disc(12,14,4,[240,110,96]); stemLeaf(16,9); return done(); }
+    if(K==='ORANGE'){ disc(16,18,10,[236,146,38]); disc(12,14,4,[250,186,96]); stemLeaf(16,9); return done(); }
+    if(K==='LEMON'){ x.fillStyle=css([238,214,70]); x.beginPath(); x.ellipse(16,18,10,8,0,0,6.283); x.fill(); disc(12,14,3.5,[248,236,140]); stemLeaf(16,10); return done(); }
+    if(K==='TOMATO'){ disc(16,19,10,[210,52,42]); disc(12,15,4,[240,110,88]); x.fillStyle='#4e8a3a';
+      for(var t2=0;t2<5;t2++){ x.save(); x.translate(16,10); x.rotate(t2*1.257); x.fillRect(-1,-1,2,6); x.restore(); } return done(); }
+    if(K==='FIG'){ x.fillStyle=css([120,66,124]); x.beginPath(); x.moveTo(16,7); x.lineTo(25,22); x.quadraticCurveTo(16,32,7,22); x.closePath(); x.fill();
+      disc(13,18,3.5,[160,104,164]); stemLeaf(16,8); return done(); }
+    if(K==='COCONUT'||K==='COCONUT_FRUIT'){ disc(16,18,10,[112,74,42]); disc(13,15,4,[150,108,70]);
+      x.fillStyle='#3a2414'; disc(12,13,1.6,[58,36,20]); disc(19,13,1.6,[58,36,20]); disc(15.5,17,1.6,[58,36,20]); return done(); }
+    if(K==='MELON_SLICE'){ x.fillStyle=css([64,140,60]); x.beginPath(); x.moveTo(4,26); x.lineTo(28,26); x.arc(16,26,12,0,Math.PI,true); x.fill();
+      x.fillStyle=css([226,90,86]); x.beginPath(); x.moveTo(7,24); x.lineTo(25,24); x.arc(16,24,9,0,Math.PI,true); x.fill();
+      x.fillStyle='#2a1a10'; disc(12,20,1.2,[40,26,16]); disc(16,18,1.2,[40,26,16]); disc(20,20,1.2,[40,26,16]); return done(); }
+    if(K==='BANANA'){ x.fillStyle=css([238,206,72]); x.beginPath(); x.moveTo(7,7); x.quadraticCurveTo(28,12,25,27); x.quadraticCurveTo(19,16,7,7); x.fill();
+      x.fillStyle='#6b4a24'; x.fillRect(6,5,3,4); return done(); }
+    if(K==='GRAPES'){ var gp=[[16,10],[11,15],[21,15],[16,17],[13,22],[19,22],[16,26]];
+      for(var g4=0;g4<gp.length;g4++){ disc(gp[g4][0],gp[g4][1],4,[112,72,156]); disc(gp[g4][0]-1.2,gp[g4][1]-1.2,1.6,[160,124,200]); }
+      x.fillStyle='#4e8a3a'; x.fillRect(15,3,2,5); return done(); }
+    if(K==='STRAWBERRY'){ x.fillStyle=css([214,44,52]); x.beginPath(); x.moveTo(16,29); x.quadraticCurveTo(4,18,10,10); x.quadraticCurveTo(16,6,22,10); x.quadraticCurveTo(28,18,16,29); x.fill();
+      x.fillStyle='#ffe8a0'; for(var sd=0;sd<7;sd++) x.fillRect(9+((sd*5)%14), 12+((sd*7)%13), 1.6,1.6);
+      x.fillStyle='#4e8a3a'; x.beginPath(); x.moveTo(16,4); x.lineTo(23,10); x.lineTo(9,10); x.closePath(); x.fill(); return done(); }
+    if(K==='BLUEBERRY'||K==='SWEET_BERRIES'){ berries([56,74,168],[122,148,224]); return done(); }
+    if(K==='GLOW_BERRY'){ berries([228,158,50],[255,226,140], true); return done(); }
+    if(K==='SPORE_CAP'){ x.fillStyle=css([190,178,150]); x.fillRect(13,17,6,10);
+      x.fillStyle=css([126,214,170]); x.beginPath(); x.ellipse(16,16,11,7,0,Math.PI,0); x.fill();
+      x.fillStyle='#d8f8e6'; disc(11,14,1.8,[216,248,230]); disc(19,13,1.6,[216,248,230]); return done(); }
+    if(K==='CORN'||K==='GRILLED_CORN'){ x.fillStyle=css(K==='CORN'?[228,196,64]:[236,176,52]);
+      x.beginPath(); x.ellipse(16,17,7,11,0,0,6.283); x.fill();
+      x.fillStyle='rgba(140,100,20,0.5)'; for(var cr=0;cr<5;cr++) x.fillRect(10,9+cr*4,12,1.2);
+      x.fillStyle=css([86,150,62]); x.beginPath(); x.moveTo(9,20); x.quadraticCurveTo(3,26,10,29); x.fill();
+      if(K==='GRILLED_CORN'){ x.strokeStyle='rgba(70,40,16,0.65)'; x.lineWidth=1.4; x.beginPath(); x.moveTo(11,12); x.lineTo(21,22); x.stroke(); } return done(); }
+    if(K==='CARROT'||K==='GLAZED_CARROTS'){ x.fillStyle=css([230,126,40]); x.beginPath(); x.moveTo(13,8); x.lineTo(19,8); x.lineTo(16,28); x.closePath(); x.fill();
+      x.fillStyle='rgba(150,70,16,0.5)'; for(var cg=0;cg<3;cg++) x.fillRect(13+cg*0.6,12+cg*5,6-cg*1.2,1.2);
+      x.fillStyle=css([76,150,60]); x.fillRect(12,3,2,6); x.fillRect(16,2,2,7); x.fillRect(19,4,2,5);
+      if(K==='GLAZED_CARROTS'){ x.fillStyle='rgba(255,224,120,0.55)'; x.beginPath(); x.ellipse(16,16,9,11,0,0,6.283); x.fill(); } return done(); }
+    if(K==='POTATO'||K==='BAKED_POTATO'){ x.fillStyle=css(K==='POTATO'?[196,164,110]:[168,124,64]);
+      x.beginPath(); x.ellipse(16,18,11,8,0.3,0,6.283); x.fill();
+      x.fillStyle='rgba(90,64,30,0.5)'; disc(12,15,1.6,[110,80,40]); disc(20,20,1.4,[110,80,40]); disc(17,14,1.2,[110,80,40]);
+      if(K==='BAKED_POTATO'){ x.fillStyle='#f4e4b0'; x.beginPath(); x.ellipse(16,17,5,2.4,0.3,0,6.283); x.fill(); } return done(); }
+    if(K==='CHEESE'){ x.fillStyle=css([238,200,72]); x.beginPath(); x.moveTo(4,24); x.lineTo(26,10); x.lineTo(28,22); x.lineTo(8,28); x.closePath(); x.fill();
+      x.fillStyle=css([214,170,48]); disc(12,22,2.4,[214,170,48]); disc(19,19,1.8,[214,170,48]); disc(23,16,1.4,[214,170,48]); return done(); }
+    if(K==='HONEY'){ x.fillStyle='rgba(230,240,246,0.7)'; x.fillRect(9,8,14,20);
+      x.fillStyle=css([228,164,32]); x.fillRect(10,13,12,14); x.fillStyle='#f2c65a'; x.fillRect(11,14,3,12);
+      x.fillStyle='#8a6a4a'; x.fillRect(9,5,14,4); return done(); }
+    if(K==='BOILED_EGG'){ x.fillStyle='#f6f2e6'; x.beginPath(); x.ellipse(16,18,9,11,0,0,6.283); x.fill();
+      x.fillStyle=css([246,206,80]); disc(16,19,4.5,[246,206,80]); return done(); }
+    if(K==='MILK_BUCKET'){ x.fillStyle=css([150,156,166]); x.beginPath(); x.moveTo(8,10); x.lineTo(24,10); x.lineTo(22,28); x.lineTo(10,28); x.closePath(); x.fill();
+      x.fillStyle='#f4f4f0'; x.fillRect(10,11,12,4); x.strokeStyle=css([120,126,136]); x.lineWidth=1.6; x.beginPath(); x.arc(16,10,7,Math.PI,0); x.stroke(); return done(); }
+    if(K==='BREAD'){ x.fillStyle=css([196,140,68]); x.beginPath(); x.ellipse(16,18,12,7,0,0,6.283); x.fill();
+      x.fillStyle=css([224,176,104]); x.beginPath(); x.ellipse(15,16,9,4.5,0,0,6.283); x.fill();
+      x.strokeStyle='rgba(120,76,30,0.6)'; x.lineWidth=1.4;
+      for(var br=0;br<3;br++){ x.beginPath(); x.moveTo(9+br*5,13); x.lineTo(12+br*5,21); x.stroke(); } return done(); }
+    if(K==='COOKIE'){ disc(16,18,10,[176,120,60]); disc(13,15,3,[204,152,88]);
+      x.fillStyle='#3a2414'; disc(12,20,1.8,[58,36,20]); disc(19,15,1.6,[58,36,20]); disc(20,22,1.5,[58,36,20]); disc(15,13,1.4,[58,36,20]); return done(); }
+    if(K==='CAKE_SLICE'){ x.fillStyle='#f4e2c8'; x.beginPath(); x.moveTo(6,26); x.lineTo(26,26); x.lineTo(22,12); x.lineTo(10,12); x.closePath(); x.fill();
+      x.fillStyle=css([232,110,130]); x.beginPath(); x.moveTo(9,13); x.lineTo(23,13); x.lineTo(21,8); x.lineTo(11,8); x.closePath(); x.fill();
+      x.fillStyle='#fff'; disc(16,7,2.4,[255,255,255]); x.fillStyle=css([210,50,60]); disc(16,5,1.8,[210,50,60]); return done(); }
+    if(K==='BERRY_PIE'){ x.fillStyle=css([200,150,84]); x.beginPath(); x.ellipse(16,20,12,8,0,0,6.283); x.fill();
+      x.fillStyle=css([120,40,80]); x.beginPath(); x.ellipse(16,18,9,5.5,0,0,6.283); x.fill();
+      x.strokeStyle=css([224,182,110]); x.lineWidth=2;
+      x.beginPath(); x.moveTo(8,18); x.lineTo(24,18); x.moveTo(16,13); x.lineTo(16,23); x.stroke(); return done(); }
+    // --- meats ---
+    if(K==='RAW_BEEF'){ meat(true,[214,92,96],[236,138,140]); return done(); }
+    if(K==='COOKED_BEEF'){ meat(false,[142,84,44],[176,116,64]); return done(); }
+    if(K==='RAW_PORK'){ meat(true,[240,152,158],[250,190,192]); return done(); }
+    if(K==='COOKED_PORK'){ meat(false,[186,120,66],[214,154,90]); return done(); }
+    if(K==='RAW_MUTTON'){ meat(true,[212,102,102],[238,150,148]); return done(); }
+    if(K==='COOKED_MUTTON'){ meat(false,[150,92,50],[186,124,70]); return done(); }
+    if(K==='RAW_VENISON'){ meat(true,[178,70,74],[212,110,110]); return done(); }
+    if(K==='COOKED_VENISON'){ meat(false,[126,74,40],[162,104,58]); return done(); }
+    if(K==='RAW_CHICKEN'||K==='RAW_DUCK'){ meat(true,[240,196,176],[250,220,206]); return done(); }
+    if(K==='COOKED_CHICKEN'||K==='COOKED_DUCK'){ meat(false,[196,150,80],[224,184,112]); return done(); }
+    if(K==='CRAB_MEAT'){ meat(true,[240,170,150],[252,206,190]); return done(); }
+    if(K==='COOKED_CRAB'){ x.fillStyle=css([214,86,52]); x.beginPath(); x.ellipse(16,18,11,8,0,0,6.283); x.fill();
+      x.fillStyle=css([240,128,84]); x.beginPath(); x.ellipse(14,16,6,4,0,0,6.283); x.fill();
+      x.fillStyle=css([190,64,36]); x.fillRect(3,14,6,3); x.fillRect(23,14,6,3); return done(); }
+    if(K==='RAW_FISH'){ fishIcon([132,156,180],[104,128,152],false); return done(); }
+    if(K==='COOKED_FISH'){ fishIcon([196,150,92],[164,120,68],true); return done(); }
+    // --- bowls ---
+    if(K==='FRUIT_SALAD'){ bowl([236,196,120]);
+      disc(11,15,3,[206,48,48]); disc(17,14,3,[236,146,38]); disc(22,16,2.6,[112,72,156]);
+      disc(14,17,2.2,[214,44,52]); disc(20,18,2,[238,214,70]); x.fillStyle='#4e8a3a'; x.fillRect(15,11,2,3); return done(); }
+    if(K==='SALAD'){ bowl([120,180,90]);
+      x.fillStyle=css([86,160,70]); for(var lv=0;lv<5;lv++){ x.save(); x.translate(10+lv*3,15+((lv*5)%4)); x.rotate(lv); x.fillRect(-3,-2,6,4); x.restore(); }
+      disc(20,16,2.2,[210,52,42]); return done(); }
+    if(K==='HEARTY_STEW'){ bowl([132,84,44]); disc(12,16,2.4,[168,110,58]); disc(19,15,2.2,[230,126,40]); disc(16,18,2,[196,164,110]);
+      x.fillStyle='rgba(255,255,255,0.3)'; x.fillRect(9,14,14,1.5); return done(); }
+    if(K==='VEGGIE_STEW'){ bowl([120,150,70]); disc(12,16,2.2,[230,126,40]); disc(19,15,2.2,[86,160,70]); disc(16,18,2,[228,196,64]); return done(); }
+    if(K==='TOMATO_SOUP'){ bowl([206,64,48]); x.fillStyle='rgba(255,255,255,0.35)'; x.beginPath(); x.ellipse(14,16,4,1.6,0.3,0,6.283); x.fill();
+      x.fillStyle=css([86,160,70]); x.fillRect(19,14,3,1.6); return done(); }
+    if(K==='CORN_CHOWDER'){ bowl([238,222,150]); disc(13,16,2,[228,196,64]); disc(18,15,1.8,[228,196,64]); disc(21,18,1.6,[196,164,110]);
+      x.fillStyle='rgba(255,255,255,0.4)'; x.beginPath(); x.ellipse(15,17,5,2,0,0,6.283); x.fill(); return done(); }
+    // --- potions ---
+    if(K==='HEALTH_POTION'){ bottle([214,48,72]); return done(); }
+    if(K==='REGEN_POTION'){ bottle([236,110,190]); return done(); }
+    if(K==='SWIFT_POTION'){ bottle([96,196,236]); return done(); }
+    if(K==='GOLDEN_AMBER'){ disc(16,18,10,[236,186,60]); disc(12,14,4,[252,222,140]);
+      x.fillStyle='rgba(255,255,255,0.5)'; x.fillRect(12,12,2,8); return done(); }
+    if(K==='PEARL'){ disc(16,17,9,[238,240,246]); disc(12,13,3.5,[255,255,255]);
+      var pg=x.createRadialGradient(16,17,1,16,17,12); pg.addColorStop(0,'rgba(255,255,255,0.5)'); pg.addColorStop(1,'rgba(200,220,255,0)');
+      x.fillStyle=pg; x.fillRect(0,0,32,32); return done(); }
+    if(K==='TURTLE_SCUTE'){ x.fillStyle=css([96,164,84]); x.beginPath(); x.moveTo(16,5); x.lineTo(27,13); x.lineTo(23,27); x.lineTo(9,27); x.lineTo(5,13); x.closePath(); x.fill();
+      x.fillStyle=css([126,196,112]); x.beginPath(); x.moveTo(16,10); x.lineTo(22,15); x.lineTo(20,23); x.lineTo(12,23); x.lineTo(10,15); x.closePath(); x.fill(); return done(); }
+    if(K==='PRISMARINE_SHARD'){ x.fillStyle=css([120,200,186]); x.beginPath(); x.moveTo(16,3); x.lineTo(27,16); x.lineTo(16,29); x.lineTo(5,16); x.closePath(); x.fill();
+      x.fillStyle=css([170,232,220]); x.beginPath(); x.moveTo(16,8); x.lineTo(22,16); x.lineTo(16,24); x.lineTo(10,16); x.closePath(); x.fill(); return done(); }
+    if(K==='BRASS_GEAR'){ disc(16,16,11,[204,164,80]);
+      x.fillStyle=css([164,128,56]); for(var tg=0;tg<8;tg++){ x.save(); x.translate(16,16); x.rotate(tg*0.785); x.fillRect(-2,-14,4,5); x.restore(); }
+      disc(16,16,4.5,[110,86,40]); return done(); }
+    if(K==='STEAM_CORE'){ disc(16,16,10,[190,210,220]); disc(16,16,6,[120,180,210]); disc(16,16,2.6,[240,252,255]);
+      x.strokeStyle=css([90,140,170]); x.lineWidth=1.6; x.beginPath(); x.arc(16,16,8,0,6.283); x.stroke(); return done(); }
+    if(K==='BLUE_OBSIDIAN'){ x.fillStyle=css([26,32,72]); x.beginPath(); x.moveTo(16,4); x.lineTo(28,14); x.lineTo(24,28); x.lineTo(8,28); x.lineTo(4,14); x.closePath(); x.fill();
+      x.strokeStyle=css([90,190,255]); x.lineWidth=1.6; x.beginPath(); x.moveTo(10,10); x.lineTo(18,18); x.lineTo(14,26); x.moveTo(18,18); x.lineTo(25,15); x.stroke(); return done(); }
+    if(K==='BRIMSTONE'){ disc(16,18,10,[190,120,40]); disc(13,15,4,[255,190,70]);
+      x.fillStyle='rgba(255,120,20,0.6)'; disc(19,20,3,[255,150,40]); return done(); }
+    if(K==='CINDERSTEEL_INGOT'||K==='BRASS_INGOT'){ var ic=(K==='BRASS_INGOT')?[204,164,80]:[196,96,52];
+      x.fillStyle=css(ic); x.beginPath(); x.moveTo(6,20); x.lineTo(26,20); x.lineTo(23,26); x.lineTo(9,26); x.closePath(); x.fill();
+      x.fillStyle=css([ic[0]+30,ic[1]+30,ic[2]+30]); x.beginPath(); x.moveTo(8,14); x.lineTo(24,14); x.lineTo(26,20); x.lineTo(6,20); x.closePath(); x.fill(); return done(); }
+    if(K==='BAMBOO_CANE'){ x.fillStyle=css([132,196,84]); x.fillRect(13,3,6,26);
+      x.fillStyle=css([96,156,58]); for(var bk=0;bk<4;bk++) x.fillRect(12,7+bk*6,8,2); return done(); }
+    if(K==='LILY_PAD'){ disc(16,17,11,[63,143,56]); disc(16,17,8,[79,168,68]); disc(14,14,4,[92,187,78]);
+      x.fillStyle='rgba(0,0,0,0)'; x.globalCompositeOperation='destination-out';
+      x.beginPath(); x.moveTo(16,17); x.lineTo(30,12); x.lineTo(30,22); x.closePath(); x.fill();
+      x.globalCompositeOperation='source-over'; return done(); }
     if(it.key==='CIGARETTE'){
       x.fillStyle=css([238,238,230]); x.fillRect(5,14,20,5);            // white paper
       x.fillStyle=css([210,170,90]); x.fillRect(21,14,5,5);            // tan filter
@@ -3436,6 +3599,7 @@ function decorFor(id, f, frontF){
   if(id===B.BLUE_OBSIDIAN) return 70*8+face;
   if(id===B.VOID_BRICK) return 71*8+face;
   if(id===B.TERRACOTTA) return 72*8+face;
+  if(id===B.COOKING_POT) return 79*8+face;
   if(id===B.COCONUT) return 73*8+face;
   if(id===B.MOSS_BLOCK) return 74*8+face;
   if(id===B.DRIPSTONE) return 75*8+face;
@@ -4236,6 +4400,19 @@ function showChestLid(x,y,z){
   var t=World.tiles[World.ck(x,y,z)]||{}; var front=(t.front!=null)?t.front:4;
   var grp=new THREE.Group();
   var m=new THREE.MeshBasicMaterial({color:0x7a4a22, map:mobNoiseTex, side:THREE.DoubleSide});
+  // ---- the open cavity: hides the block's wooden top so you look INTO the chest ----
+  var dark=new THREE.MeshBasicMaterial({color:0x1a1008});
+  var wallM=new THREE.MeshBasicMaterial({color:0x5e3616, map:mobNoiseTex});
+  var cavity=new THREE.Group();
+  var floorPl=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.02,0.9), dark); floorPl.position.set(0,-0.30,0); cavity.add(floorPl);
+  var wN=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.32,0.04), wallM); wN.position.set(0,-0.15,-0.45); cavity.add(wN);
+  var wS=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.32,0.04), wallM); wS.position.set(0,-0.15,0.45); cavity.add(wS);
+  var wE=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.32,0.9), wallM); wE.position.set(0.45,-0.15,0); cavity.add(wE);
+  var wW=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.32,0.9), wallM); wW.position.set(-0.45,-0.15,0); cavity.add(wW);
+  var rimM=new THREE.MeshBasicMaterial({color:0x6b3f1c, map:mobNoiseTex});
+  var rim=new THREE.Mesh(new THREE.BoxGeometry(1.002,0.03,1.002), rimM); rim.position.set(0,0.012,0); cavity.add(rim);   // caps the wooden top face
+  cavity.visible=false;
+  grp.add(cavity);
   var hinge=new THREE.Group(); hinge.position.set(0,0,-0.5);   // pivot on the back-top edge of the block
   var lid=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.1,1.0), m); lid.position.set(0,0.05,0.5); hinge.add(lid);
   var lm=new THREE.MeshBasicMaterial({color:0xcaa23a});
@@ -4244,11 +4421,12 @@ function showChestLid(x,y,z){
   var yaw = front===4?0 : (front===5?Math.PI : (front===0?-Math.PI/2 : Math.PI/2));
   grp.rotation.y=yaw; grp.position.set(x+0.5, y+1.0, z+0.5);   // rests on top of the block, not inside it
   scene.add(grp);
-  chestLid={grp:grp, hinge:hinge, t:0, opening:true};
+  chestLid={grp:grp, hinge:hinge, cavity:cavity, t:0, opening:true};
 }
 function tickChestLid(dt){
   if(!chestLid) return;
   chestLid.t += (chestLid.opening?1:-1)*dt*6;
+  if(chestLid.cavity) chestLid.cavity.visible = (chestLid.t > 0.06);   // the moment the lid cracks open, show the inside
   if(chestLid.t>1) chestLid.t=1;
   if(chestLid.t<=0 && !chestLid.opening){ removeChestLid(); return; }
   chestLid.hinge.rotation.x = -1.5*Math.max(0,chestLid.t);   // swings up to near-vertical, clear of the box
@@ -4582,6 +4760,17 @@ function chunkFrag(alpha, grain){
     '     float dr=abs(fract(uv.y*3.0)-0.5);',
     '     dc*=0.82+0.3*smoothstep(0.05,0.45,dr);',
     '     dc*=0.94+0.12*n2(uv*8.0);',
+    '   } else if(base==79.0){',                          // COOKING POT: riveted iron cauldron with a stew line and firelight
+    '     float rim=step(uv.y,0.16);',
+    '     float band=step(abs(fract(uv.y*3.0)-0.5),0.06);',
+    '     dc*=0.82+0.26*band;',
+    '     dc=mix(dc, vec3(0.62,0.62,0.66), rim*0.8);',
+    '     float rivet=1.0-smoothstep(0.05,0.10,length(fract(uv*4.0)-0.5));',
+    '     dc=mix(dc, vec3(0.74,0.74,0.78), rivet*0.5);',
+    '     float stew=step(0.72,uv.y)*step(0.2,uv.x)*step(uv.x,0.8);',
+    '     dc=mix(dc, vec3(0.72,0.36,0.12), stew*0.85*(face>1.5?0.0:1.0));',
+    '     float fire=step(uv.y,0.12)*step(abs(uv.x-0.5),0.28);',
+    '     dc=mix(dc, vec3(1.0,0.5,0.12), fire*0.7*(face>1.5?1.0:0.0));',
     '   } else if(base==72.0){',                          // TERRACOTTA: banded mesa strata by world height
     '     float band=floor(mod(vWorld.y,9.0));',
     '     vec3 c1=vec3(0.62,0.38,0.25), c2=vec3(0.74,0.46,0.28), c3=vec3(0.55,0.32,0.22), c4=vec3(0.70,0.55,0.40);',
@@ -6100,6 +6289,11 @@ function doPlace(){
   }
   if(slot && slot.key==='AIRSHIP'){
     var oax=hit.x+hit.nx, oay=hit.y+hit.ny, oaz=hit.z+hit.nz;
+    var _tooClose=false;
+    for(var _ai=0;_ai<entities.length;_ai++){ var _ae=entities[_ai];
+      if(_ae && _ae.kind==='airship'){ var _adx=_ae.pos.x-(oax+0.5), _adz=_ae.pos.z-(oaz+0.5);
+        if(_adx*_adx+_adz*_adz < 400){ _tooClose=true; break; } } }   // 20 blocks of clearance
+    if(_tooClose){ toast('\u2708\uFE0F Too close to another airship \u2014 give it room to moor'); return; }
     if(oay>=0 && oay<WORLD_H && World.getBlock(oax,oay,oaz)===B.AIR){
       spawnEnemy('airship', oax+0.5, oay+2.0, oaz+0.5);
       if(gameMode!=='creative') consumeSlot(slot,1);
@@ -6863,15 +7057,15 @@ function makeGridSlot(arr, i, onClick){
   var d=document.createElement('div'); d.className='gslot';
   d.innerHTML=slotHTML(arr[i]);
   liveSlots.push({el:d, arr:arr, i:i});
-  function showName(){ var it=arr[i]; if(it&&ITEMS[it.key]) lastSlotName=ITEMS[it.key].name; if(invNameEl) invNameEl.textContent=lastSlotName; }
+  function showName(){ setInvName(arr[i]); }
   d.addEventListener('mouseenter', function(){ showName(); });
-  d.addEventListener('mousedown', function(e){ e.preventDefault(); showName(); onClick(i, e.button); if(cursor){ var _r=d.getBoundingClientRect(); heldEl.style.left=(_r.left+_r.width/2)+'px'; heldEl.style.top=(_r.top+_r.height/2)+'px'; } });
+  d.addEventListener('mousedown', function(e){ e.preventDefault(); showName(); onClick(i, e.button); refreshInvName(arr[i]); if(cursor){ var _r=d.getBoundingClientRect(); heldEl.style.left=(_r.left+_r.width/2)+'px'; heldEl.style.top=(_r.top+_r.height/2)+'px'; } });
   var pressT=null, didLong=false;
-  d.addEventListener('touchstart', function(e){ e.preventDefault(); didLong=false;
-    pressT=setTimeout(function(){ didLong=true; onClick(i, 2); /* split half */ if(navigator.vibrate) navigator.vibrate(15); }, 320);
+  d.addEventListener('touchstart', function(e){ e.preventDefault(); didLong=false; showName();
+    pressT=setTimeout(function(){ didLong=true; onClick(i, 2); refreshInvName(arr[i]); if(navigator.vibrate) navigator.vibrate(15); }, 320);
   }, {passive:false});
   d.addEventListener('touchend', function(e){ e.preventDefault(); if(pressT){ clearTimeout(pressT); pressT=null; }
-    if(!didLong){ showName(); onClick(i, 0); } });
+    if(!didLong){ onClick(i, 0); refreshInvName(arr[i]); } });
   d.addEventListener('touchcancel', function(){ if(pressT){ clearTimeout(pressT); pressT=null; } });
   return d;
 }
@@ -7063,6 +7257,43 @@ function spacer(h){ var d=document.createElement('div'); d.style.height=h+'px'; 
 
 function creativeItemKeys(){ var blocks=[],tools=[],other=[]; for(var k in ITEMS){ var it=ITEMS[k]; if(!it) continue; if(k==='WATER'||k==='SWAMP_WATER'||k==='ANY_PLANKS') continue; if(it.block!=null) blocks.push(k); else if(it.tool) tools.push(k); else other.push(k); } return blocks.concat(tools, other); }
 var palNameEl=null, invNameEl=null, lastSlotName='';
+function setInvName(sl){
+  var t = (sl && ITEMS[sl.key]) ? ITEMS[sl.key].name : '';
+  if(t) lastSlotName=t;
+  if(invNameEl) invNameEl.textContent = t || lastSlotName || '';
+  if(palNameEl && t) palNameEl.textContent = t;
+}
+function refreshInvName(fallback){
+  // while you're carrying something, the bar names what's on your cursor
+  if(cursor && ITEMS[cursor.key]){ lastSlotName=ITEMS[cursor.key].name;
+    if(invNameEl) invNameEl.textContent=lastSlotName;
+    if(palNameEl) palNameEl.textContent=lastSlotName;
+    return; }
+  setInvName(fallback);
+}
+function invNameFromPoint(cx,cy){
+  // find whichever slot the finger is over and name it
+  for(var i=0;i<liveSlots.length;i++){
+    var ls=liveSlots[i]; if(!ls.el) continue;
+    var r=ls.el.getBoundingClientRect();
+    if(cx>=r.left && cx<=r.right && cy>=r.top && cy<=r.bottom){
+      if(cursor && ITEMS[cursor.key]){ if(invNameEl) invNameEl.textContent=ITEMS[cursor.key].name; return; }
+      setInvName(ls.arr[ls.i]); return;
+    }
+  }
+}
+var _nameMoveT=0;
+document.addEventListener('touchmove', function(e){
+  if(!currentScreen) return;
+  var nw=Date.now(); if(nw-_nameMoveT<60) return; _nameMoveT=nw;   // throttled so it never thrashes layout
+  var t=e.touches && e.touches[0]; if(!t) return;
+  try{ invNameFromPoint(t.clientX, t.clientY); }catch(_){ }
+}, {passive:true});
+document.addEventListener('mousemove', function(e){
+  if(!currentScreen || !cursor) return;
+  var nw2=Date.now(); if(nw2-_nameMoveT<60) return; _nameMoveT=nw2;
+  try{ invNameFromPoint(e.clientX, e.clientY); }catch(_){ }
+});
 function cosCss(cat,base){ var c=cosItem(cat, playerCos[cat]); if(c&&c.col!=null){ return '#'+('000000'+c.col.toString(16)).slice(-6); } return base; }
 function makeAvatarPreview(){
   var box=document.createElement('div'); box.style.cssText='width:80px;height:178px;background:linear-gradient(#10202e,#0a0e16);border:2px solid #0007;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none;';
@@ -7089,6 +7320,8 @@ function makeAvatarPreview(){
 function makePaletteSlot(key){
   var d=document.createElement('div'); d.className='gslot'; d.innerHTML=slotHTML({key:key,qty:1});
   var it=ITEMS[key]; if(it) d.title=it.name||key;
+  d.addEventListener('touchstart', function(){ if(it && palNameEl) palNameEl.textContent=it.name||key; }, {passive:true});
+  d.addEventListener('mouseenter', function(){ if(it && palNameEl) palNameEl.textContent=it.name||key; });
   // use click so scrolling the grid doesn't grab items
   d.addEventListener('click', function(){ if(!it) return;
     if(it.durability!=null) cursor={key:key,qty:1,dur:it.durability};
@@ -7104,7 +7337,7 @@ function openInventory(keep){
   if(gameMode==='creative'){
     var search=document.createElement('input'); search.type='text'; search.placeholder='Search items\u2026';
     search.style.cssText='width:100%;box-sizing:border-box;padding:8px 10px;border-radius:0;border:2px solid #2b2b2b;background:#dcdcdc;color:#222;font-size:14px;box-shadow:inset 2px 2px 0 #8b8b8b;';
-    palNameEl=document.createElement('div'); palNameEl.style.cssText='min-height:16px;font-size:12px;color:#2f2f28;opacity:0.92;padding:4px 2px;font-weight:600;'; palNameEl.textContent='Tap an item to grab a stack';
+    palNameEl=document.createElement('div'); palNameEl.style.cssText='min-height:22px;font-size:14px;color:#fdf6e3;background:rgba(28,24,20,0.82);border:2px solid #6b5a44;border-radius:6px;padding:4px 8px;margin:4px 0;font-weight:700;text-align:center;'; palNameEl.textContent='Tap an item to grab a stack';
     var grid=gridContainer(9);                       // fixed page, no scrolling
     var PAGE=36, page=0, curFlt='', curCat='all';
     var creativeCat=function(k,it){
@@ -7191,7 +7424,7 @@ function openInventory(keep){
     var hg=gridContainer(9);
     for(var j=0;j<9;j++){ (function(j){ hg.appendChild(makeGridSlot(inv.hotbar,j,function(idx,btn){ clickSlot(inv.hotbar,idx,btn); })); })(j); }
     right.appendChild(hg);
-    invNameEl=document.createElement('div'); invNameEl.style.cssText='min-height:15px;font-size:12px;color:#2f2f28;opacity:0.92;text-align:center;font-weight:600;'; invNameEl.textContent=lastSlotName;
+    invNameEl=document.createElement('div'); invNameEl.style.cssText='min-height:22px;font-size:14px;color:#fdf6e3;background:rgba(28,24,20,0.82);border:2px solid #6b5a44;border-radius:6px;padding:4px 8px;margin:4px 0;text-align:center;font-weight:700;letter-spacing:0.3px;'; invNameEl.textContent=lastSlotName||'Tap an item to see its name';
     right.appendChild(invNameEl);
     L.appendChild(left); L.appendChild(right);
     p.appendChild(L);
@@ -7389,7 +7622,7 @@ function bindScreenBg(){ fitScreenPanel();
 var curTileKey=null;
 function openFurnace(tk, keep){
   curTileKey=tk; var tile=World.tiles[tk]; if(!tile){ tile=World.tiles[tk]={type:'furnace',input:null,fuel:null,output:null,burn:0,burnMax:0,cook:0}; }
-  openScreen(); currentScreen='furnace';
+  openScreen(); currentScreen='furnace'; _furnSig=furnSigOf(tile);   // seed from the tile so the watcher doesn't instantly rebuild
   screenEl.innerHTML=''; var p=document.createElement('div'); p.className='panel';
   var h=document.createElement('h2'); h.textContent='Furnace'; p.appendChild(h);
   var widget=document.createElement('div'); widget.style.cssText='display:flex;flex-direction:column;gap:6px;align-items:center;';
@@ -7399,7 +7632,12 @@ function openFurnace(tk, keep){
   var flame=document.createElement('div'); flame.className='furnflame'+(tile.burn>0?' on':''); col.appendChild(flame);
   col.appendChild(tileSlot(tile,'fuel'));
   var arrow=document.createElement('div'); arrow.className='arrow'; arrow.textContent='\u279c';
-  row.appendChild(col); row.appendChild(arrow); row.appendChild(tileSlot(tile,'output'));
+  var pbar=document.createElement('div'); pbar.style.cssText='width:56px;height:6px;background:rgba(0,0,0,0.35);border-radius:3px;overflow:hidden;margin-top:3px;';
+  var pfill=document.createElement('div'); pfill.className='furnprog'; pfill.style.cssText='height:100%;width:'+Math.max(0,Math.min(100,(tile.cook||0)*100))+'%;background:#e8a33a;transition:none;';
+  pbar.appendChild(pfill);
+  var arrowWrap=document.createElement('div'); arrowWrap.style.cssText='display:flex;flex-direction:column;align-items:center;';
+  arrowWrap.appendChild(arrow); arrowWrap.appendChild(pbar);
+  row.appendChild(col); row.appendChild(arrowWrap); row.appendChild(tileSlot(tile,'output'));
   widget.appendChild(row);
   machineLayout(p, widget);
   p.appendChild(closeBtn(0));
@@ -8056,6 +8294,11 @@ function updateWaypointHud(){
 }
 
 /* ----------------------------- FURNACE TICK ----------------------------- */
+var _furnSig='';
+function furnSigOf(t){
+  if(!t) return '';
+  return (t.input?(t.input.key+':'+t.input.qty):'-')+'|'+(t.fuel?(t.fuel.key+':'+t.fuel.qty):'-')+'|'+(t.output?(t.output.key+':'+t.output.qty):'-');
+}
 function tickFurnaces(dt){
   for(var tk in World.tiles){ var t=World.tiles[tk]; if(t.type!=='furnace') continue;
     var canSmelt = t.input && ITEMS[t.input.key] && ITEMS[t.input.key].smeltTo;
@@ -8076,7 +8319,20 @@ function tickFurnaces(dt){
       }
     } else { t.cook=0; }
   }
-  if(currentScreen==='furnace' && (frame%6===0)) rerenderScreen();
+  if(currentScreen==='furnace'){
+    // update just the flame and progress bar in place - rebuilding the whole panel was making it flicker and resize
+    var _ft=World.tiles[curTileKey];
+    if(_ft){
+      var _fl=screenEl.querySelector('.furnflame');
+      if(_fl){ if(_ft.burn>0){ if(_fl.className.indexOf(' on')<0) _fl.className='furnflame on'; }
+               else if(_fl.className.indexOf(' on')>=0) _fl.className='furnflame'; }
+      var _fb=screenEl.querySelector('.furnprog');
+      if(_fb){ _fb.style.width=Math.max(0,Math.min(100,(_ft.cook||0)*100))+'%'; }
+      // only a full rebuild when the actual contents change
+      var _sig=furnSigOf(_ft);
+      if(_sig!==_furnSig){ _furnSig=_sig; rerenderScreen(); }
+    }
+  }
 }
 var MACERATE={ IRON_ORE:'IRON_DUST', GOLD_ORE:'GOLD_DUST', COPPER_ORE:'COPPER_DUST', TIN_ORE:'TIN_DUST' };
 var COMPRESS={ IRON_INGOT:'IRON_PLATE', GOLD_INGOT:'GOLD_PLATE', COPPER_INGOT:'COPPER_PLATE', COBBLE:'STONE', COBBLE_DEEP:'DEEPSLATE', GRAVEL:'COBBLE' };
@@ -12964,8 +13220,13 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 261';
+var VERSION='Update 266';
 var CHANGELOG=[
+  { v:'Update 266', t:'Chests Open Properly', items:['<b>Fixed seeing the chest\u2019s wooden top through the open lid.</b> The lid was just a separate panel resting on a whole solid block, so lifting it revealed the block\u2019s top face underneath','<b>Chests now have an interior</b> \u2014 as the lid cracks open a dark cavity appears with plank walls and a shadowed floor, capped by a rim that hides the block\u2019s top face. You look down <i>into</i> the chest the way you should, and it seals back up as the lid closes'] },
+  { v:'Update 265', t:'Fix Furnace Close Button', items:['<b>Fixed the furnace Close button.</b> My flicker fix had a flaw: opening the furnace blanked the change-tracker, so the watcher immediately saw a mismatch and rebuilt the window \u2014 which blanked it again, every single frame. The button was being destroyed between your finger touching it and the tap registering. The tracker is now seeded from the furnace contents on open, so it only rebuilds on a real change'] },
+  { v:'Update 264', t:'Furnace Flicker &amp; Airship Spacing', items:['<b>Fixed the furnace UI juddering.</b> It was tearing down and rebuilding its entire window ten times a second to animate the flame, which made the panel visibly jump between sizes. It now updates the flame and progress bar in place and only rebuilds when the items in the slots actually change','<b>Airships need room to moor</b> \u2014 you can no longer park one within 20 blocks of another, so fleets stop stacking on top of each other','Throttled the new item-name tracking so it can never interfere with UI layout'] },
+  { v:'Update 263', t:'Item Names You Can Actually Read', items:['<b>Item names now show properly on touch.</b> The inventory relied on hover tooltips, which never fire on a phone \u2014 and the one name line only updated <i>after</i> you lifted your finger, by which point the slot was already empty','<b>The name appears the moment you press a slot</b>, follows your finger as you drag across the grid, and while you are carrying something it names what is on your cursor','<b>The name bar is readable now</b> \u2014 a proper dark plaque with a border instead of a faint thin line, in both your inventory and the creative palette','Fixed a drawing error in the new banana icon that could break the icon renderer'] },
+  { v:'Update 262', t:'Everything Gets Artwork', items:['<b>Over fifty foods now have real hand-drawn icons</b> instead of flat colour swatches \u2014 apples with leaves, sliced melon with seeds, bunches of grapes, seeded strawberries, husked corn, wheels of cheese, honey jars, boiled eggs, milk pails, scored loaves, chocolate-chip cookies, frosted cake and latticed berry pie','<b>Meats are drawn properly</b> \u2014 raw cuts are pink and glistening, cooked ones are browned with grill marks, and every fish has fins, a tail and an eye','<b>Cooking-pot dishes have their own bowls</b> \u2014 <b>Fruit Salad</b> heaped with berries and citrus, leafy salad, hearty and veggie stews, tomato soup with a cream swirl, and golden corn chowder','<b>Glow Berries glow</b> in your hand and inventory, with a warm halo around the cluster','<b>The Cooking Pot has a real texture</b> \u2014 a riveted iron cauldron with a stew line at the brim and firelight flickering underneath','Potions, pearls, prismarine shards, brass gears, steam cores, blue obsidian, brimstone, ingots, bamboo and lily pads all drawn too'] },
   { v:'Update 261', t:'The Village Comes Alive', items:['<b>Villagers are people now.</b> Every villager has a <b>name</b>, a <b>profession</b> (farmer, blacksmith, baker, shepherd, fisher, miner, healer, carpenter, guard, merchant, brewer or scholar), a <b>personality</b> and an age \u2014 all fixed to that villager, so the baker on your square is always the same person','<b>Floating name tags</b> show who is who as you walk through town','<b>Talk to them</b> and they answer in character \u2014 a gruff smith and a shy shepherd say very different things, and their words warm as they get to know you. Each chat earns a heart','<b>Give gifts</b> \u2014 every profession has things they love (iron for the smith, wheat for the farmer, pearls and gold for the merchant). The right gift is worth three hearts','<b>At 6 hearts they will travel with you</b>, following you across the world and hopping obstacles to keep up. <b>At 10 hearts you can propose</b> \u2014 and they will say yes','<b>You can no longer jump over fences.</b> Fences and walls always stood 1.6 blocks tall, but the collision check never looked at the block beneath your feet, so a jump sailed clean over them. Fixed \u2014 pens actually hold livestock now'] },
   { v:'Update 260', t:'Sharks Hunt, Turtles Reborn, Living Seafloor', items:['<b>SHARK AI rebuilt</b> \u2014 sharks no longer swim straight at you. They circle at a distance, stalking and slowly closing the ring, then commit to a fast straight <b>charge</b> at nearly double speed. Land a bite and they peel away to circle again. Pectoral fins beat and the body rolls as they swim','<b>SHARK remodelled</b> to your reference \u2014 grey back with a white belly, tapering snout with a dark mouth and a line of teeth, black eyes, four gill slits down each flank, tall dorsal fin, angled pectorals, and a tall vertical tail','<b>SEA TURTLE remodelled</b> to your reference \u2014 a broad flat shell in three greens with a bright centre scute, tan rim over a pale plastron, blunt green head with a lighter crown, and four long flippers','<b>THE SEAFLOOR IS ALIVE</b> \u2014 every ocean, not just reefs, now grows seagrass meadows, towering <b>kelp forests</b>, waving <b>sea anemones</b>, clusters of feathery <b>tube worms</b> and glowing <b>sea pickles</b> that light the dark water'] },
   { v:'Update 259', t:'Swamp Water Is Just Water', items:['<b>Swamp water is no longer its own block.</b> Swamps now generate ordinary water \u2014 identical transparency, waves, flow and physics \u2014 simply tinted a darker green as it is drawn. Nothing about it can behave differently any more, because it is the same water as everywhere else','<b>Old saves are migrated</b> \u2014 any swamp-water left in your world is folded back into ordinary water on load','<b>Lily pads look like lily pads</b> \u2014 they were borrowing the daisy artwork, which is why they read as flowers. They now have their own texture: a round layered green leaf with the classic wedge notch'] },
