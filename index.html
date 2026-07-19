@@ -518,6 +518,7 @@ defBlock({key:'DRIPSTONE', name:'Dripstone', col:[142,110,94], top:[156,122,104]
 defBlock({key:'DRIP_SPIKE', name:'Dripstone Spike', col:[150,116,98], solid:false, transparent:true, thin:true, cross:true, hard:0.6, drop:'DRIPSTONE' });
 defBlock({key:'GLOWBERRY', name:'Glow Berries', col:[240,178,70], spec:[255,220,140], solid:false, transparent:true, thin:true, cross:true, light:9, hard:0.1, drop:'GLOW_BERRY' });
 defBlock({key:'ICE', name:'Ice', col:[168,206,238], top:[186,220,246], side:[160,200,234], spec:[228,244,255], solid:true, transparent:true, tool:'pickaxe', hard:0.6, drop:'ICE' });
+defBlock({key:'QUEST_BOARD', name:'Quest Board', col:[122,92,58], top:[140,108,68], side:[112,84,52], solid:true, tool:'axe', hard:1.2 });
 defBlock({key:'DEAD_BUSH', name:'Dead Bush', col:[154,122,68], solid:false, transparent:true, thin:true, cross:true, hard:0.05 });
 defBlock({key:'TOBACCO_PLANT', name:'Tobacco Plant', col:[120,150,70], solid:false, transparent:true, thin:true, cross:true, hard:0.1, drop:'TOBACCO_LEAF' });
 defBlock({key:'BANANA_BUNCH', name:'Banana Bunch', col:[230,200,66], top:[240,214,80], side:[214,182,54], solid:false, transparent:true, hard:0.2, tool:'axe', drop:'BANANA' });
@@ -1862,7 +1863,14 @@ var World = {
         var fr=[[2,0],[-2,0],[0,2],[0,-2],[1,1],[-1,1],[1,-1],[-1,-1]];
         for(var fi=0;fi<fr.length;fi++){ setLocal(blocks,ptx+fr[fi][0],ptop,lz+fr[fi][1],B.JUNGLE_LEAVES); }
         setLocal(blocks,ptx,ptop+1,lz,B.JUNGLE_LEAVES); setLocal(blocks,ptx-1,ptop,lz,B.JUNGLE_LEAVES); setLocal(blocks,ptx+1,ptop,lz,B.JUNGLE_LEAVES);
-        setLocal(blocks,ptx,ptop-1,lz,B.COCONUT);   // coconut cluster hanging under the fronds
+        // coconuts hang beneath the fronds like fruit
+        var _cn=[[1,1],[-1,-1],[1,-1],[-1,1],[2,0],[0,2]];
+        for(var _ci=0;_ci<_cn.length;_ci++){
+          if(hash3(wx+_cn[_ci][0], 92, wz+_cn[_ci][1], this.seed^0xC0C1) > 0.45) continue;
+          var _cx3=ptx+_cn[_ci][0], _cz3=lz+_cn[_ci][1];
+          if(getLocal(blocks,_cx3,ptop,_cz3)===B.JUNGLE_LEAVES && getLocal(blocks,_cx3,ptop-1,_cz3)===B.AIR)
+            setLocal(blocks,_cx3,ptop-1,_cz3,B.COCONUT);
+        }
       }
       if(getLocal(blocks,lx,h,lz)===B.GRASS && h>SEA && getLocal(blocks,lx,h+1,lz)===B.AIR){
         var _br=hash3(wx,120,wz,this.seed^0xB77);
@@ -2321,6 +2329,51 @@ var World = {
       setLocal(ch.blocks,6,deck+4,8,LAMP); setLocal(ch.blocks,9,deck+4,8,LAMP);
     }
   },
+  genBanditCamp: function(ch){
+    var cx=ch.cx, cz=ch.cz;
+    var r1=cx>>3, r2=cz>>3;
+    if((((hash3(r1,991,r2,this.seed^0xBA9D)*64)|0)) !== ((cx&7)+((cz&7)<<3))) return;
+    if(hash3(cx,992,cz,this.seed^0xBA9D) > 0.42) return;
+    var h=this.heightAt(cx*CHUNK+8, cz*CHUNK+8); if(h<SEA+1||h>SEA+40) return;
+    var by=h+1;
+    // flatten a clearing
+    for(var fx=2;fx<=13;fx++) for(var fz=2;fz<=13;fz++){
+      for(var cy=by;cy<by+5;cy++) setLocal(ch.blocks,fx,cy,fz,B.AIR);
+      setLocal(ch.blocks,fx,by-1,fz,B.DIRT);
+    }
+    // spiked log palisade with a gap for the gate
+    for(var p=2;p<=13;p++){
+      if(p!==7 && p!==8){ setLocal(ch.blocks,p,by,2,B.LOG); setLocal(ch.blocks,p,by+1,2,B.LOG); setLocal(ch.blocks,p,by+2,2,B.WOOD_FENCE); }
+      setLocal(ch.blocks,p,by,13,B.LOG); setLocal(ch.blocks,p,by+1,13,B.LOG); setLocal(ch.blocks,p,by+2,13,B.WOOD_FENCE);
+      setLocal(ch.blocks,2,by,p,B.LOG); setLocal(ch.blocks,2,by+1,p,B.LOG); setLocal(ch.blocks,2,by+2,p,B.WOOD_FENCE);
+      setLocal(ch.blocks,13,by,p,B.LOG); setLocal(ch.blocks,13,by+1,p,B.LOG); setLocal(ch.blocks,13,by+2,p,B.WOOD_FENCE);
+    }
+    // campfire at the heart
+    setLocal(ch.blocks,8,by-1,8,B.COBBLE); setLocal(ch.blocks,8,by,8,B.TORCH);
+    for(var ri=0;ri<8;ri++){ var ra=ri*0.785, rx=8+Math.round(Math.cos(ra)*2), rz=8+Math.round(Math.sin(ra)*2);
+      setLocal(ch.blocks,rx,by-1,rz,B.COBBLE); }
+    // two lean-to tents of wool over log frames
+    var tents=[[4,4],[10,10]];
+    for(var ti=0;ti<2;ti++){
+      var tx=tents[ti][0], tz=tents[ti][1];
+      for(var ax2=0;ax2<3;ax2++) for(var az2=0;az2<3;az2++){
+        setLocal(ch.blocks,tx+ax2,by+2,tz+az2,B.WOOL);
+      }
+      setLocal(ch.blocks,tx,by,tz,B.LOG); setLocal(ch.blocks,tx+2,by,tz+2,B.LOG);
+      setLocal(ch.blocks,tx+1,by,tz+1,B.CHEST);
+    }
+    // the chieftain's tent, larger, at the back
+    for(var gx2=6;gx2<=10;gx2++) for(var gz2=3;gz2<=6;gz2++) setLocal(ch.blocks,gx2,by+3,gz2,B.WOOL);
+    setLocal(ch.blocks,6,by,3,B.LOG); setLocal(ch.blocks,10,by,3,B.LOG); setLocal(ch.blocks,6,by,6,B.LOG); setLocal(ch.blocks,10,by,6,B.LOG);
+    setLocal(ch.blocks,8,by,4,B.CHEST);
+    setLocal(ch.blocks,7,by,5,B.TORCH); setLocal(ch.blocks,9,by,5,B.TORCH);
+    // the camp roster
+    World.tiles[World.ck(cx*CHUNK+8, by, cz*CHUNK+5)]={type:'banditnest', chief:true};
+    World.tiles[World.ck(cx*CHUNK+5, by, cz*CHUNK+9)]={type:'banditnest'};
+    World.tiles[World.ck(cx*CHUNK+11, by, cz*CHUNK+7)]={type:'banditnest'};
+    // remember where camps are, so quests can point you at one
+    try{ if(!World.banditCamps) World.banditCamps=[]; World.banditCamps.push({x:cx*CHUNK+8, z:cz*CHUNK+8}); }catch(_){ }
+  },
   genFoundryVault: function(ch){    // the Forge Tyrant's hall, sunk into the ash with a plated entrance
     var cx=ch.cx, cz=ch.cz;
     var _v1=cx>>3,_v2=cz>>3; if((((hash3(_v1,961,_v2,this.seed^0xF07)*64)|0))!==((cx&7)+((cz&7)<<3))) return;
@@ -2491,7 +2544,8 @@ var World = {
       this.vPath(ch, v, v.cx, v.cz, bx, bz);
       this.vHouse(ch, v, bx, bz, rr, big, pal, i, (i===bsIdx?'smith':null));
     }
-    this.vWell(ch, v, pal);   // last, so the central well sits on top of the paths
+    this.vWell(ch, v, pal);
+    try{ this.vPostBoard(ch, v); }catch(_){ }   // last, so the central well sits on top of the paths
   },
   vPath: function(ch, v, x0, z0, x1, z1){
     if(!bboxHits(ch, x0, z0, x1, z1)) return;
@@ -2502,6 +2556,12 @@ var World = {
       setW(ch,px,gy,pz,B.GRAVEL); setW(ch,px,gy+1,pz,B.AIR);
       if(s>0 && s%6===0 && inCh(ch,px+1,pz)){ var lgy=this.heightAt(px+1,pz); setW(ch,px+1,lgy+1,pz,B.WOOD_FENCE); setW(ch,px+1,lgy+2,pz,B.LANTERN); }   // roadside lamp post
     }
+  },
+  vPostBoard: function(ch, v){
+    var bx=v.cx+3, bz=v.cz+1, h=this.heightAt(ch.cx*CHUNK+bx, ch.cz*CHUNK+bz);
+    if(bx<0||bx>15||bz<0||bz>15) return;
+    setLocal(ch.blocks, bx, h+1, bz, B.LOG);
+    setLocal(ch.blocks, bx, h+2, bz, B.QUEST_BOARD);
   },
   vWell: function(ch, v, pal){
     var wx=v.cx, wz=v.cz, h=v.gy;
@@ -2931,6 +2991,7 @@ var World = {
     if(this.dim==='underforge'){ this.genDwarfCity(ch); this.genAshFortress(ch); try{ this.genFoundryVault(ch); }catch(_){ } try{ this.genIronSpan(ch); }catch(_){ } try{ this.genObsidianShrine(ch); }catch(_){ } return; }
     this.genVillage(ch);
     this.genSteampunkStructures(ch);
+    try{ this.genBanditCamp(ch); }catch(_){ }
     var _lm=hash3(cx,777,cz,this.seed);   // structures never spawn in adjacent chunks
     for(var _sx=-1;_sx<=1;_sx++) for(var _sz=-1;_sz<=1;_sz++){ if(_sx===0&&_sz===0) continue; if(hash3(cx+_sx,777,cz+_sz,this.seed) > _lm) return; }
     if(hash3(cx,101,cz,this.seed^0xB00B) > 0.3) return;
@@ -3649,7 +3710,7 @@ function buildAvatarModel(L){ var g=new THREE.Group();
 }
 var playerAvatar=buildAvatarModel(avatarLimbs); playerAvatar.visible=false; var _avBaseY=playerAvatar.position.y||0;
 scene.add(playerAvatar);
-var MOB_NAMES={voidwarden:'Voidwarden', cogling:'Cogling', steamguard:'Steamguard', runesmith:'Runesmith', sporeling:'Sporeling', slagback:'Slagback', gloomstalker:'Gloomstalker', forgetyrant:'The Forge Tyrant', mimic:'Mimic', skycarver:'Skycarver', valkyrie:'The Valkyrie', sunspirit:'The Sun Spirit', slider:'The Slider', skywisp:'Sky Wisp', skysheep:'Sky Sheep', skywhale:'Sky Whale', warden:'The Warden', cart:'Minecart', cockatrice:'Cockatrice', moa:'Moa', swet:'Swet',  zombie:'Zombie', zombie_villager:'Zombie Villager', zombie_dwarf:'Zombie Dwarf', skeleton:'Skeleton', creeper:'Cogspider', spooler:'Spooler', villager:'Villager', dwarf:'Dwarf', knight:'Knight', cow:'Cow', pig:'Pig', sheep:'Sheep', chicken:'Chicken', horse:'Horse', zombie_horse:'Zombie Horse', skeleton_horse:'Skeleton Horse', seahorse:'Seahorse', fish:'Fish', bird:'Bird', bear:'Bear', boar:'Boar', fox:'Fox', rabbit:'Rabbit', deer:'Deer', dog:'Dog', cat:'Cat', monkey:'Monkey', frog:'Frog', crab:'Crab', bee:'Bee', cinderkin:'Cinderkin', forgewright:'Forgewright' };
+var MOB_NAMES={bandit_dwarf:'Dwarven Bandit', bandit_chief:'Bandit Chieftain', voidwarden:'Voidwarden', cogling:'Cogling', steamguard:'Steamguard', runesmith:'Runesmith', sporeling:'Sporeling', slagback:'Slagback', gloomstalker:'Gloomstalker', forgetyrant:'The Forge Tyrant', mimic:'Mimic', skycarver:'Skycarver', valkyrie:'The Valkyrie', sunspirit:'The Sun Spirit', slider:'The Slider', skywisp:'Sky Wisp', skysheep:'Sky Sheep', skywhale:'Sky Whale', warden:'The Warden', cart:'Minecart', cockatrice:'Cockatrice', moa:'Moa', swet:'Swet',  zombie:'Zombie', zombie_villager:'Zombie Villager', zombie_dwarf:'Zombie Dwarf', skeleton:'Skeleton', creeper:'Cogspider', spooler:'Spooler', villager:'Villager', dwarf:'Dwarf', knight:'Knight', cow:'Cow', pig:'Pig', sheep:'Sheep', chicken:'Chicken', horse:'Horse', zombie_horse:'Zombie Horse', skeleton_horse:'Skeleton Horse', seahorse:'Seahorse', fish:'Fish', bird:'Bird', bear:'Bear', boar:'Boar', fox:'Fox', rabbit:'Rabbit', deer:'Deer', dog:'Dog', cat:'Cat', monkey:'Monkey', frog:'Frog', crab:'Crab', bee:'Bee', cinderkin:'Cinderkin', forgewright:'Forgewright' };
 var _shadowTex=null;
 function shadowTexture(){ if(_shadowTex) return _shadowTex; var c=document.createElement('canvas'); c.width=c.height=64; var x=c.getContext('2d'); var g=x.createRadialGradient(32,32,2,32,32,31); g.addColorStop(0,'rgba(0,0,0,0.75)'); g.addColorStop(0.55,'rgba(0,0,0,0.45)'); g.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=g; x.fillRect(0,0,64,64); _shadowTex=new THREE.CanvasTexture(c); _shadowTex.needsUpdate=true; return _shadowTex; }
 function makeBlobShadow(sz){ var mat=new THREE.MeshBasicMaterial({map:shadowTexture(), transparent:true, opacity:0.7, depthWrite:false, depthTest:false, fog:false}); var m=new THREE.Mesh(new THREE.PlaneGeometry(sz,sz), mat); m.rotation.x=-Math.PI/2; m.renderOrder=999; scene.add(m); return m; }
@@ -5737,6 +5798,7 @@ function doPlace(){
       sfxClick(); } else { toast('Add crops, seeds or plant matter to compost'); }
     return; }
   if(hit.id===B.FURNITURE_BENCH){ openFurnitureBench(); return; }
+  if(hit.id===B.QUEST_BOARD){ openQuestBoard(); return; }
   if(blk(hit.id).shape==='door'){ toggleDoor(hit.x,hit.y,hit.z); return; }
   if(hit.id===B.FENCE_GATE){ var gt=World.tiles[World.ck(hit.x,hit.y,hit.z)]; if(gt){ gt.open=!gt.open; World.markDirty(hit.x>>4,hit.z>>4); sfxDoor(gt.open); } return; }
   if(blk(hit.id).shape==='trapdoor'){ var td=World.tiles[World.ck(hit.x,hit.y,hit.z)]; if(td){ td.open=!td.open; World.markDirty(hit.x>>4,hit.z>>4); sfxDoor(td.open); } return; }
@@ -6135,8 +6197,8 @@ function placeShape(pid, pb, hit, nx,ny,nz){
     var lc=World.tiles[World.ck(nx+perp[0][0],ny,nz+perp[0][1])];
     var rc=World.tiles[World.ck(nx+perp[1][0],ny,nz+perp[1][1])];
     var hinge='l';
-    if(lc && lc.type==='door' && lc.dir===ddir){ hinge='r'; if(lc.hinge!=='l'){ lc.hinge='l'; try{ World.markDirty((nx+perp[0][0])>>4,(nz+perp[0][1])>>4); }catch(_){ } } }   // partner on the left: it hinges left, we hinge right -> knobs meet in the middle
-    else if(rc && rc.type==='door' && rc.dir===ddir){ hinge='l'; if(rc.hinge!=='r'){ rc.hinge='r'; try{ World.markDirty((nx+perp[1][0])>>4,(nz+perp[1][1])>>4); }catch(_){ } } }
+    if(lc && lc.type==='door' && lc.dir===ddir){ hinge='l'; if(lc.hinge!=='r'){ lc.hinge='r'; try{ World.markDirty((nx+perp[0][0])>>4,(nz+perp[0][1])>>4); }catch(_){ } } }   // partner sits on the far side: each leaf hinges on its OUTER edge so the middle swings clear
+    else if(rc && rc.type==='door' && rc.dir===ddir){ hinge='r'; if(rc.hinge!=='l'){ rc.hinge='l'; try{ World.markDirty((nx+perp[1][0])>>4,(nz+perp[1][1])>>4); }catch(_){ } } }
     else if(isSolid(World.getBlock(nx+perp[1][0],ny,nz+perp[1][1])) && !isSolid(World.getBlock(nx+perp[0][0],ny,nz+perp[0][1]))) hinge='r';
     else hinge=resolveDoorHinge(nx,ny,nz,ddir);
     World.tiles[World.ck(nx,ny,nz)]={type:'door', shape:'door', dir:ddir, open:false, hinge:hinge};
@@ -8925,7 +8987,7 @@ function makeRabbit(){ var g=new THREE.Group(); g.__mats=[]; function p(w,h,d,c,
 var MOBDEF={
   zombie:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:3}, zombie_villager:{hp:20,w:0.6,h:1.9,sp:2.1,dmg:4}, zombie_dwarf:{hp:18,w:0.6,h:1.42,sp:2.0,dmg:4}, skeleton:{hp:14,w:0.55,h:1.9,sp:2.3,dmg:2},
   spooler:{hp:8,w:0.8,h:0.6,sp:4.0,dmg:0}, creeper:{hp:14,w:0.9,h:0.9,sp:3.0,dmg:3},   // Cogspider: brass boiler-spider
-  skycarver:{hp:40,w:2.4,h:1.4,sp:2.0,dmg:0,passive:true}, skywisp:{hp:8,w:0.5,h:0.5,sp:1.4,dmg:0,passive:true}, cockatrice:{hp:14,w:0.7,h:1.1,sp:3.4,dmg:3}, moa:{hp:20,w:0.8,h:1.7,sp:2.6,dmg:0,passive:true}, swet:{hp:10,w:0.8,h:0.7,sp:2.4,dmg:2}, skysheep:{hp:12,w:0.9,h:1.2,sp:1.6,dmg:0,passive:true}, skywhale:{hp:70,w:3.5,h:2.2,sp:1.2,dmg:0,passive:true}, cart:{hp:20,w:0.9,h:0.7,sp:0,dmg:0,passive:true}, valkyrie:{hp:170,w:0.9,h:2.2,sp:3.6,dmg:7,boss:true}, sunspirit:{hp:200,w:1.2,h:1.2,sp:2.8,dmg:8,boss:true}, voidwarden:{hp:120,w:1.1,h:2.6,sp:2.6,dmg:10}, cogling:{hp:12,w:0.5,h:0.6,sp:4.4,dmg:3}, steamguard:{hp:70,w:1.0,h:2.1,sp:1.9,dmg:8}, runesmith:{hp:24,w:0.6,h:1.4,sp:1.6,dmg:0,passive:true}, sporeling:{hp:10,w:0.6,h:0.7,sp:1.8,dmg:0,passive:true}, slagback:{hp:38,w:1.1,h:1.3,sp:2.2,dmg:6}, gloomstalker:{hp:26,w:0.7,h:1.8,sp:4.2,dmg:5}, forgetyrant:{hp:220,w:1.6,h:3.0,sp:2.9,dmg:9,boss:true}, mimic:{hp:45,w:0.9,h:0.9,sp:3.0,dmg:5}, slider:{hp:130,w:1.8,h:1.8,sp:3.4,dmg:5,boss:true}, warden:{hp:150,w:0.9,h:2.5,sp:2.7,dmg:6,boss:true}, fish:{hp:3,w:0.4,h:0.3,sp:2.0,dmg:0}, seahorse:{hp:14,w:0.6,h:1.1,sp:3.0,dmg:0,passive:true,water:true}, cow:{hp:14,w:0.8,h:1.3,sp:1.4,dmg:0,passive:true},
+  skycarver:{hp:40,w:2.4,h:1.4,sp:2.0,dmg:0,passive:true}, skywisp:{hp:8,w:0.5,h:0.5,sp:1.4,dmg:0,passive:true}, cockatrice:{hp:14,w:0.7,h:1.1,sp:3.4,dmg:3}, moa:{hp:20,w:0.8,h:1.7,sp:2.6,dmg:0,passive:true}, swet:{hp:10,w:0.8,h:0.7,sp:2.4,dmg:2}, skysheep:{hp:12,w:0.9,h:1.2,sp:1.6,dmg:0,passive:true}, skywhale:{hp:70,w:3.5,h:2.2,sp:1.2,dmg:0,passive:true}, cart:{hp:20,w:0.9,h:0.7,sp:0,dmg:0,passive:true}, valkyrie:{hp:170,w:0.9,h:2.2,sp:3.6,dmg:7,boss:true}, sunspirit:{hp:200,w:1.2,h:1.2,sp:2.8,dmg:8,boss:true}, bandit_dwarf:{hp:26,w:0.6,h:1.45,sp:2.6,dmg:5}, bandit_chief:{hp:90,w:0.75,h:1.7,sp:2.4,dmg:8}, voidwarden:{hp:120,w:1.1,h:2.6,sp:2.6,dmg:10}, cogling:{hp:12,w:0.5,h:0.6,sp:4.4,dmg:3}, steamguard:{hp:70,w:1.0,h:2.1,sp:1.9,dmg:8}, runesmith:{hp:24,w:0.6,h:1.4,sp:1.6,dmg:0,passive:true}, sporeling:{hp:10,w:0.6,h:0.7,sp:1.8,dmg:0,passive:true}, slagback:{hp:38,w:1.1,h:1.3,sp:2.2,dmg:6}, gloomstalker:{hp:26,w:0.7,h:1.8,sp:4.2,dmg:5}, forgetyrant:{hp:220,w:1.6,h:3.0,sp:2.9,dmg:9,boss:true}, mimic:{hp:45,w:0.9,h:0.9,sp:3.0,dmg:5}, slider:{hp:130,w:1.8,h:1.8,sp:3.4,dmg:5,boss:true}, warden:{hp:150,w:0.9,h:2.5,sp:2.7,dmg:6,boss:true}, fish:{hp:3,w:0.4,h:0.3,sp:2.0,dmg:0}, seahorse:{hp:14,w:0.6,h:1.1,sp:3.0,dmg:0,passive:true,water:true}, cow:{hp:14,w:0.8,h:1.3,sp:1.4,dmg:0,passive:true},
   pig:{hp:10,w:0.7,h:0.9,sp:1.5,dmg:0,passive:true}, sheep:{hp:10,w:0.8,h:1.2,sp:1.4,dmg:0,passive:true},
   chicken:{hp:4,w:0.4,h:0.7,sp:1.7,dmg:0,passive:true},
   shark:{hp:18,w:0.6,h:0.6,sp:4.4,dmg:4}, crab:{hp:6,w:0.5,h:0.4,sp:1.3,dmg:0,passive:true},
@@ -9075,6 +9137,29 @@ function meshFor(kind){ switch(kind){
     var se3=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.16,0.1), new THREE.MeshBasicMaterial({color:0x401808})); se3.position.set(-0.2,0.85,0.55); su.add(se3);
     var se4=se3.clone(); se4.position.x=0.2; su.add(se4);
     return su; }
+  case 'bandit_dwarf':{ var bd2=new THREE.Group(); bd2.__mats=[]; function _bd(w,h,d,c,x,y,z){ return partMesh(bd2,w,h,d,c,x,y,z); }
+    _bd(0.58,0.62,0.38,0x4a3b30,0,0.8,0);                                  // dark leather jerkin
+    _bd(0.62,0.14,0.42,0x2e2620,0,0.54,0);                                 // belt
+    _bd(0.44,0.4,0.4,0xc09a76,0,1.22,0);                                   // head
+    _bd(0.48,0.16,0.44,0x6a2a24,0,1.46,0);                                 // red bandana
+    _bd(0.4,0.26,0.16,0x6a5a48,0,1.04,0.2);                                // matted beard
+    _bd(0.07,0.07,0.04,0xd83a2a,-0.1,1.26,0.21); _bd(0.07,0.07,0.04,0xd83a2a,0.1,1.26,0.21);   // angry red eyes
+    var _b1=_bd(0.16,0.5,0.16,0x4a3b30,-0.38,0.82,0), _b2=_bd(0.16,0.5,0.16,0x4a3b30,0.38,0.82,0);
+    _bd(0.1,0.42,0.1,0x6a5a48,0.44,0.55,0.12); _bd(0.26,0.1,0.1,0x9aa0a8,0.44,0.34,0.12);      // rusty axe
+    _bd(0.18,0.48,0.18,0x33291f,-0.16,0.26,0); _bd(0.18,0.48,0.18,0x33291f,0.16,0.26,0);
+    bd2.userData.arms=[_b1,_b2]; return bd2; }
+  case 'bandit_chief':{ var bc=new THREE.Group(); bc.__mats=[]; function _bc(w,h,d,c,x,y,z){ return partMesh(bc,w,h,d,c,x,y,z); }
+    _bc(0.72,0.74,0.46,0x3a3038,0,0.95,0);                                 // heavy blackened mail
+    _bc(0.76,0.16,0.5,0xc8a23a,0,1.24,0);                                  // gold-trimmed pauldron band
+    _bc(0.5,0.46,0.46,0xbe9270,0,1.46,0);                                  // head
+    _bc(0.56,0.2,0.5,0x5a4a2a,0,1.74,0);                                   // iron circlet
+    _bc(0.18,0.16,0.1,0xc8a23a,0,1.8,0.24);
+    _bc(0.46,0.34,0.18,0x8a7a5a,0,1.24,0.24);                              // great braided beard
+    _bc(0.08,0.08,0.04,0xff5a3a,-0.11,1.5,0.24); _bc(0.08,0.08,0.04,0xff5a3a,0.11,1.5,0.24);
+    var _c1=_bc(0.2,0.6,0.2,0x3a3038,-0.46,0.97,0), _c2=_bc(0.2,0.6,0.2,0x3a3038,0.46,0.97,0);
+    _bc(0.12,0.6,0.12,0x5a4a34,0.54,0.72,0.14); _bc(0.4,0.22,0.16,0xb0b6be,0.54,0.4,0.14);     // great warhammer
+    _bc(0.22,0.54,0.22,0x2a2228,-0.18,0.3,0); _bc(0.22,0.54,0.22,0x2a2228,0.18,0.3,0);
+    bc.userData.arms=[_c1,_c2]; return bc; }
   case 'voidwarden':{ var vw=new THREE.Group(); vw.__mats=[]; function _v(w,h,d,c,x,y,z){ return partMesh(vw,w,h,d,c,x,y,z); }
     var OBS=0x1a2048, OBS2=0x222a5c, GLOW=0x48b4ff;
     _v(1.0,1.2,0.6,OBS,0,1.5,0);                                   // obsidian torso
@@ -9515,7 +9600,9 @@ function playerShootArrow(torchMode){
   projectiles.push({mesh:m, pos:new THREE.Vector3(ox,oy,oz), vel:dir.clone().multiplyScalar(_bd>=13?42:34), life:4, friendly:true, dmg:torchMode?1:_bd, torch:!!torchMode});
 }
 function arrowHitEntity(e,dmg,dir){
+  var _wasAlive=e.hp>0;
   e.hp-=dmg; e.hurt=0.3;
+  if(_wasAlive && e.hp<=0){ try{ questOnKill(e.kind); }catch(_){ } }
   if((e.kind==='bear'||e.kind==='boar'||e.kind==='cinderkin') && !e.tamed){ e.provoked=true; e.aggroT=14; }
   if(e.vel){ e.vel.x+=dir.x*4.5; e.vel.z+=dir.z*4.5; e.vel.y=3.0; }
   sfxHurtMob(e.kind);
@@ -9784,6 +9871,12 @@ function tickEntities(dt){
       toast('\uD83C\uDF89 The Warden falls! Loot explodes out!'); }
     if(e && e.hp!=null && e.hp<=0 && e.kind==='skywisp' && !e._wd){ e._wd=1; if(Math.random()<0.6) spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'SKY_CRYSTAL',1); }
     if(e && e.hp!=null && e.hp<=0 && e.kind==='skysheep' && !e._wd){ e._wd=1; spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'WOOL',1+(Math.random()*2|0)); if(Math.random()<0.3) spawnDrop(Math.floor(e.pos.x),Math.floor(e.pos.y),Math.floor(e.pos.z),'SKY_CRYSTAL',1); }
+    if(e && e.hp!=null && e.hp<=0 && (e.kind==='bandit_dwarf'||e.kind==='bandit_chief') && !e._wd){ e._wd=1;
+      var _nx4=Math.floor(e.pos.x),_ny4=Math.floor(e.pos.y),_nz4=Math.floor(e.pos.z);
+      spawnDrop(_nx4,_ny4+1,_nz4,'GOLD_INGOT',1+(Math.random()*2|0));
+      if(e.kind==='bandit_chief'){ spawnDrop(_nx4,_ny4+1,_nz4,'EMERALD',3); spawnDrop(_nx4,_ny4+1,_nz4,'DIAMOND',1); toast('The Bandit Chieftain falls!'); }
+      try{ questOnKill(e.kind); }catch(_){ }
+    }
     if(e && e.hp!=null && e.hp<=0 && e.kind==='voidwarden' && !e._wd){ e._wd=1; var _vx=Math.floor(e.pos.x),_vy=Math.floor(e.pos.y),_vz=Math.floor(e.pos.z);
       for(var _vi=0;_vi<5;_vi++) spawnDrop(_vx,_vy+1,_vz,'BLUE_OBSIDIAN',1+(Math.random()*2|0));
       spawnDrop(_vx,_vy+1,_vz,'DUNGEON_KEY',1);
@@ -10116,7 +10209,7 @@ function vehicleInFront(maxd){
   }
   return best;
 }
-function damageMob(e, dmg, from){ if(!e||e.hp<=0) return; e.hp-=dmg; e.hurt=0.2; e.barT=3.0; try{ spawnDmgNumber(e, Math.max(1,Math.round(dmg)), false); }catch(_){}
+function damageMob(e, dmg, from){ if(!e||e.hp<=0) return; e.hp-=dmg; e.hurt=0.2; e.barT=3.0; if(e.hp<=0){ try{ questOnKill(e.kind); }catch(_){ } } try{ spawnDmgNumber(e, Math.max(1,Math.round(dmg)), false); }catch(_){}
   if(from){ var a=Math.atan2(e.pos.z-from.pos.z, e.pos.x-from.pos.x); e.vel.x+=Math.cos(a)*5; e.vel.z+=Math.sin(a)*5; e.vel.y=4.0; }
   if((e.kind==='bear'||e.kind==='boar'||e.kind==='cinderkin') && !e.tamed){ e.provoked=true; e.aggroT=14; }
   try{ sfxHurtMob(e.kind); }catch(_){}
@@ -10128,7 +10221,9 @@ function hitEntity(e){
   dmg *= rpgCombatDmg();                                   // RPG combat damage perk
   var _crit=false; if(Math.random()<rpgCritChance()){ dmg*=1.6; _crit=true; }   // RPG critical hit
   if(e.armorDef){ dmg=Math.max(1, dmg-e.armorDef); }   // mob armor absorbs some damage
+  var _wa2=e.hp>0;
   e.hp-=dmg; e.hurt=0.2; e.barT=3.0;
+  if(_wa2 && e.hp<=0){ try{ questOnKill(e.kind); }catch(_){ } }
   spawnDmgNumber(e, Math.max(1,Math.round(dmg)), _crit);
   if(_crit){ try{ tone(1200,0.05,'square',0.05); }catch(_){} }
   if(rpgLifeSteal()>0 && Math.random()<rpgLifeSteal() && Player.hp<20){ Player.hp=Math.min(20,Player.hp+1); updateStats(); }   // RPG life steal
@@ -10750,6 +10845,127 @@ function unlock(id){ if(gameMode==='creative' || unlocked[id] || !ACHIEVEMENTS[i
   grantCosmeticsFor(id);
   var a=ACHIEVEMENTS[id]; toast('\uD83C\uDFC6 Achievement: '+a.name+'  (+'+a.xp+' XP)');
   giveXP(a.xp); if(a.item) giveItem(a.item[0],a.item[1]); sfxClick(); }
+var QUEST_FETCH=[
+  {key:'WHEAT', n:8,  txt:'The granary is short. Bring {n} Wheat.'},
+  {key:'RAW_FISH', n:6, txt:'The inn needs fish. Bring {n} Raw Fish.'},
+  {key:'LOG', n:12, txt:'We are rebuilding a barn. Bring {n} Logs.'},
+  {key:'COAL', n:10, txt:'The forge has gone cold. Bring {n} Coal.'},
+  {key:'IRON_INGOT', n:5, txt:'The smith needs {n} Iron Ingots.'},
+  {key:'WOOL', n:6, txt:'Winter is coming. Bring {n} Wool.'},
+  {key:'APPLE', n:8, txt:'The children are hungry. Bring {n} Apples.'},
+  {key:'LEATHER', n:5, txt:'The tanner needs {n} Leather.'}
+];
+var QUEST_HUNT=[
+  {kind:'zombie', n:5, txt:'Zombies trouble our fields at night. Slay {n}.'},
+  {kind:'skeleton', n:5, txt:'Bowmen of bone haunt the caves. Slay {n}.'},
+  {kind:'spider', n:6, txt:'Spiders nest too close. Slay {n}.'},
+  {kind:'creeper', n:4, txt:'Creepers have wrecked two walls. Slay {n}.'}
+];
+var QUEST_REWARDS=[
+  {key:'EMERALD', n:3}, {key:'IRON_INGOT', n:5}, {key:'GOLD_INGOT', n:3},
+  {key:'DIAMOND', n:1}, {key:'BREAD', n:6}, {key:'COOKED_BEEF', n:5}
+];
+function questSeedAt(x,z){ return Math.abs(Math.floor(x/64)*7919 + Math.floor(z/64)*104729); }
+function makeQuest(seed, idx){
+  var r=function(n){ seed=(seed*1103515245+12345)&0x7fffffff; return seed%n; };
+  for(var sk=0;sk<idx*3+1;sk++) r(97);
+  var roll=r(100);
+  var rw=QUEST_REWARDS[r(QUEST_REWARDS.length)];
+  var xp=12+r(20);
+  if(roll<45){
+    var q=QUEST_FETCH[r(QUEST_FETCH.length)];
+    return {type:'fetch', key:q.key, need:q.n, have:0, text:q.txt.replace('{n}',q.n), rw:rw.key, rwn:rw.n, xp:xp, done:false, taken:false};
+  } else if(roll<80){
+    var hq=QUEST_HUNT[r(QUEST_HUNT.length)];
+    return {type:'hunt', kind:hq.kind, need:hq.n, have:0, text:hq.txt.replace('{n}',hq.n), rw:rw.key, rwn:rw.n, xp:xp, done:false, taken:false};
+  } else {
+    // a bounty on a bandit chieftain, with a rough bearing to the camp
+    var bx=Math.floor(Player.pos.x)+((r(2)?1:-1)*(180+r(420)));
+    var bz=Math.floor(Player.pos.z)+((r(2)?1:-1)*(180+r(420)));
+    return {type:'bounty', kind:'bandit_chief', need:1, have:0,
+            text:'Dwarven bandits raid our roads. Slay their Chieftain.',
+            mapX:bx, mapZ:bz, rw:'DIAMOND', rwn:2, xp:45+r(30), done:false, taken:false};
+  }
+}
+function activeQuests(){ if(!Player.quests) Player.quests=[]; return Player.quests; }
+function questOnKill(kind){
+  var qs=activeQuests(), changed=false;
+  for(var i=0;i<qs.length;i++){ var q=qs[i];
+    if(q.done || (q.type!=='hunt' && q.type!=='bounty')) continue;
+    if(q.kind===kind){ q.have++; changed=true;
+      if(q.have>=q.need){ q.done=true; toast('\u2705 Quest ready to turn in: '+q.text); }
+      else toast(q.have+'/'+q.need+' \u2014 '+q.text);
+    }
+  }
+  if(changed) try{ saveGame(true); }catch(_){ }
+}
+function countItem(key){ var n=0, all=inv.hotbar.concat(inv.main||[]);
+  for(var i=0;i<all.length;i++){ if(all[i] && all[i].key===key) n+=all[i].n||1; } return n; }
+function takeItem(key,amt){ var all=inv.hotbar.concat(inv.main||[]);
+  for(var i=0;i<all.length && amt>0;i++){ var sl=all[i]; if(!sl||sl.key!==key) continue;
+    var take=Math.min(amt, sl.n||1); sl.n=(sl.n||1)-take; amt-=take; if(sl.n<=0){ var hi=inv.hotbar.indexOf(sl); if(hi>=0) inv.hotbar[hi]=null; else { var mi=inv.main.indexOf(sl); if(mi>=0) inv.main[mi]=null; } } }
+  renderHotbar(); return amt<=0; }
+function openQuestBoard(){
+  var qs=activeQuests();
+  var seed=questSeedAt(Player.pos.x, Player.pos.z);
+  if(!Player._boardSeed || Player._boardSeed!==seed || !Player._boardOffers){
+    Player._boardSeed=seed; Player._boardOffers=[makeQuest(seed,0), makeQuest(seed,1), makeQuest(seed,2)];
+  }
+  var offers=Player._boardOffers;
+  var ov=document.createElement('div'); ov.id='questov';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px;';
+  var pan=document.createElement('div');
+  pan.style.cssText='background:#2b2016;border:4px solid #6b4f31;border-radius:10px;max-width:520px;width:100%;max-height:82vh;overflow:auto;padding:14px;font-family:monospace;color:#f0e2c8;box-shadow:0 8px 40px #000;';
+  var html='<div style="font-size:20px;font-weight:bold;margin-bottom:4px;">\uD83D\uDCDC Village Notice Board</div>'
+         + '<div style="opacity:.7;font-size:12px;margin-bottom:10px;">Parchment flutters in the wind.</div>';
+  // active quests
+  if(qs.length){
+    html+='<div style="font-size:14px;color:#ffd479;margin:8px 0 4px;">YOUR TASKS</div>';
+    for(var i=0;i<qs.length;i++){ var q=qs[i];
+      var prog = q.type==='fetch' ? (countItem(q.key)+'/'+q.need) : (q.have+'/'+q.need);
+      var ready = q.type==='fetch' ? (countItem(q.key)>=q.need) : q.done;
+      html+='<div style="background:#3a2c1d;border:2px solid #55402a;border-radius:6px;padding:8px;margin-bottom:6px;">'
+          + '<div style="font-size:13px;">'+q.text+'</div>'
+          + (q.mapX!=null?'<div style="font-size:11px;color:#9fd0ff;">\uD83D\uDDFA Reported near X '+q.mapX+', Z '+q.mapZ+'</div>':'')
+          + '<div style="font-size:11px;opacity:.8;margin-top:3px;">Progress '+prog+' \u00b7 Reward: '+q.rwn+'\u00d7 '+(ITEMS[q.rw]?ITEMS[q.rw].name:q.rw)+' + '+q.xp+' XP</div>'
+          + (ready?'<button data-turnin="'+i+'" style="margin-top:6px;background:#3e7a34;color:#fff;border:2px solid #2b5424;border-radius:5px;padding:6px 12px;font-family:monospace;font-size:13px;">Turn In</button>'
+                  :'<button data-abandon="'+i+'" style="margin-top:6px;background:#5a3030;color:#f0d0d0;border:2px solid #402020;border-radius:5px;padding:5px 10px;font-family:monospace;font-size:12px;">Abandon</button>')
+          + '</div>';
+    }
+  }
+  html+='<div style="font-size:14px;color:#ffd479;margin:12px 0 4px;">AVAILABLE WORK</div>';
+  for(var oi=0;oi<offers.length;oi++){ var o=offers[oi];
+    var already=false; for(var qi=0;qi<qs.length;qi++){ if(qs[qi].text===o.text) already=true; }
+    html+='<div style="background:#332618;border:2px solid #4b3826;border-radius:6px;padding:8px;margin-bottom:6px;'+(already?'opacity:.45;':'')+'">'
+        + '<div style="font-size:13px;">'+o.text+'</div>'
+        + '<div style="font-size:11px;opacity:.8;margin-top:3px;">Reward: '+o.rwn+'\u00d7 '+(ITEMS[o.rw]?ITEMS[o.rw].name:o.rw)+' + '+o.xp+' XP</div>'
+        + (already?'<div style="font-size:11px;color:#9f9;margin-top:5px;">Accepted</div>'
+                  :'<button data-accept="'+oi+'" style="margin-top:6px;background:#6b4f31;color:#fff;border:2px solid #4a361f;border-radius:5px;padding:6px 12px;font-family:monospace;font-size:13px;">Accept</button>')
+        + '</div>';
+  }
+  html+='<button id="questclose" style="margin-top:10px;width:100%;background:#4a3826;color:#f0e2c8;border:2px solid #6b4f31;border-radius:6px;padding:9px;font-family:monospace;font-size:14px;">Close</button>';
+  pan.innerHTML=html; ov.appendChild(pan); document.body.appendChild(ov);
+  function close(){ try{ document.body.removeChild(ov); }catch(_){ } }
+  pan.addEventListener('click', function(ev){
+    var t=ev.target; if(!t) return;
+    if(t.id==='questclose'){ close(); sfxClick(); return; }
+    var ac=t.getAttribute('data-accept');
+    if(ac!=null){ var o=offers[ac|0]; var cp=JSON.parse(JSON.stringify(o)); cp.taken=true; activeQuests().push(cp);
+      toast('\uD83D\uDCDC Task accepted'); sfxClick(); close(); try{ saveGame(true); }catch(_){ } openQuestBoard(); return; }
+    var ab=t.getAttribute('data-abandon');
+    if(ab!=null){ activeQuests().splice(ab|0,1); sfxClick(); close(); openQuestBoard(); return; }
+    var ti=t.getAttribute('data-turnin');
+    if(ti!=null){ var q=activeQuests()[ti|0]; if(!q) return;
+      if(q.type==='fetch'){ if(countItem(q.key)<q.need){ toast('You do not have enough yet'); return; } takeItem(q.key,q.need); }
+      else if(!q.done){ toast('Not finished yet'); return; }
+      giveItem(q.rw, q.rwn); giveXP(q.xp);
+      activeQuests().splice(ti|0,1);
+      toast('\u2705 Task complete! +'+q.xp+' XP');
+      try{ sfxClick(); saveGame(true); }catch(_){ }
+      close(); openQuestBoard(); return; }
+  });
+  ov.addEventListener('click', function(ev){ if(ev.target===ov) close(); });
+}
 function giveXP(n){ Player.xp+=n; while(Player.xp >= xpForLevel(Player.xpLevel)){ Player.xp-=xpForLevel(Player.xpLevel); Player.xpLevel++; sfxClick(); } updateStats(); }
 function updateStats(){
   var hpEl=document.getElementById('hearts'), foodEl=document.getElementById('food');
@@ -12022,6 +12238,13 @@ function loop(t){
           else if(_wr2<0.82) spawnEnemy('moa', _wx2+0.5, _wt2+1.2, _wz2+0.5);
           else if(_wr2<0.93) spawnEnemy('cockatrice', _wx2+0.5, _wt2+1.2, _wz2+0.5);
           else spawnEnemy('swet', _wx2+0.5, _wt2+1.2, _wz2+0.5); } } }catch(_){ } }
+    if(frame%90===55){ try{ for(var _nk in World.tiles){ var _nt=World.tiles[_nk]; if(!_nt||_nt.type!=='banditnest'||_nt.spawned) continue;
+      var _np=_nk.split(','); var _ndx=(+_np[0])-Player.pos.x, _ndy=(+_np[1])-Player.pos.y, _ndz=(+_np[2])-Player.pos.z;
+      if(_ndx*_ndx+_ndy*_ndy+_ndz*_ndz<400){ _nt.spawned=true;
+        var _bn=_nt.chief?1:(2+((Math.random()*2)|0));
+        for(var _bi3=0;_bi3<_bn;_bi3++) spawnEnemy(_nt.chief?'bandit_chief':'bandit_dwarf', (+_np[0])+0.5+(Math.random()*3-1.5), (+_np[1])+0.2, (+_np[2])+0.5+(Math.random()*3-1.5));
+        if(_nt.chief) toast('\u2694\uFE0F The Bandit Chieftain spots you!');
+      } } }catch(_){ } }
     if(frame%90===30){ try{ for(var _bk in World.tiles){ var _bt2=World.tiles[_bk]; if(!_bt2||_bt2.type!=='bossnest'||_bt2.spawned) continue;
       var _bp2=_bk.split(','); var _bdx=(+_bp2[0])-Player.pos.x, _bdy=(+_bp2[1])-Player.pos.y, _bdz=(+_bp2[2])-Player.pos.z;
       if(_bdx*_bdx+_bdy*_bdy+_bdz*_bdz<196){ _bt2.spawned=true; var _bw=spawnEnemy(_bt2.kind||'warden', (+_bp2[0])+0.5, (+_bp2[1])+0.2, (+_bp2[2])+0.5); toast('\u2694\uFE0F '+(MOB_NAMES[_bt2.kind||'warden']||'The Warden')+' awakens!'); } } }catch(_){ } }
@@ -12200,8 +12423,9 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 252';
+var VERSION='Update 253';
 var CHANGELOG=[
+  { v:'Update 253', t:'Quest Boards, Bandits, Doors &amp; Coconuts', items:['<b>VILLAGE QUEST BOARDS</b> \u2014 every village now posts a notice board by the well. Tap it for three tasks: <b>fetch quests</b> (bring wheat, fish, logs, iron, wool\u2026), <b>hunts</b> (slay zombies, skeletons, spiders, creepers) and <b>bounties</b>. Accept, track your progress, and turn them in for XP and rewards like emeralds, diamonds and ingots','<b>DWARVEN BANDIT CAMPS</b> \u2014 dwarves turned to banditry now hold fortified camps in the overworld: spiked log palisades, a gated entrance, lean-to tents, a campfire ring, loot chests and the <b>Chieftain\u2019s tent</b> at the back','<b>Bandit bounties give you a bearing</b> \u2014 bounty postings report the raiders\u2019 whereabouts with rough coordinates to hunt down. The Chieftain drops emeralds and a diamond','<b>Doors fixed</b> \u2014 double doors had both leaves hinged the wrong way, so they swung <i>into</i> each other and left a post in the middle. Each leaf now hinges on its outer edge and both swing clear together, the way they should','<b>Coconuts hang from the fronds</b> now, dangling beneath the palm leaves like real fruit instead of sitting in the trunk'] },
   { v:'Update 252', t:'Portals For Everyone &amp; Freezing Water', items:['<b>Sky Rifts now build a full portal when placed</b>, exactly like Rift Gates \u2014 a 2\u00d73 sheet of energy in a proper frame, the classic portal size. Both are identical in creative','<b>Creatures use portals too</b> \u2014 wander a mob into a rift and it steps through in a puff of light\u2026 and something from the other side often wanders back out. Sky rifts breathe out wisps and moas; rift gates cough up cinderkin and coglings','<b>Travel between the far dimensions</b> \u2014 build a Rift Gate up in the Skylands to drop straight into the UnderForge, or raise a Sky Rift down in the UnderForge to climb straight to the Skylands','<b>ICE</b> \u2014 open water freezes over in snowy plains and taiga, and anywhere it\u2019s snowing. Keep a torch or lamp nearby and the water stays thawed'] },
   { v:'Update 251', t:'Caves Come Alive &amp; Farther Horizons', items:['<b>View distance now matches the defaults you\u2019re used to</b> \u2014 8 chunks on mobile, 12 on desktop (up from 4 and 7). The world opens right up. If your device struggles, dial it back in Settings','<b>LUSH CAVES</b> \u2014 some cave systems are carpeted in thick moss with clusters of <b>glow berries</b> hanging from the ceilings and sprouting from the floor, lighting the dark in warm gold. The berries are edible','<b>DRIPSTONE CAVES</b> \u2014 others are floored in banded flowstone and bristling with <b>dripstone spikes</b> hanging above and rising below','<b>New blocks</b> \u2014 Moss Block, Dripstone, Dripstone Spike and Glow Berries. Moss and dirt together make grass again'] },
   { v:'Update 250', t:'Beaches, Badlands &amp; Bamboo', items:['<b>Real beaches at last</b> \u2014 sand only ever generated in deserts, which is why you never saw a coconut palm: there was no shoreline for them to grow on. Every coast now has a proper sand beach, and <b>coconut palms lean over the water</b> three times as often, heavy with <b>coconuts you can eat</b>','<b>NEW BIOME: The Badlands</b> \u2014 stepped mesa plateaus and hoodoos of banded terracotta over red sand, strata shifting colour with height, dotted with dead bushes and cacti','<b>NEW BIOME: Bamboo Grove</b> \u2014 rolling green country thick with tall bamboo stalks. Cut canes for sticks and planks','<b>Redwood Forest, Badlands and Bamboo Grove now show their names</b> on the location readout'] },
