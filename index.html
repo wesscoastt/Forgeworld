@@ -421,7 +421,8 @@ var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || ('
 var RENDER_DIST = IS_MOBILE ? 8 : 12;   // matches the default render distance in the games people know
 var lookSens = 1.0;
 var difficulty = 'normal'; // peaceful | easy | normal
-function mobDmgMult(){ if(gameMode==='creative') return 0; return difficulty==='peaceful'?0 : difficulty==='easy'?0.5 : 1; }
+function mobDmgMult(){
+  if(gameMode==='creative') return 0; return difficulty==='peaceful'?0 : difficulty==='easy'?0.5 : 1; }
 var REACH = 5.2;
 var SAVE_KEY = 'forgeworld_save_v1';
 
@@ -849,6 +850,49 @@ mat('GLOW_BERRY','Glow Berry',[240,178,70],{food:2,heal:1,stack:64});
 mat('PEARL','Pearl',[236,240,246],{stack:64});
 mat('PRISMARINE_SHARD','Prismarine Shard',[120,200,186],{stack:64});
 mat('TURTLE_SCUTE','Turtle Scute',[96,164,84],{stack:64});
+// ---- creative spawn eggs, one per creature ----
+var SPAWN_EGGS=[
+  ['zombie','Zombie',[74,124,78],[44,74,48]], ['zombie_villager','Zombie Villager',[74,124,78],[120,92,64]],
+  ['zombie_dwarf','Zombie Dwarf',[86,122,74],[150,110,70]], ['skeleton','Skeleton',[214,214,206],[110,110,104]],
+  ['spooler','Spooler',[120,110,140],[60,54,74]], ['creeper','Creeper',[90,190,90],[40,110,40]],
+  ['mimic','Mimic',[140,96,50],[70,44,22]], ['slider','Slider',[150,150,158],[80,80,88]],
+  ['warden','Warden',[40,90,100],[16,44,52]], ['cinderkin','Cinderkin',[210,90,40],[110,36,14]],
+  ['knight','Knight',[170,176,186],[80,86,96]],
+  ['skycarver','Skycarver',[222,238,248],[150,196,222]], ['skywisp','Skywisp',[174,240,255],[90,180,220]],
+  ['cockatrice','Cockatrice',[120,90,170],[60,40,100]], ['moa','Moa',[240,220,140],[190,150,70]],
+  ['swet','Swet',[130,200,230],[70,140,180]], ['skysheep','Sky Sheep',[240,244,250],[170,200,230]],
+  ['skywhale','Sky Whale',[150,170,210],[80,100,150]], ['valkyrie','Valkyrie',[230,230,240],[190,160,60]],
+  ['sunspirit','Sun Spirit',[255,214,90],[220,130,20]],
+  ['cogling','Cogling',[190,150,80],[110,84,40]], ['steamguard','Steamguard',[160,160,170],[90,90,100]],
+  ['runesmith','Runesmith',[170,130,90],[90,60,40]], ['sporeling','Sporeling',[150,200,170],[70,120,90]],
+  ['slagback','Slagback',[110,90,80],[50,40,34]], ['gloomstalker','Gloomstalker',[80,90,110],[30,36,50]],
+  ['forgetyrant','Forge Tyrant',[220,110,50],[110,44,16]], ['voidwarden','Void Warden',[70,110,220],[26,32,72]],
+  ['jellyfish','Jellyfish',[255,154,212],[190,110,170]], ['bull','Bull',[70,58,50],[30,26,24]],
+  ['dolphin','Dolphin',[127,151,173],[223,231,238]], ['sea_turtle','Sea Turtle',[79,148,64],[201,189,134]],
+  ['abyss_guardian','Abyssal Guardian',[63,122,112],[255,224,122]], ['shark','Shark',[138,131,120],[240,236,226]],
+  ['fish','Fish',[132,156,180],[104,128,152]], ['seahorse','Seahorse',[240,180,90],[190,120,50]],
+  ['crab','Crab',[214,86,52],[240,128,84]],
+  ['bandit_dwarf','Dwarven Bandit',[74,59,48],[106,42,36]], ['bandit_chief','Bandit Chieftain',[58,48,56],[200,162,58]],
+  ['villager','Villager',[190,160,120],[110,84,56]], ['dwarf','Dwarf',[200,170,130],[150,60,40]],
+  ['forgewright','Forgewright',[180,150,90],[90,70,40]],
+  ['cow','Cow',[110,80,58],[240,240,236]], ['pig','Pig',[240,152,158],[200,110,120]],
+  ['sheep','Sheep',[242,240,234],[176,138,94]], ['chicken','Chicken',[244,244,240],[230,150,40]],
+  ['horse','Horse',[140,100,62],[80,56,34]], ['zombie_horse','Zombie Horse',[100,130,90],[54,74,50]],
+  ['skeleton_horse','Skeleton Horse',[220,220,212],[120,120,114]],
+  ['dog','Dog',[190,170,140],[110,94,70]], ['cat','Cat',[120,110,104],[220,210,200]],
+  ['bear','Bear',[110,80,54],[60,42,28]], ['fox','Fox',[220,130,50],[240,236,226]],
+  ['boar','Boar',[92,74,58],[50,40,30]], ['rabbit','Rabbit',[210,190,164],[120,104,84]],
+  ['deer','Deer',[172,124,74],[240,236,226]], ['duck','Duck',[236,220,160],[230,150,40]],
+  ['bird','Bird',[110,150,210],[60,90,150]], ['bee','Bee',[240,200,60],[40,34,24]],
+  ['frog','Frog',[110,180,90],[60,120,50]], ['monkey','Monkey',[130,96,62],[200,170,140]],
+  ['emberwisp','Emberwisp',[255,150,60],[200,60,20]]
+];
+(function(){
+  for(var i=0;i<SPAWN_EGGS.length;i++){
+    var e=SPAWN_EGGS[i];
+    mat('EGG_'+e[0].toUpperCase(), e[1]+' Spawn Egg', e[2], {stack:64, spawnEgg:e[0], eggSpot:e[3]});
+  }
+})();
 mat('AMBROSIUM_SHARD','Ambrosium Shard',[255,220,110],{stack:64});
 mat('TOBACCO_LEAF','Tobacco Leaf',[150,170,80],{stack:64,smeltTo:'DRIED_TOBACCO'});
 mat('DRIED_TOBACCO','Dried Tobacco',[150,120,60],{stack:64});
@@ -1107,6 +1151,60 @@ function iconFor(key){
       x.fillStyle='rgba(255,255,255,0.5)'; x.fillRect(12,12,2,13);
     }
     var K=it.key;
+    if(it.spawnEgg){                                   // a speckled egg tinted to its creature
+      var base=it.color||[200,200,200], spot=it.eggSpot||[80,80,80];
+      x.fillStyle=css(base);
+      x.beginPath(); x.ellipse(16,18,9,12,0,0,6.283); x.fill();
+      x.fillStyle=css([Math.min(255,base[0]+40),Math.min(255,base[1]+40),Math.min(255,base[2]+40)]);
+      x.beginPath(); x.ellipse(13,13,4,5,0,0,6.283); x.fill();
+      x.fillStyle=css(spot);
+      var sp3=[[13,12,2.4],[19,16,2.8],[14,22,2.6],[20,24,2.0],[16,17,2.2],[11,19,1.8],[18,10,1.6]];
+      for(var si3=0;si3<sp3.length;si3++){ x.beginPath(); x.arc(sp3[si3][0],sp3[si3][1],sp3[si3][2],0,6.283); x.fill(); }
+      x.strokeStyle='rgba(0,0,0,0.35)'; x.lineWidth=1.2;
+      x.beginPath(); x.ellipse(16,18,9,12,0,0,6.283); x.stroke();
+      return done();
+    }
+    // --- thin plants and props: draw what they actually look like, not a cube ---
+    if(K==='CORAL_FAN'){ x.fillStyle=css([236,124,176]);
+      for(var cf=0;cf<5;cf++){ x.save(); x.translate(16,26); x.rotate((cf-2)*0.38); x.fillRect(-1.6,-18,3.2,18); x.restore(); }
+      x.fillStyle=css([255,176,214]);
+      for(var cf2=0;cf2<4;cf2++){ x.save(); x.translate(16,26); x.rotate((cf2-1.5)*0.44); x.fillRect(-1.2,-14,2.4,8); x.restore(); }
+      x.fillStyle=css([190,86,132]); x.fillRect(13,25,6,5); return done(); }
+    if(K==='SEA_ANEMONE'){ x.fillStyle=css([184,96,127]); x.fillRect(12,18,8,12);
+      for(var sa=0;sa<7;sa++){ var ax2=4+sa*3.6, ah=6+((sa*53)%7);
+        x.fillStyle=(sa%2)?css([240,123,168]):css([228,98,143]); x.fillRect(ax2|0, 18-ah, 3, ah); }
+      x.fillStyle=css([255,168,200]); x.fillRect(10,15,12,4); return done(); }
+    if(K==='SEA_PICKLE'){ var pk2=[[8,20,4],[14,16,4],[20,22,3],[12,25,3]];
+      for(var sp2=0;sp2<pk2.length;sp2++){ x.fillStyle=css([142,178,84]);
+        x.fillRect(pk2[sp2][0], pk2[sp2][1], pk2[sp2][2], 30-pk2[sp2][1]);
+        x.fillStyle=css([216,240,138]); x.fillRect(pk2[sp2][0], pk2[sp2][1], pk2[sp2][2], 3); }
+      var gg=x.createRadialGradient(16,20,2,16,20,14); gg.addColorStop(0,'rgba(220,255,150,0.4)'); gg.addColorStop(1,'rgba(220,255,150,0)');
+      x.fillStyle=gg; x.fillRect(0,0,32,32); return done(); }
+    if(K==='TUBE_WORM'){ for(var tw=0;tw<5;tw++){ var tx2=4+tw*5.2, th2=12+((tw*71)%9);
+        x.fillStyle=css([201,194,176]); x.fillRect(tx2|0, 30-th2, 3, th2);
+        x.fillStyle=(tw%2)?css([242,148,106]):css([224,122,82]); x.fillRect(tx2|0, 30-th2-5, 3, 5); }
+      return done(); }
+    if(K==='DRIP_SPIKE'){ x.fillStyle=css([150,116,98]); x.beginPath(); x.moveTo(16,30); x.lineTo(23,4); x.lineTo(9,4); x.closePath(); x.fill();
+      x.fillStyle=css([182,146,124]); x.beginPath(); x.moveTo(15,26); x.lineTo(19,7); x.lineTo(12,7); x.closePath(); x.fill(); return done(); }
+    if(K==='BAMBOO'){ x.fillStyle=css([132,196,84]); x.fillRect(12,2,7,28);
+      x.fillStyle=css([96,156,58]); for(var bb2=0;bb2<5;bb2++) x.fillRect(11,5+bb2*6,9,2);
+      x.fillStyle=css([160,214,110]); x.fillRect(13,2,2,28); return done(); }
+    if(K==='GLOWBERRY'||K==='SEAGRASS'||K==='KELP'){
+      var gc=(K==='GLOWBERRY')?[228,158,50]:[62,150,96];
+      for(var kb=0;kb<5;kb++){ var kx=5+kb*5, kh=14+((kb*61)%12);
+        x.fillStyle=css([Math.round(gc[0]*0.75),Math.round(gc[1]*0.8),Math.round(gc[2]*0.75)]);
+        x.fillRect(kx|0, 30-kh, 3, kh); }
+      if(K==='GLOWBERRY'){ berries([228,158,50],[255,226,140], true); }
+      return done(); }
+    if(K==='QUEST_BOARD'){ x.fillStyle=css([112,84,52]); x.fillRect(5,5,22,20);
+      x.fillStyle=css([146,110,68]); x.fillRect(7,7,18,16);
+      x.fillStyle='#f2e8d0'; x.fillRect(10,10,6,8); x.fillRect(18,11,6,7);
+      x.fillStyle=css([90,66,40]); x.fillRect(14,25,4,6); return done(); }
+    if(K==='COOKING_POT'){ x.fillStyle=css([88,88,96]); x.beginPath(); x.ellipse(16,20,11,8,0,0,6.283); x.fill();
+      x.fillStyle=css([120,120,130]); x.beginPath(); x.ellipse(16,14,11,4,0,0,6.283); x.fill();
+      x.fillStyle=css([176,96,40]); x.beginPath(); x.ellipse(16,14,8,2.8,0,0,6.283); x.fill();
+      x.fillStyle=css([70,70,78]); x.fillRect(4,13,3,3); x.fillRect(25,13,3,3);
+      x.fillStyle=css([255,140,40]); x.fillRect(10,27,12,2); x.fillStyle=css([255,208,90]); x.fillRect(13,28,6,2); return done(); }
     // --- round fruit ---
     if(K==='APPLE'||K==='APPLE_F'){ disc(16,18,10,[206,48,48]); disc(12,14,4,[240,110,96]); stemLeaf(16,9); return done(); }
     if(K==='ORANGE'){ disc(16,18,10,[236,146,38]); disc(12,14,4,[250,186,96]); stemLeaf(16,9); return done(); }
@@ -1782,13 +1880,13 @@ var World = {
       if(y===0){ id=B.BEDROCK; }
       else if(y < h-4){ id=B.STONE; }
       else if(y < h){
-        var _beach=(h<=SEA+2 && h>=SEA-2 && biome!==9 && biome!==12);
+        var _beach=(h<=SEA+1 && h>=SEA-2 && biome!==9 && biome!==12 && this.nearShore(wx,wz,h));
         id = (biome===3||_beach)? B.SAND : (biome===14? B.TERRACOTTA : ((h>SEA+30 || (biome===2 && h>SEA+18))? B.STONE : B.DIRT));
       }
       else if(y === h){
         if(biome===3) id=B.SAND;
         else if(biome===14) id=B.RED_SAND;
-        else if(h<=SEA+2 && h>=SEA-2 && biome!==9 && biome!==12) id=B.SAND;   // shoreline beaches
+        else if(h<=SEA+1 && h>=SEA-2 && biome!==9 && biome!==12 && this.nearShore(wx,wz,h)) id=B.SAND;   // shoreline beaches
         else if(biome===2 && h>SEA+30) id=B.SNOW;
         else if(biome===4 && h>SEA+22) id=B.SNOW;
         else if(biome===9) id=B.SNOW;
@@ -1805,12 +1903,37 @@ var World = {
       }
       // caves (3D) - carve STONE only, and keep a 4-block solid surface cap (so stone/rock surfaces never get holes you fall through)
       if(id===B.STONE){
+        // how close to the surface caves are allowed to reach, varied by a slow field so
+        // some systems stay buried and others tear right open into daylight
+        var mouth = this.noise.fbm(wx*0.0045-820, wz*0.0045+640, 2);
+        var breach = (mouth > 0.30);                                    // a cave mouth region
+        var capT = breach ? -2 : (4 + Math.floor((mouth+1)*4));         // buried caves sit 4-12 blocks down
+
+        // tunnels pinch and swell instead of holding one perfect width
+        var wob = this.noise.n2(wx*0.03+70, wz*0.03-70) * 0.5 + this.noise.n2(y*0.11, wx*0.02+9)*0.5;
+        var cvT = 0.52 + wob*0.10;
         var cv = this.noise.fbm(wx*0.045, wz*0.045 + y*0.07, 3) + this.noise.n2(wx*0.075+y*0.045, wz*0.075)*0.5;
-        if(y>3 && y<h-4 && cv > 0.52) id = B.AIR;
-        var tun = this.noise.fbm(wx*0.02+11, y*0.06, wz*0.02-11 + 4);   // long winding tunnels
-        if(y>4 && y<h-5 && Math.abs(tun) < 0.06) id = B.AIR;
-        var cav = this.noise.fbm(wx*0.012+400, wz*0.012-400 + y*0.028, 3);   // giant caverns
-        if(y>4 && y<h-8 && cav > 0.30) id = B.AIR;
+        if(y>3 && y<h-capT && cv > cvT) id = B.AIR;
+
+        var tunW = 0.06 + wob*0.035;                                    // winding tunnels of varying bore
+        var tun = this.noise.fbm(wx*0.02+11, y*0.06, wz*0.02-11 + 4);
+        if(y>4 && y<h-capT && Math.abs(tun) < tunW) id = B.AIR;
+
+        var tun2 = this.noise.fbm(wz*0.023-300, y*0.05+40, wx*0.023+300);   // a second set crossing the first
+        if(y>5 && y<h-capT-1 && Math.abs(tun2) < 0.045+wob*0.03) id = B.AIR;
+
+        var cav = this.noise.fbm(wx*0.012+400, wz*0.012-400 + y*0.028, 3);  // giant caverns
+        if(y>4 && y<h-(breach?2:8) && cav > 0.30 - wob*0.06) id = B.AIR;
+
+        // vertical shafts that punch up toward the light
+        var sh = this.noise.fbm(wx*0.055-900, wz*0.055+900, 2);
+        if(sh > 0.62 && y>8 && y<h-1 && this.noise.n2(wx*0.14, wz*0.14) > 0.15) id = B.AIR;
+
+        // ragged pockets so cave walls are never smooth
+        if(id===B.STONE && y>4 && y<h-3){
+          var pk = this.noise.n2(wx*0.19+5, wz*0.19-5) + this.noise.n2(y*0.23, wx*0.17)*0.6;
+          if(pk > 1.05) id = B.AIR;
+        }
       }
       // ores in stone
       if(id===B.STONE){ id = this.oreAt(wx,y,wz,h); }
@@ -1824,7 +1947,10 @@ var World = {
       if(id===B.AIR && y>0 && y<=4){ id=B.LAVA; }
       else if(id===B.AIR && y>0 && y<=11 && isSolid(blocks[idx(lx,y-1,lz)]) && hash3(wx,y,wz,this.seed^0x1a7a)<0.05){ id=B.LAVA; }
       // ravines: winding deep chasms, open to the surface
-      if(ravDist<0.017 && y>9 && y<=h && id!==B.AIR && id!==B.BEDROCK && !blk(id).liquid){ id=B.AIR; }
+      var ravW = 0.017 * (0.55 + (this.noise.n2(wx*0.008+55, wz*0.008-55)+1)*0.62);   // chasms widen and narrow along their length
+      var ravFloor = 9 + Math.floor((this.noise.n2(wx*0.006-140, wz*0.006+140)+1)*11);  // and bottom out at different depths
+      if(ravDist<ravW && y>ravFloor && y<=h && id!==B.AIR && id!==B.BEDROCK && !blk(id).liquid){ id=B.AIR; }
+      if(ravDist<ravW*0.45 && y>ravFloor-4 && y<=h && id!==B.AIR && id!==B.BEDROCK && !blk(id).liquid){ id=B.AIR; }   // a deeper slot down the centre
       // underground biomes: decorate cave floors by region
       if(id===B.AIR && y>6 && y<h-6){ var _bl=blocks[idx(lx,y-1,lz)];
         if(_bl===B.STONE||_bl===B.DEEPSLATE||_bl===B.MOSS_STONE){ var _dc=hash3(wx,y,wz,this.seed^0xCA7E);
@@ -1964,6 +2090,16 @@ var World = {
     o=vein(0x8181, 2, 0.0075, 0.66, B.SILVER_ORE,  10, 44); if(o>0)return o;
     o=vein(0x9292, 2, 0.0040, 0.68, B.AMETHYST_ORE, 5, 26); if(o>0)return o;
     return B.STONE;
+  },
+  nearShore: function(wx,wz,h){
+    // sand only where the ground actually meets open water within a few blocks
+    for(var r=2;r<=5;r+=3){
+      if(this.heightAt(wx+r,wz) < SEA-1) return true;
+      if(this.heightAt(wx-r,wz) < SEA-1) return true;
+      if(this.heightAt(wx,wz+r) < SEA-1) return true;
+      if(this.heightAt(wx,wz-r) < SEA-1) return true;
+    }
+    return false;
   },
   decorateCaves: function(blocks, lx,lz, wx,wz, h){
     // which kind of cave system runs beneath here?
@@ -3394,7 +3530,9 @@ var World = {
   },
   setBlock: function(x,y,z,id, persist){
     if(y<0||y>=WORLD_H) return;
-    if(id===B.AIR){ try{ queueLiquid(x,y,z,0); }catch(_){ } }   // a hole opened: let any neighbouring liquid pour in
+    if(id===B.AIR){ try{ queueLiquid(x,y,z,0);
+      queueLiquid(x+1,y,z,0); queueLiquid(x-1,y,z,0); queueLiquid(x,y,z+1,0); queueLiquid(x,y,z-1,0); queueLiquid(x,y-1,z,0);
+    }catch(_){ } }   // a hole opened: let any neighbouring liquid pour in
     var cx=x>>4, cz=z>>4; var ch=this.getChunk(cx,cz,true);
     var prev = ch.blocks[idx(x-cx*CHUNK,y,z-cz*CHUNK)];
     ch.blocks[idx(x-cx*CHUNK,y,z-cz*CHUNK)] = id;
@@ -4385,7 +4523,7 @@ function lightningFlash(){ var el=document.getElementById('lflash');
   setTimeout(function(){ el.style.opacity='0.35'; setTimeout(function(){ el.style.opacity='0'; },60); },190); }
 
 /* ----------------------------- UNDERWATER ----------------------------- */
-var waterVeil=null, bubbleT=0;
+var waterVeil=null, bubbleT=0, lavaVeil=null, fireVeil=null, flameT=0;
 function spawnBubble(){
   var b=document.createElement('div'); var sz=4+Math.random()*8, lx=8+Math.random()*84;
   b.style.cssText='position:fixed;z-index:31;pointer-events:none;bottom:16%;left:'+lx+'%;width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:radial-gradient(circle at 35% 30%, rgba(255,255,255,0.92), rgba(200,230,255,0.22));border:1px solid rgba(255,255,255,0.4);opacity:0.85;transition:transform 1.5s linear, opacity 1.5s linear;';
@@ -4481,9 +4619,43 @@ function tickUnderwater(dt){
   if(!waterVeil){ waterVeil=document.createElement('div'); waterVeil.id='waterveil';
     waterVeil.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:30;opacity:0;transition:opacity 0.25s;background:radial-gradient(circle at 50% 42%, rgba(34,98,158,0.28), rgba(10,44,90,0.58));'; document.body.appendChild(waterVeil); }
   var hx=Math.floor(Player.pos.x), hy=Math.floor(Player.pos.y+Player.eye), hz=Math.floor(Player.pos.z);
-  var under = running && World.getBlock(hx,hy,hz)===B.WATER;
+  var _hb=World.getBlock(hx,hy,hz);
+  var under = running && (_hb===B.WATER||_hb===B.SWAMP_WATER);
   waterVeil.style.opacity = under ? '1' : '0';
   if(under){ bubbleT-=dt; if(bubbleT<=0){ bubbleT=0.11+Math.random()*0.16; spawnBubble(); } }
+  // ---- sinking into lava fills the screen with fire, the way water fills it with bubbles ----
+  if(!lavaVeil){ lavaVeil=document.createElement('div'); lavaVeil.id='lavaveil';
+    lavaVeil.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:31;opacity:0;transition:opacity 0.2s;background:radial-gradient(circle at 50% 46%, rgba(255,150,40,0.55), rgba(150,30,0,0.92));'; document.body.appendChild(lavaVeil); }
+  var inLava = running && _hb===B.LAVA;
+  lavaVeil.style.opacity = inLava ? '1' : '0';
+  var _feet=World.getBlock(Math.floor(Player.pos.x), Math.floor(Player.pos.y+0.2), Math.floor(Player.pos.z));
+  var burning = running && (inLava || _feet===B.LAVA || (Player.burnT||0)>0);
+  if(inLava || _feet===B.LAVA) Player.burnT=Math.max(Player.burnT||0, 4.0);
+  else if(Player.burnT>0) Player.burnT-=dt;
+  if(burning){
+    if(!fireVeil){ fireVeil=document.createElement('div'); fireVeil.id='fireveil';
+      fireVeil.style.cssText='position:fixed;left:0;right:0;bottom:0;height:46%;pointer-events:none;z-index:32;overflow:hidden;';
+      document.body.appendChild(fireVeil);
+      for(var _fi=0;_fi<9;_fi++){
+        var fl=document.createElement('div');
+        fl.style.cssText='position:absolute;bottom:-14%;width:22%;height:78%;border-radius:50% 50% 42% 42%;filter:blur(3px);mix-blend-mode:screen;';
+        fireVeil.appendChild(fl);
+      }
+    }
+    fireVeil.style.display='block';
+    flameT=(flameT||0)+dt;
+    for(var _fj=0;_fj<fireVeil.children.length;_fj++){
+      var el=fireVeil.children[_fj];
+      var ph=flameT*(2.4+_fj*0.31)+_fj*1.7;
+      var lift=(Math.sin(ph)*0.5+0.5);
+      el.style.left=(_fj*11.5 - 4 + Math.sin(ph*0.7)*3)+'%';
+      el.style.height=(52+lift*46)+'%';
+      el.style.opacity=String(0.45+lift*0.45);
+      el.style.background=(_fj%3===0)
+        ? 'linear-gradient(to top, rgba(255,246,180,0.95), rgba(255,160,40,0.5), rgba(255,90,0,0))'
+        : 'linear-gradient(to top, rgba(255,190,60,0.9), rgba(255,110,20,0.45), rgba(200,40,0,0))';
+    }
+  } else if(fireVeil){ fireVeil.style.display='none'; }
 }
 /* ----------------------------- FIRE ----------------------------- */
 var fires={}, fireTimer=0, FIRE_MAX=48, fireSprites=[], fireDmgCd=0;
@@ -4608,6 +4780,52 @@ function tickWeather(dt){
   var target = inStorm?(stormy?1.0:0.7):0;
   rainAmt += (target-rainAmt)*Math.min(1,dt*0.5);
   if(rainAmt<0.01) stopRainSound(); else if(actx && rainAmt>0.05) startRainSound();
+  // ---- keep liquids settling around the player, so pockets dug earlier fill in too ----
+  if(frame%(IS_MOBILE?24:12)===3 && _liqQ.length<400){   // don't pile more work on while a flood is already running
+    try{
+      var _lx0=Math.floor(Player.pos.x), _ly0=Math.floor(Player.pos.y), _lz0=Math.floor(Player.pos.z);
+      for(var _lt=0;_lt<(IS_MOBILE?14:26);_lt++){
+        var _lx=_lx0+((Math.random()*24)|0)-12;
+        var _lz=_lz0+((Math.random()*24)|0)-12;
+        var _ly=_ly0+((Math.random()*16)|0)-9;
+        if(_ly<2||_ly>=WORLD_H-1) continue;
+        if(World.getBlockLoaded(_lx,_ly,_lz)!==B.AIR) continue;
+        if(isLiquidId(World.getBlockLoaded(_lx,_ly+1,_lz)) ||
+           isLiquidId(World.getBlockLoaded(_lx+1,_ly,_lz)) || isLiquidId(World.getBlockLoaded(_lx-1,_ly,_lz)) ||
+           isLiquidId(World.getBlockLoaded(_lx,_ly,_lz+1)) || isLiquidId(World.getBlockLoaded(_lx,_ly,_lz-1))){
+          queueLiquid(_lx,_ly,_lz,0);
+        }
+      }
+    }catch(_){ }
+  }
+  // ---- achievements that watch where you are and what's around you ----
+  if(frame%30===7){
+    try{
+      var _ax=Math.floor(Player.pos.x), _ay=Math.floor(Player.pos.y), _az=Math.floor(Player.pos.z);
+      if(World.dim==='overworld'){
+        var _ab=World.biomeAt(_ax,_az);
+        if(!Player.biomesSeen) Player.biomesSeen={};
+        if(!Player.biomesSeen[_ab]){
+          Player.biomesSeen[_ab]=1;
+          var _bn=0; for(var _bk in Player.biomesSeen) _bn++;
+          if(_bn>=8) unlock('wanderer');
+          if(_bn>=14) unlock('far_traveller');
+        }
+        if(_ab===14) unlock('painted_desert');
+        if(_ab===16) unlock('coral_gardens');
+      }
+      if(_ay<8) unlock('rock_bottom');
+      if(_ay>120 && World.dim==='overworld') unlock('sky_high');
+      if(Player.riding && Player.riding.kind==='skycarver') unlock('skyrider');
+      if(Player.riding && Player.riding.kind==='airship') unlock('aeronaut');
+      // structures you are standing inside
+      for(var _sx=-3;_sx<=3;_sx+=3) for(var _sz=-3;_sz<=3;_sz+=3){
+        var _sb=World.getBlockLoaded(_ax+_sx,_ay,_az+_sz);
+        if(_sb===B.PRISMARINE_BRICK || _sb===B.DARK_PRISMARINE) unlock('monument_diver');
+        if(_sb===B.QUEST_BOARD) unlock('villager_found');
+      }
+    }catch(_){ }
+  }
   // ---- water freezes over in the cold, where no light warms it ----
   if(World.dim==='overworld' && frame%20===0){
     try{
@@ -4931,6 +5149,26 @@ function chunkFrag(alpha, grain){
     ' float anyWater = clamp(isWater+isSwamp, 0.0, 1.0);',
     ' float w = sin(mod(vWorld.x,256.0)*1.7 + uTime*1.6) + sin(mod(vWorld.z,256.0)*2.1 + uTime*1.3) + sin(mod(vWorld.x+vWorld.z,256.0)*1.1 - uTime*1.9);',
     ' vec3 wc = vColor * (1.0 + 0.06*w*anyWater);',
+    ' float isLava = step(0.34, vColor.r) * step(vColor.g, vColor.r*0.62) * step(vColor.b, vColor.r*0.32);',
+    ' if(isLava>0.5){',
+    '   float lx1 = vWorld.x*0.85 + sin(vWorld.z*0.6 + uTime*0.55)*0.9;',
+    '   float lz1 = vWorld.z*0.85 + sin(vWorld.x*0.5 - uTime*0.42)*0.9;',
+    '   float crust = sin(lx1*1.7) * sin(lz1*1.9) + 0.6*sin((lx1+lz1)*2.7 + uTime*0.3);',
+    '   float fine  = sin(vWorld.x*5.5 + uTime*0.9) * sin(vWorld.z*6.1 - uTime*0.7);',
+    '   float plates = smoothstep(-0.15, 0.55, crust);',
+    '   vec3 hot  = vec3(1.0, 0.92, 0.42);',
+    '   vec3 mid  = vec3(1.0, 0.46, 0.06);',
+    '   vec3 cool = vec3(0.30, 0.07, 0.02);',
+    '   vec3 lv = mix(cool, mid, plates);',
+    '   float cracks = 1.0 - smoothstep(0.0, 0.16, abs(crust));',
+    '   lv = mix(lv, hot, cracks*0.92);',
+    '   lv = mix(lv, mid, max(0.0, fine)*0.18);',
+    '   float pulse = 0.86 + 0.14*sin(uTime*1.6 + vWorld.x*0.3 + vWorld.z*0.25);',
+    '   lv *= pulse;',
+    '   float ember = smoothstep(0.86, 1.0, sin(vWorld.x*9.0+uTime*2.1)*sin(vWorld.z*8.3-uTime*1.7));',
+    '   lv += hot*ember*0.5;',
+    '   wc = lv;',
+    ' }',
     ' float isRift = step(463.5, vDecor) * step(vDecor, 471.5);',
     ' if(isRift>0.5){ vec2 pc=vUV-0.5; float ang=atan(pc.y,pc.x), rad=length(pc);',
     '   float sw=sin(ang*3.0 + rad*16.0 - uTime*2.4); float sw2=sin(ang*5.0 - rad*11.0 + uTime*1.7);',
@@ -4941,7 +5179,9 @@ function chunkFrag(alpha, grain){
     ' if(isLeaf>0.5){ float ln = 0.5 + 0.25*sin(vWorld.x*3.1 + vWorld.y*1.7) + 0.25*sin(vWorld.z*3.7 - vWorld.y*2.1) + 0.2*sin((vWorld.x+vWorld.z)*6.3);',
     '   wc *= 0.8 + 0.3*ln;',
     '   wc *= 1.0 - 0.4*step(ln, 0.34); }',
+    ' vec3 _lvKeep = wc;',
     ' wc = torchLit(wc, vWorld);',
+    ' wc = mix(wc, _lvKeep, isLava);',   // molten rock lights itself
     ' vec3 c = mix(uFogColor, wc, vFog);',
     ' float _wa = mix('+alpha+', 0.68, anyWater);',
     ' float isGlass = '+(alpha<0.99?'(step(407.5, vDecor)*step(vDecor, 413.5))':'0.0')+';',
@@ -5767,11 +6007,11 @@ function tryHarvest(matureOnly){
 var _liqQ=[], _liqSeen={};
 function queueLiquid(x,y,z,d){
   if(y<1||y>=WORLD_H) return;
+  if(_liqQ.length>8000) return;                    // never let the backlog run away
   var k=x+','+y+','+z;
   if(_liqSeen[k]) return;
   _liqSeen[k]=1;
-  _liqQ.push([x,y,z,d||0]);
-  if(_liqQ.length>6000) _liqQ.length=6000;
+  _liqQ.push([x,y,z,0]);
 }
 function seedLiquidEdges(cx,cz){
   // after a chunk loads, look for air pockets under the sea that touch water
@@ -5790,34 +6030,48 @@ function migrateSwampWater(){
     for(var k in World.edits){ if(World.edits[k]===B.SWAMP_WATER) World.edits[k]=B.WATER; }
   }catch(_){ }
 }
+var WATER_REACH=7, LAVA_REACH=3, _flowCount=0;                 // how far a source creeps sideways before it runs out
+function isLiquidId(b){ return b===B.WATER||b===B.SWAMP_WATER||b===B.LAVA; }
+function flowDepthAt(x,y,z){
+  if(!World.flowD) World.flowD={};
+  var v=World.flowD[x+','+y+','+z];
+  return (v==null) ? 0 : v;                       // anything the world generated is a full source
+}
 function processLiquid(){
   if(!_liqQ.length) return;
-  var budget=IS_MOBILE?150:350;   // keep big floods smooth on phones
+  if(!World.flowD) World.flowD={};
+  if(_flowCount>60000){ World.flowD={}; _flowCount=0; }   // periodic sweep so the map never grows forever
+  var budget=IS_MOBILE?150:350;                    // keep big floods smooth on phones
   while(_liqQ.length && budget-- > 0){
     var c=_liqQ.shift();
-    var x=c[0], y=c[1], z=c[2], d=c[3];
+    var x=c[0], y=c[1], z=c[2];
     delete _liqSeen[x+','+y+','+z];
     if(World.getBlockLoaded(x,y,z)!==B.AIR) continue;
-    // what can feed this empty cell?
-    var src=0, fromAbove=false;
+
+    // does anything pour into this empty cell?
+    var src=0, newD=99;
     var up=World.getBlockLoaded(x,y+1,z);
-    if(up===B.WATER||up===B.SWAMP_WATER||up===B.LAVA){ src=up; fromAbove=true; }
-    if(!src){
-      var nb=[[1,0],[-1,0],[0,1],[0,-1]];
-      for(var i=0;i<4;i++){
-        var b2=World.getBlockLoaded(x+nb[i][0],y,z+nb[i][1]);
-        if(b2===B.WATER||b2===B.SWAMP_WATER||b2===B.LAVA){ src=b2; break; }
-      }
+    if(isLiquidId(up)){ src=up; newD=0; }          // falling liquid arrives at full strength
+    var nb=[[1,0],[-1,0],[0,1],[0,-1]];
+    for(var i=0;i<4;i++){
+      var nx=x+nb[i][0], nz=z+nb[i][1];
+      var b2=World.getBlockLoaded(nx,y,nz);
+      if(!isLiquidId(b2)) continue;
+      var cand=flowDepthAt(nx,y,nz)+1;
+      if(cand<newD){ newD=cand; if(!src) src=b2; }
     }
     if(!src) continue;
-    var isW=(src===B.WATER||src===B.SWAMP_WATER);
-    if(isW && y>SEA) continue;                       // water never climbs above sea level
-    if(!isW && !fromAbove && d>=3) continue;         // lava only creeps a few blocks sideways
+
+    var isW=(src!==B.LAVA);
+    var reach=isW?WATER_REACH:LAVA_REACH;
+    if(newD>reach) continue;                       // too far from any source - the flow dies out here
+
+    World.flowD[x+','+y+','+z]=newD; _flowCount++;
     World.setBlock(x,y,z,src,true);
-    var nd = fromAbove ? 0 : d+1;                     // falling resets the spread budget
-    queueLiquid(x,y-1,z,0);
-    queueLiquid(x+1,y,z,nd); queueLiquid(x-1,y,z,nd);
-    queueLiquid(x,y,z+1,nd); queueLiquid(x,y,z-1,nd);
+
+    queueLiquid(x,y-1,z,0);                        // always try to fall first
+    queueLiquid(x+1,y,z,0); queueLiquid(x-1,y,z,0);
+    queueLiquid(x,y,z+1,0); queueLiquid(x,y,z-1,0);
   }
 }
 function breakBlock(hit){
@@ -6028,6 +6282,19 @@ function takeItem(key,n){   // remove n of an item from anywhere in the inventor
   renderHotbar(); return n<=0;
 }
 function doPlace(){
+  var _eg=inv.hotbar[hotbarSel], _egIt=_eg?ITEMS[_eg.key]:null;
+  if(_egIt && _egIt.spawnEgg){
+    var _eh=raycast();
+    if(!_eh){ toast('Aim at a block to place the creature'); return; }
+    var _ex=_eh.x+_eh.nx+0.5, _ey=_eh.y+_eh.ny, _ez=_eh.z+_eh.nz+0.5;
+    try{
+      spawnEnemy(_egIt.spawnEgg, _ex, _ey, _ez);
+      if(gameMode!=='creative') consumeSlot(_eg,1);
+      renderHotbar(); sfxClick();
+      toast(_egIt.name.replace(' Spawn Egg','')+' spawned');
+    }catch(err){ toast('Could not spawn that here'); }
+    return;
+  }
   if(uiOpen) return;
   triggerHandSwing();
   var heldBpk=inv.hotbar[hotbarSel];
@@ -6203,7 +6470,7 @@ function doPlace(){
       sfxClick(); } else { toast('Add crops, seeds or plant matter to compost'); }
     return; }
   if(hit.id===B.FURNITURE_BENCH){ openFurnitureBench(); return; }
-  if(hit.id===B.QUEST_BOARD){ openQuestBoard(); return; }
+  if(hit.id===B.QUEST_BOARD){ try{ unlock('villager_found'); }catch(_){ } openQuestBoard(); return; }
   if(blk(hit.id).shape==='door'){ toggleDoor(hit.x,hit.y,hit.z); return; }
   if(hit.id===B.FENCE_GATE){ var gt=World.tiles[World.ck(hit.x,hit.y,hit.z)]; if(gt){ gt.open=!gt.open; World.markDirty(hit.x>>4,hit.z>>4); sfxDoor(gt.open); } return; }
   if(blk(hit.id).shape==='trapdoor'){ var td=World.tiles[World.ck(hit.x,hit.y,hit.z)]; if(td){ td.open=!td.open; World.markDirty(hit.x>>4,hit.z>>4); sfxDoor(td.open); } return; }
@@ -6678,6 +6945,7 @@ function randomEnchantedTool(){
 function giveItem(key, qty){
   if(!ITEMS[key]) return qty;
   if(key.indexOf('_PICK')>=0) unlock('time_to_mine');
+  try{ if(ACH_ITEM[key]) unlock(ACH_ITEM[key]); }catch(_){ }
   var stack=ITEMS[key].stack||64;
   // fill existing stacks (hotbar first then main)
   var lists=[inv.hotbar, inv.main];
@@ -7341,6 +7609,7 @@ function openInventory(keep){
     var grid=gridContainer(9);                       // fixed page, no scrolling
     var PAGE=36, page=0, curFlt='', curCat='all';
     var creativeCat=function(k,it){
+      if(it.spawnEgg) return 'eggs';
       if(it.tool||it.armor) return 'tools';
       if(it.block){ if(/LOG|LEAVES|LEAF|SAPLING|FLOWER|GRASS|DIRT|SAND|GRAVEL|MUSHROOM|CACTUS|VINE|SNOW|ICE|WATER|LAVA|ORE|BAMBOO|BERR|PUMPKIN|MELON|CORAL|KELP|BEEHIVE|HONEY|MOSS|PODZOL/.test(k)) return 'nature'; return 'blocks'; }
       return 'items';
@@ -7363,7 +7632,7 @@ function openInventory(keep){
     prevB.addEventListener('click', function(){ if(page>0){ page--; renderPalette(); } });
     nextB.addEventListener('click', function(){ page++; renderPalette(); });
     search.addEventListener('input', function(){ curFlt=this.value.trim().toLowerCase(); page=0; renderPalette(); });
-    var cats=[['all','\u25A6','All'],['blocks','\uD83E\uDDF1','Blocks'],['nature','\uD83C\uDF3F','Nature'],['tools','\u2692\uFE0F','Tools'],['items','\uD83C\uDF4E','Items']];
+    var cats=[['all','\u25A6','All'],['blocks','\uD83E\uDDF1','Blocks'],['nature','\uD83C\uDF3F','Nature'],['tools','\u2692\uFE0F','Tools'],['items','\uD83C\uDF4E','Items'],['eggs','\uD83E\uDD5A','Eggs']];
     var tabRow=document.createElement('div'); tabRow.style.cssText='display:flex;gap:4px;margin-bottom:8px;';
     var tabBtns=[];
     var setActiveTab=function(){ for(var i=0;i<tabBtns.length;i++){ var on=cats[i][0]===curCat; tabBtns[i].style.background=on?'linear-gradient(#7ac060,#4f9e3a)':'linear-gradient(#bdbdbd,#9a9a9a)'; tabBtns[i].style.borderColor=on?'#2c5a1d':'#2b2b2b'; tabBtns[i].style.color=on?'#fff':'#2b2b22'; } };
@@ -7749,6 +8018,7 @@ function openVillager(e){
       if(rel._cd && now2<rel._cd){ say('We just spoke, friend.'); return; }
       rel._cd=now2+20000; rel.talked++;
       if(rel.hearts<10) rel.hearts++;
+      try{ unlock('neighbourly'); if(rel.hearts>=6) unlock('boon_companion'); }catch(_){ }
       say(villagerLine(p,rel)); sfxClick(); draw();
       try{ giveXP(2); saveGame(true); }catch(_){ }
       return;
@@ -7761,6 +8031,7 @@ function openVillager(e){
       var val = love?3:1;
       consumeSlot(sl,1); renderHotbar();
       rel.hearts=Math.min(10, rel.hearts+val);
+      try{ unlock('gift_giver'); if(rel.hearts>=6) unlock('boon_companion'); }catch(_){ }
       say(love ? ('Oh, '+(ITEMS[sl.key]?ITEMS[sl.key].name:'this')+'! Exactly what I needed. Thank you!')
                : 'That is kind of you. I will find a use for it.');
       sfxClick(); draw();
@@ -7775,6 +8046,7 @@ function openVillager(e){
     }
     if(act==='marry'){
       rel.married=true; e.following=true;
+      try{ unlock('two_hearts'); }catch(_){ }
       say('Yes. A hundred times yes.');
       toast('\uD83D\uDC8D '+p.name+' has married you!');
       try{ giveXP(60); saveGame(true); }catch(_){ }
@@ -10032,8 +10304,8 @@ function followsFood(kind, key){
 }
 function animalTick(e,dt){
   if(e.kind==='sheep' && e.sheared){ e.woolTimer-=dt; if(e.woolTimer<=0){ e.sheared=false; setSheepSheared(e,false); } }
-  if(e.kind==='skycarver' && !e.tamed){ var _ka=inv.hotbar[hotbarSel]; if(_ka && (_ka.key==='AMBROSIUM_SHARD'||_ka.key==='GOLDEN_AMBER')){ e.tamed=true; consumeSlot(_ka,1); renderHotbar(); toast('\u2728 The Skycarver bows its head. Tap it to ride the skies!'); try{ spawnSteam(e.pos.x,e.pos.y+1.5,e.pos.z,0xffe08a); }catch(_){ } sfxClick(); return true; } }
-  if(e.kind==='seahorse' && !e.tamed){ var _hs=inv.hotbar[hotbarSel]; if(_hs && _hs.key==='SADDLE'){ e.tamed=true; e.saddled=true; consumeSlot(_hs,1); renderHotbar(); toast('The seahorse is yours! Tap it to ride.'); sfxClick(); return true; } }
+  if(e.kind==='skycarver' && !e.tamed){ var _ka=inv.hotbar[hotbarSel]; if(_ka && (_ka.key==='AMBROSIUM_SHARD'||_ka.key==='GOLDEN_AMBER')){ e.tamed=true; try{ unlock('best_friend'); }catch(_){ } consumeSlot(_ka,1); renderHotbar(); toast('\u2728 The Skycarver bows its head. Tap it to ride the skies!'); try{ spawnSteam(e.pos.x,e.pos.y+1.5,e.pos.z,0xffe08a); }catch(_){ } sfxClick(); return true; } }
+  if(e.kind==='seahorse' && !e.tamed){ var _hs=inv.hotbar[hotbarSel]; if(_hs && _hs.key==='SADDLE'){ e.tamed=true; try{ unlock('best_friend'); }catch(_){ } e.saddled=true; consumeSlot(_hs,1); renderHotbar(); toast('The seahorse is yours! Tap it to ride.'); sfxClick(); return true; } }
   if(e.kind==='seahorse' && e.tamed){ Player.riding=e; e.ridden=true; sfxClick(); toast('Riding the seahorse \u2014 you can breathe underwater! SNEAK to dismount'); return true; }
   if((e.kind==='bear'||e.kind==='boar') && e.provoked && !e.tamed && gameMode!=='creative'){
     var bdx=Player.pos.x-e.pos.x, bdz=Player.pos.z-e.pos.z, bd=Math.hypot(bdx,bdz);
@@ -10542,7 +10814,7 @@ function castFishingRod(){
       else { giveItem('BONE',1); toast('Reeled in a bone'); }
       rpgAddXP('fishing',8);   // RPG fishing XP
       if(Math.random()<rpgFishLuck()){ giveItem(Math.random()<0.25?'EMERALD':'RAW_FISH',1); toast('\u2728 Lucky catch!'); }   // RPG fishing luck perk
-      giveXP(2); unlock('fisherman');
+      giveXP(2); unlock('fisherman'); try{ var _fn=0; for(var _fk in (Player.fishSeen||{})) _fn++; if(_fn>=15) unlock('master_angler'); }catch(_){ }
     } else { toast('Reeled in \u2014 nothing biting yet'); }
     if(fs.bob) scene.remove(fs.bob); Player.fishing=null; sfxClick(); damageHeld(); return;
   }
@@ -10698,7 +10970,7 @@ function tickEntities(dt){
     tintMob(e);
     var dx=pp.x-e.pos.x, dz=pp.z-e.pos.z; var dist=Math.hypot(dx,dz);
     if(e.kind==='fish'){ fishTick(e,dt);
-      if(e.hp<=0){ scene.remove(e.mesh); entities.splice(i,1); if(!e.noDrop){ giveItem('RAW_FISH',1); giveXP(1); unlock('fisherman'); } continue; }
+      if(e.hp<=0){ scene.remove(e.mesh); entities.splice(i,1); if(!e.noDrop){ giveItem('RAW_FISH',1); giveXP(1); unlock('fisherman'); try{ var _fn=0; for(var _fk in (Player.fishSeen||{})) _fn++; if(_fn>=15) unlock('master_angler'); }catch(_){ } } continue; }
       if(e.pos.y<-5 || dist>70){ scene.remove(e.mesh); entities.splice(i,1); }
       continue;
     }
@@ -10851,7 +11123,7 @@ function tickEntities(dt){
     if(e.swimming && e.kind!=='crab'){ e._swb=Math.sin(now*0.0025+(e.wdir||0))*0.1; } else e._swb=0;
     e.mesh.position.copy(e.pos);
     tickBlink(e,dt);
-    try{ tickVillagerTag(e); }catch(_){ }
+    if(frame%4===(i&3)){ try{ tickVillagerTag(e); }catch(_){ } }
     if(e.kind==='villager' && e.following){
       var _fdx=Player.pos.x-e.pos.x, _fdz=Player.pos.z-e.pos.z, _fd=Math.hypot(_fdx,_fdz);
       if(_fd>2.4){ var _fa=Math.atan2(_fdz,_fdx); var _fs=Math.min(4.6, 1.6+_fd*0.35);
@@ -11632,8 +11904,69 @@ var ACHIEVEMENTS={
   rancher:{ name:'Rancher', xp:4 },
   marksman:{ name:'Bone Collector', xp:5, item:['STICK',2] },
   diamonds:{ name:'DIAMONDS!', xp:12, item:['DIAMOND',1] },
-  survivor:{ name:'Survived the Night', xp:10, item:['APPLE',1] }
+  survivor:{ name:'Survived the Night', xp:10, item:['APPLE',1] },
+  // --- forging and gear ---
+  iron_age:{ name:'Iron Age', xp:6, item:['IRON_INGOT',1] },
+  cutting_edge:{ name:'Cutting Edge', xp:12 },
+  cindersteel:{ name:'Forged in Fire', xp:16 },
+  voidforged:{ name:'Voidforged', xp:26, item:['DIAMOND',2] },
+  dwarven_drill:{ name:'Dwarven Engineering', xp:20 },
+  harpooner:{ name:'Harpooner', xp:10 },
+  deep_diver:{ name:'Deep Diver', xp:12 },
+  // --- exploration ---
+  into_the_sky:{ name:'Into the Sky', xp:20, item:['GLOWBLOOM',1] },
+  the_underforge:{ name:'The UnderForge', xp:20 },
+  one_small_step:{ name:'One Small Step', xp:30 },
+  worlds_apart:{ name:'Worlds Apart', xp:45, item:['DIAMOND',3] },
+  rift_walker:{ name:'Rift Walker', xp:14 },
+  wanderer:{ name:'Wanderer', xp:14 },
+  far_traveller:{ name:'Far Traveller', xp:22 },
+  painted_desert:{ name:'Painted Desert', xp:8 },
+  coral_gardens:{ name:'Coral Gardens', xp:8 },
+  rock_bottom:{ name:'Rock Bottom', xp:10 },
+  sky_high:{ name:'Sky High', xp:10 },
+  // --- bosses ---
+  warden_slain:{ name:'The Warden Falls', xp:30, item:['DIAMOND',2] },
+  sun_spirit:{ name:'Spirit of the Sun', xp:32 },
+  valkyrie:{ name:'Valkyrie\u2019s Match', xp:28 },
+  slider:{ name:'Stone Slider', xp:22 },
+  forge_tyrant:{ name:'Tyrant of the Foundry', xp:35 },
+  void_unmade:{ name:'The Void Unmade', xp:40, item:['BLUE_OBSIDIAN',2] },
+  broke_bandits:{ name:'Broke the Bandits', xp:24, item:['EMERALD',2] },
+  abyssal:{ name:'Abyssal Hunter', xp:16 },
+  shark_slayer:{ name:'Jaws of the Deep', xp:14 },
+  // --- structures ---
+  villager_found:{ name:'Welcome to the Village', xp:8 },
+  dungeon_delver:{ name:'Dungeon Delver', xp:16 },
+  keymaster:{ name:'Keymaster', xp:18 },
+  monument_diver:{ name:'Monument Diver', xp:22 },
+  // --- village life ---
+  neighbourly:{ name:'Neighbourly', xp:5 },
+  gift_giver:{ name:'Gift Giver', xp:8 },
+  boon_companion:{ name:'Boon Companion', xp:18 },
+  two_hearts:{ name:'Two Hearts', xp:40, item:['CAKE_SLICE',2] },
+  odd_jobs:{ name:'Odd Jobs', xp:10 },
+  hero_of_people:{ name:'Hero of the People', xp:35, item:['EMERALD',5] },
+  // --- living off the land ---
+  green_thumb:{ name:'Green Thumb', xp:6, item:['WHEAT',3] },
+  home_cooking:{ name:'Home Cooking', xp:8 },
+  master_angler:{ name:'Master Angler', xp:30 },
+  best_friend:{ name:'Best Friend', xp:10 },
+  skyrider:{ name:'Skyrider', xp:26 },
+  aeronaut:{ name:'Aeronaut', xp:18 },
+  beekeeper:{ name:'Beekeeper', xp:8 }
 };
+// items that announce themselves the moment they reach your hands
+var ACH_ITEM={ IRON_INGOT:'iron_age', DIAMOND_PICK:'cutting_edge', DIAMOND_SWORD:'cutting_edge',
+  CINDERSTEEL_PICK:'cindersteel', CINDERSTEEL_SWORD:'cindersteel', VOIDFORGED_BLADE:'voidforged',
+  VOIDFORGED_PICK:'voidforged', DWARVEN_DRILL:'dwarven_drill', HARPOON:'harpooner', DIVING_HELMET:'deep_diver',
+  DUNGEON_KEY:'dungeon_delver', HONEY:'beekeeper', WHEAT:'green_thumb', FRUIT_SALAD:'home_cooking',
+  HEARTY_STEW:'home_cooking', VEGGIE_STEW:'home_cooking', TOMATO_SOUP:'home_cooking', CORN_CHOWDER:'home_cooking',
+  SALAD:'home_cooking', BLUE_OBSIDIAN:'the_underforge', PRISMARINE_SHARD:'abyssal' };
+// creatures whose deaths are worth remembering
+var ACH_KILL={ warden:'warden_slain', sunspirit:'sun_spirit', valkyrie:'valkyrie', slider:'slider',
+  forgetyrant:'forge_tyrant', voidwarden:'void_unmade', bandit_chief:'broke_bandits',
+  abyss_guardian:'abyssal', shark:'shark_slayer' };
 var unlocked={};
 function unlock(id){ if(gameMode==='creative' || unlocked[id] || !ACHIEVEMENTS[id]) return; unlocked[id]=true;
   grantCosmeticsFor(id);
@@ -11683,6 +12016,7 @@ function makeQuest(seed, idx){
 }
 function activeQuests(){ if(!Player.quests) Player.quests=[]; return Player.quests; }
 function questOnKill(kind){
+  try{ if(ACH_KILL[kind]) unlock(ACH_KILL[kind]); }catch(_){ }
   var qs=activeQuests(), changed=false;
   for(var i=0;i<qs.length;i++){ var q=qs[i];
     if(q.done || (q.type!=='hunt' && q.type!=='bounty')) continue;
@@ -11755,6 +12089,8 @@ function openQuestBoard(){
       giveItem(q.rw, q.rwn); giveXP(q.xp);
       activeQuests().splice(ti|0,1);
       toast('\u2705 Task complete! +'+q.xp+' XP');
+      try{ Player.questsDone=(Player.questsDone||0)+1; unlock('odd_jobs');
+        if(Player.questsDone>=10) unlock('hero_of_people'); }catch(_){ }
       try{ sfxClick(); saveGame(true); }catch(_){ }
       close(); openQuestBoard(); return; }
   });
@@ -12152,6 +12488,16 @@ function saveGame(quiet){
 function serializeTiles(t){ t=t||World.tiles; var o={}; for(var k in t){ o[k]=t[k]; } return o; }
 function travelDim(target){
   if(World.dim===target || !running) return;
+  try{
+    unlock('rift_walker');
+    if(target==='sky') unlock('into_the_sky');
+    if(target==='underforge') unlock('the_underforge');
+    if(target==='moon') unlock('one_small_step');
+    if(!Player.dimsSeen) Player.dimsSeen={};
+    Player.dimsSeen[target]=1; Player.dimsSeen[World.dim]=1;
+    var _dn=0; for(var _dk in Player.dimsSeen) _dn++;
+    if(_dn>=4) unlock('worlds_apart');
+  }catch(_){ }
   dimStash[World.dim]={ edits:World.edits, tiles:World.tiles, blockLight:World.blockLight, wsrc:World.wsrc, wlvl:World.wlvl, grassTaken:World.grassTaken, ents:entities.slice(), px:Player.pos.x, py:Player.pos.y, pz:Player.pos.z, yaw:Player.yaw, pitch:Player.pitch };
   for(var k in World.chunks){ var c=World.chunks[k]; if(c.mesh)scene.remove(c.mesh); if(c.tmesh)scene.remove(c.tmesh); if(c.pmesh)scene.remove(c.pmesh); if(c.smesh)scene.remove(c.smesh); }
   for(var ei=0;ei<entities.length;ei++){ if(entities[ei].mesh) scene.remove(entities[ei].mesh); }
@@ -12323,6 +12669,15 @@ function exitToTitle(){ saveGame(true); closePause(); running=false;
   if(musicTimer){ clearInterval(musicTimer); musicTimer=null; } playMenuTheme();
   document.getElementById('hud').classList.add('hidden'); document.getElementById('touch').classList.add('hidden');
   var wo=document.getElementById('waterOverlay'); if(wo) wo.style.display='none';       // clear the underwater tint
+  // these all live on document.body, outside the HUD, so hiding the HUD never cleared them
+  if(waterVeil) waterVeil.style.opacity='0';
+  if(lavaVeil) lavaVeil.style.opacity='0';
+  if(fireVeil) fireVeil.style.display='none';
+  Player.burnT=0;
+  var _ln=document.getElementById('lookName'); if(_ln){ _ln.style.opacity='0'; _ln.textContent=''; }
+  var _tt=document.getElementById('toast'); if(_tt) _tt.classList.remove('show');
+  var _hn2=document.getElementById('heldname'); if(_hn2) _hn2.textContent='';
+  try{ removeChestLid(); }catch(_){ }
   var bb=document.getElementById('bubbles'); if(bb) bb.style.display='none';            // and the air bubbles
   var bd=document.getElementById('btnDown'); if(bd) bd.classList.add('hidden');
   showScreen('menu');
@@ -13220,8 +13575,16 @@ document.getElementById('btnHow').addEventListener('click', function(){ ac();
   toast(IS_MOBILE ? 'Left: move \u00b7 Drag right: look \u00b7 Hold: mine \u00b7 Tap: place/attack \u00b7 Inventory to craft'
                   : 'WASD move \u00b7 Mouse look \u00b7 Hold L-click: mine \u00b7 R-click: place \u00b7 E: inventory'); });
 
-var VERSION='Update 266';
+var VERSION='Update 274';
 var CHANGELOG=[
+  { v:'Update 274', t:'Spectator Mode Removed', items:['<b>Spectator mode has been taken out.</b> World creation is back to Survival, Creative and Hardcore','Every piece of it is gone rather than just hidden \u2014 the collision bypass, the flight override, the physics exemptions, the damage and hunger guards and the safety-net skip have all been reverted to exactly how they were, so nothing it touched is left behaving differently'] },
+  { v:'Update 273', t:'Spectator Bounce Fixed', items:['<b>Fixed spectators bouncing on the ground and being unable to sink into it.</b> A safety net exists to rescue players who fall through the world or get embedded in a block \u2014 it detects a body inside solid rock and pops it up to the surface. It was running in every mode, so the moment a spectator drifted into the ground it shoved them back out, fought the descent, and produced that juddering bounce','Spectators now skip that rescue entirely. The only limits left are the very bottom and very top of the world, so you can sink through the floor and drift around inside solid stone freely','Also stopped step-up assistance from nudging spectators upward when they graze terrain'] },
+  { v:'Update 272', t:'Spectator Mode Fixed', items:['<b>Spectator flight actually works now.</b> The flight controls were gated to Creative only, so a spectator was left falling with gravity still pulling and no way to climb. Flying now applies in Spectator, rises and sinks faster than Creative, and you always move at sprint pace','<b>Removed the see-through terrain.</b> Making the whole world semi-transparent meant every chunk drew out of order \u2014 that was the weird flickering geometry around you. The world renders normally again; you still pass straight through it, which is the part that matters for looking at caves','<b>Spectators are properly untouchable</b> \u2014 no drowning, no burning, no fall damage, no hunger, no underwater tint or fire on screen, and mobs ignore you','<b>You can no longer fall out of the world</b> \u2014 movement is bounded just below bedrock and just above the sky, so you drift instead of plummeting forever'] },
+  { v:'Update 271', t:'Spawn Eggs', items:['<b>SPAWN EGGS</b> \u2014 63 of them, one for every creature in the game, from cows and chickens to the Warden, the Forge Tyrant, the Void Warden and the Skycarver','<b>Each egg is drawn in that creature\u2019s own colours</b> \u2014 a speckled shell tinted to the mob with a second colour in the spots, so a Creeper egg is green flecked with dark green and a Sun Spirit egg burns gold','<b>They live in their own tab</b> in the creative palette, so they never clutter your blocks and items. Aim at a block and tap to place \u2014 the creature appears on the face you were pointing at','Eggs work in survival too if you ever get hold of one, where they are consumed on use'] },
+  { v:'Update 270', t:'Spectator Mode, Overlay Fix &amp; Matching Art', items:['<b>SPECTATOR MODE</b> \u2014 a third choice beside Survival and Creative. You drift straight through solid rock, the world turns ghostly so you can <b>see caves and ravines through the walls</b>, nothing can hurt you and mobs ignore you completely. You cannot break or place anything \u2014 you are only there to look','<b>Fixed effects sticking to the screen after quitting to the menu.</b> The underwater tint, the lava glow, the fire flames and the block-name readout are all attached to the page rather than the game HUD, so hiding the HUD never cleared them. Leaving a world now wipes every overlay, cancels any burning and closes any open chest lid','<b>Thin blocks finally look right in your bag and your hand</b> \u2014 coral fans, sea anemones, sea pickles, tube worms, dripstone spikes, bamboo, kelp, seagrass, glow berries, the quest board and the cooking pot were all drawn as plain coloured cubes. Each now has proper artwork matching what you see in the world','<b>Performance</b> \u2014 the liquid settler now does roughly half the work on phones and backs off entirely while a flood is already spreading, villager name tags refresh on a rota instead of every frame, and the liquid flow map sweeps itself clean so it can never grow without bound during a long session'] },
+  { v:'Update 269', t:'Cave Mouths, Wilder Caverns &amp; Molten Lava', items:['<b>Caves break the surface now.</b> They never could before \u2014 the generator forced a solid cap 4 to 8 blocks under the ground on every cave, so tunnels always stopped short of daylight and ravines were the only way in. A slow field now picks out <b>cave mouth regions</b> where that cap is lifted entirely and the caverns tear straight open into the world','<b>Caves are far less uniform</b> \u2014 tunnels pinch and swell along their length instead of holding one perfect bore, a second tunnel network crosses the first, <b>vertical shafts</b> punch upward toward the light, and ragged pockets chew at the walls so nothing is smooth','<b>Ravines vary properly</b> \u2014 each chasm widens and narrows as it winds, bottoms out at a different depth, and cuts a deeper slot down its centre','<b>Lava looks molten.</b> It was a flat orange fill with no texture at all. Now a dark cooled crust drifts across the surface with white-hot cracks glowing between the plates, embers flickering across it, and a slow pulse of heat \u2014 and it lights itself instead of being dulled by shadow'] },
+  { v:'Update 268', t:'Liquids Done Right, Lava Fire, Beach Fix', items:['<b>Found why water still would not flow.</b> The rule said water can never exist above sea level \u2014 but plains sit at y61 and the sea is at y60, so every shoreline dig was rejected before a single drop moved. That restriction is gone','<b>Water and lava now flow like proper liquids</b>, using spread levels the way the original does: a source runs about <b>7 blocks</b> sideways (lava only <b>3</b>), always falls straight down first, and regains its full strength each time it drops a level. Break a wall beside a lake and it pours through and finds its level','<b>Old dry pockets fix themselves</b> \u2014 the game now continually settles liquids around you, so holes you dug before this update fill in as you walk back to them','<b>Burning in lava fills the screen with fire</b> \u2014 flames lick up from the bottom of the screen and the world glows furnace-orange, the way bubbles and blue fill the screen underwater. The burn lingers for a few seconds after you climb out','<b>Fixed sand covering whole plains.</b> The beach rule caught any ground within two blocks of sea level \u2014 which is most of a plains biome. Beaches now require open water actually nearby, so they hug the coast like they should'] },
+  { v:'Update 267', t:'45 Achievements', items:['<b>The achievement list has grown from 11 to 45</b>, covering the whole game the way the classics do \u2014 quiet early milestones that teach you the ropes, then long-tail goals worth chasing for hundreds of hours','<b>Forging</b> \u2014 Iron Age, Cutting Edge, Forged in Fire, Voidforged, Dwarven Engineering, Harpooner and Deep Diver as you climb the tool tiers','<b>Exploration</b> \u2014 Into the Sky, The UnderForge, One Small Step, Rift Walker, and <b>Worlds Apart</b> for setting foot in every dimension. Wanderer and Far Traveller count the biomes you have seen; Rock Bottom and Sky High reward going deep and going high','<b>Bosses</b> \u2014 The Warden Falls, Spirit of the Sun, Valkyrie\u2019s Match, Stone Slider, Tyrant of the Foundry, The Void Unmade, Broke the Bandits, Abyssal Hunter and Jaws of the Deep','<b>Village life</b> \u2014 Neighbourly, Gift Giver, Boon Companion, <b>Two Hearts</b> for marrying, plus Odd Jobs and Hero of the People for quest boards','<b>Living off the land</b> \u2014 Green Thumb, Home Cooking, Master Angler for all fifteen fish, Best Friend, Skyrider and Aeronaut','Most award XP, and the bigger ones hand you an item as well'] },
   { v:'Update 266', t:'Chests Open Properly', items:['<b>Fixed seeing the chest\u2019s wooden top through the open lid.</b> The lid was just a separate panel resting on a whole solid block, so lifting it revealed the block\u2019s top face underneath','<b>Chests now have an interior</b> \u2014 as the lid cracks open a dark cavity appears with plank walls and a shadowed floor, capped by a rim that hides the block\u2019s top face. You look down <i>into</i> the chest the way you should, and it seals back up as the lid closes'] },
   { v:'Update 265', t:'Fix Furnace Close Button', items:['<b>Fixed the furnace Close button.</b> My flicker fix had a flaw: opening the furnace blanked the change-tracker, so the watcher immediately saw a mismatch and rebuilt the window \u2014 which blanked it again, every single frame. The button was being destroyed between your finger touching it and the tap registering. The tracker is now seeded from the furnace contents on open, so it only rebuilds on a real change'] },
   { v:'Update 264', t:'Furnace Flicker &amp; Airship Spacing', items:['<b>Fixed the furnace UI juddering.</b> It was tearing down and rebuilding its entire window ten times a second to animate the flame, which made the panel visibly jump between sizes. It now updates the flame and progress bar in place and only rebuilds when the items in the slots actually change','<b>Airships need room to moor</b> \u2014 you can no longer park one within 20 blocks of another, so fleets stop stacking on top of each other','Throttled the new item-name tracking so it can never interfere with UI layout'] },
